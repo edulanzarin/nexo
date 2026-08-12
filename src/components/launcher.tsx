@@ -1,8 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { MODULOS, type ModuloId } from "@/lib/modulos";
 import { sair } from "@/app/login/actions";
+import { LogoMarca } from "./logo-marca";
 import { ThemeToggle } from "./theme-toggle";
 import { Avatar } from "./avatar";
 import { ModuloCard } from "./modulo-card";
@@ -34,10 +34,7 @@ export function Launcher({
   return (
     <div className="flex min-h-screen flex-col">
       <header className="flex items-center justify-between px-6 py-5">
-        <div className="flex items-center gap-2.5">
-          <Image src="/images/logo.png" alt="Nexo" width={36} height={36} className="size-9" />
-          <p className="text-sm font-semibold tracking-tight">Nexo</p>
-        </div>
+        <LogoMarca />
         <div className="flex items-center gap-1.5">
           <ThemeToggle label={false} />
           <form action={sair}>

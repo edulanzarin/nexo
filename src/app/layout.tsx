@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { MARCA, tituloPagina } from "@/lib/marca";
 
 // Fonte única do sistema. Geist cobre tudo — inclusive números, via tabular-nums.
 const geistSans = Geist({
@@ -10,8 +11,8 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Nexo",
-  description: "Plataforma da Navecon sobre a base do Questor",
+  title: tituloPagina(),
+  description: `${MARCA} — plataforma da Navecon sobre a base do Questor`,
 };
 
 const themeInit = `(function(){try{var t=localStorage.getItem("nexo-theme");if(t!=="light"&&t!=="dark"){t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"}document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme="dark"}})()`;

@@ -2,13 +2,14 @@ import Link from "next/link";
 import { assertAdmin } from "@/lib/sessao";
 import { listarAuditoria } from "@/lib/auditoria";
 import { MODULOS } from "@/lib/modulos";
+import { tituloPagina } from "@/lib/marca";
 
 /**
  * Trilha de auditoria (só admin). Server component: o filtro por módulo/busca
  * vem da query string, sem estado no cliente. Mostra os eventos mais recentes —
  * ver ficha, gerar laudo, exportar.
  */
-export const metadata = { title: "Auditoria · Nexo" };
+export const metadata = { title: tituloPagina("Auditoria") };
 
 const PAGINA = 100;
 

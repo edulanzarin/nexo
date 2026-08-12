@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import { MarcaPublicaRh } from "@/components/logo-marca";
 
 /**
  * Moldura das telas PÚBLICAS do canal do RH (denúncia, acompanhamento, clima) —
@@ -9,11 +10,7 @@ export function ShellPublico({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen px-4 py-10">
       <div className="mx-auto max-w-2xl">
-        <div className="mb-6 flex items-center gap-2 text-muted">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/rh.png" alt="Nexo RH" className="size-8 rounded-lg" />
-          <span className="text-sm font-medium">Nexo · RH</span>
-        </div>
+        <MarcaPublicaRh className="mb-6" />
         {children}
       </div>
     </div>

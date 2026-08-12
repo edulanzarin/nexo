@@ -5,6 +5,7 @@ import { assertAdmin } from "@/lib/sessao";
 import { sair } from "@/app/login/actions";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AdminNav } from "@/components/admin/admin-nav";
+import { MARCA } from "@/lib/marca";
 
 /**
  * Área administrativa: fora do catálogo de módulos de negócio, só para admin.
@@ -28,7 +29,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Image src="/images/administracao.png" alt="" width={32} height={32} className="size-8" />
           <div className="leading-tight">
             <p className="text-sm font-semibold tracking-tight">Administração</p>
-            <p className="text-[11px] text-muted">Nexo</p>
+            <p className="text-[11px] text-muted">{MARCA}</p>
           </div>
         </div>
 

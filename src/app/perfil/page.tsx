@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { appQuery } from "@/lib/app-db";
 import { getSessao } from "@/lib/sessao";
 import { contarSessoes } from "@/lib/auth";
+import { tituloPagina } from "@/lib/marca";
 import { PerfilForm } from "./perfil-form";
 import { Voltar } from "./voltar";
 
-export const metadata: Metadata = { title: "Perfil · Nexo" };
+export const metadata: Metadata = { title: tituloPagina("Perfil") };
 
 /**
  * Perfil da pessoa logada. Fora do catálogo de módulos — é pessoal, alcançado

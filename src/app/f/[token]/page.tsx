@@ -1,3 +1,4 @@
+import { MarcaPublicaRh } from "@/components/logo-marca";
 import { resolverTokenPublico } from "@/lib/formulario-publico";
 import { FormularioPublicoView } from "./formulario-publico-view";
 
@@ -12,11 +13,7 @@ export default async function Page({ params }: { params: Promise<{ token: string
   return (
     <div className="min-h-screen px-4 py-10">
       <div className="mx-auto max-w-2xl">
-        <div className="mb-6 flex items-center gap-2 text-muted">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/rh.png" alt="Nexo RH" className="size-8 rounded-lg" />
-          <span className="text-sm font-medium">Nexo · RH</span>
-        </div>
+        <MarcaPublicaRh className="mb-6" />
 
         {!dados ? (
           <Aviso

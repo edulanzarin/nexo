@@ -1,8 +1,8 @@
-import { SECOES_FISCAL, type SecaoFiscal } from "./fiscal-secoes";
+import { SECOES_CONFIG } from "./config-secoes";
 import { SECOES_CONTABIL } from "./contabil-secoes";
+import { SECOES_FISCAL, type SecaoFiscal } from "./fiscal-secoes";
 import { SECOES_FOLHA } from "./folha-secoes";
 import { SECOES_RH } from "./rh-secoes";
-import { SECOES_CONFIG } from "./config-secoes";
 
 export type ModuloId = "fiscal" | "contabil" | "folha" | "rh" | "config";
 
@@ -40,7 +40,8 @@ export const MODULOS: Modulo[] = [
   {
     id: "folha",
     titulo: "DP",
-    descricao: "Departamento Pessoal: rotatividade, custo, eSocial e post mortem",
+    descricao:
+      "Departamento Pessoal: rotatividade, custo, eSocial e post mortem",
     icone: "/images/folha.png",
     // Home = o índice do módulo, que redireciona pra 1ª seção que a pessoa vê.
     // Analista do DP (só Post Mortem) cai direto na dele; quem tem tudo, na 1ª.
@@ -57,7 +58,7 @@ export const MODULOS: Modulo[] = [
     id: "config",
     titulo: "Configurações",
     descricao: "Configs de domínio do sistema, como grupos de empresa",
-    icone: "/images/config.png",
+    icone: "/images/configuracoes.png",
     home: "/config",
   },
 ];

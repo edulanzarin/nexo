@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { redirect } from "next/navigation";
+import { LogoMarca } from "@/components/logo-marca";
 import { getSessaoOpcional } from "@/lib/sessao";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LoginForm } from "./login-form";
@@ -11,10 +11,7 @@ export default async function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="flex items-center justify-between px-6 py-5">
-        <div className="flex items-center gap-2.5">
-          <Image src="/images/logo.png" alt="Nexo" width={36} height={36} className="size-9" />
-          <p className="text-sm font-semibold tracking-tight">Nexo</p>
-        </div>
+        <LogoMarca />
         <ThemeToggle label={false} />
       </header>
 
