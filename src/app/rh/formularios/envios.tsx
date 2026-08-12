@@ -111,6 +111,22 @@ export function EnviarModal({
       return n;
     });
 
+  // "Selecionar todos" age sobre o resultado atual da busca (colabFiltrados),
+  // preservando os que já estavam marcados fora do filtro.
+  const chavesFiltradas = useMemo(
+    () => colabFiltrados.map((f) => colabKey(f.codigoempresa, f.contrato)),
+    [colabFiltrados]
+  );
+  const todosColabMarcados =
+    chavesFiltradas.length > 0 && chavesFiltradas.every((k) => selecColab.has(k));
+  const marcarTodosColab = () =>
+    setSelecColab((s) => {
+      const n = new Set(s);
+      if (todosColabMarcados) for (const k of chavesFiltradas) n.delete(k);
+      else for (const k of chavesFiltradas) n.add(k);
+      return n;
+    });
+
   const totalGestores = useMemo(() => {
     const emails = new Set<string>();
     for (const g of lista) if (selec.has(g.id)) emails.add(g.email.toLowerCase());
@@ -280,7 +296,17 @@ export function EnviarModal({
         ) : (
           /* Colaboradores */
           <div>
-            <span className="mb-1.5 block text-xs font-medium text-ink-2">Colaboradores</span>
+            <div className="mb-1.5 flex items-center justify-between">
+              <span className="text-xs font-medium text-ink-2">Colaboradores</span>
+              {chavesFiltradas.length > 0 && (
+                <button
+                  onClick={marcarTodosColab}
+                  className="text-xs font-medium text-ent hover:underline"
+                >
+                  {todosColabMarcados ? "Limpar" : "Selecionar todos"}
+                </button>
+              )}
+            </div>
             <div className="relative mb-2">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted" />
               <input
