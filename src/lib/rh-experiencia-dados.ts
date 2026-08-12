@@ -6,7 +6,7 @@ import { enviarEmail } from "./mailer";
 import { carregarFormulario } from "./formularios";
 import type { Formulario, RespostaValores } from "./formularios-tipos";
 import { appUrl } from "./app-url";
-import { EMPRESAS_RH, nomeEmpresaRh } from "./rh";
+import { EMPRESAS_RH, PJ_CONTRATO_OFFSET, ehContratoPj, nomeEmpresaRh, pjIdDoContrato } from "./rh";
 import { MARCOS, rotuloMarco, type Marco, type StatusExperiencia } from "./rh-experiencia";
 import type { ExperienciaItem } from "./rh-tipos";
 
@@ -42,24 +42,72 @@ export async function buscarContratosExperiencia(
   empresas: number[] = [...EMPRESAS_RH],
   janelaDias = 120
 ): Promise<ContratoExperiencia[]> {
-  return query<ContratoExperiencia>(
-    `select f.codigoempresa, f.codigofunccontr, f.nomefunc as nome,
-            to_char(f.dataadm, 'YYYY-MM-DD') as dataadm,
-            f.codigoestab, f.classiforgan,
-            nullif(btrim(o.descrorgan), '') as setor,
-            nullif(btrim(ca.descrcargo), '') as cargo
-       from funcionario f
-       left join organograma o
-         on o.codigoempresa = f.codigoempresa and o.codigoestab = f.codigoestab
-        and o.classiforgan = f.classiforgan
-       left join cargo ca on ca.codigocargo = f.codigocargo
-      where f.codigoempresa = any($1::int[])
-        and f.datadem is null
-        and f.categoria = '01'
-        and f.dataadm >= current_date - ($2::int)
-      order by f.dataadm desc, f.codigoempresa`,
+  const [clt, pj] = await Promise.all([
+    query<ContratoExperiencia>(
+      `select f.codigoempresa, f.codigofunccontr, f.nomefunc as nome,
+              to_char(f.dataadm, 'YYYY-MM-DD') as dataadm,
+              f.codigoestab, f.classiforgan,
+              nullif(btrim(o.descrorgan), '') as setor,
+              nullif(btrim(ca.descrcargo), '') as cargo
+         from funcionario f
+         left join organograma o
+           on o.codigoempresa = f.codigoempresa and o.codigoestab = f.codigoestab
+          and o.classiforgan = f.classiforgan
+         left join cargo ca on ca.codigocargo = f.codigocargo
+        where f.codigoempresa = any($1::int[])
+          and f.datadem is null
+          and f.categoria = '01'
+          and f.dataadm >= current_date - ($2::int)
+        order by f.dataadm desc, f.codigoempresa`,
+      [empresas, janelaDias]
+    ),
+    buscarContratosPjExperiencia(empresas, janelaDias),
+  ]);
+  return [...clt, ...pj];
+}
+
+/**
+ * Pessoas PJ marcadas com experiência (rh_pessoa_pj.tem_experiencia) ainda dentro
+ * da janela — data de início há no máximo `janelaDias`. Sobem no mesmo formato de
+ * ContratoExperiencia, com o contrato sintético (PJ_CONTRATO_OFFSET + id) e o nome
+ * vivo do setor. O setor do organograma não se aplica: o nome vem de rh_setor.
+ */
+async function buscarContratosPjExperiencia(
+  empresas: number[],
+  janelaDias: number
+): Promise<ContratoExperiencia[]> {
+  const rows = await appQuery<{
+    id: number;
+    codigoempresa: number;
+    nome: string;
+    dataadm: string;
+    classiforgan: string | null;
+    cargo: string | null;
+    setor: string | null;
+  }>(
+    `select p.id, p.codigoempresa, p.nome,
+            to_char(p.data_inicio, 'YYYY-MM-DD') as dataadm,
+            p.classiforgan, p.cargo,
+            coalesce(s.nome, p.classiforgan) as setor
+       from rh_pessoa_pj p
+       left join rh_setor s on s.classiforgan = p.classiforgan and s.ativo
+      where p.ativo and p.tem_experiencia
+        and p.codigoempresa = any($1::int[])
+        and p.data_inicio is not null
+        and p.data_inicio >= current_date - ($2::int)
+      order by p.data_inicio desc, p.codigoempresa`,
     [empresas, janelaDias]
   );
+  return rows.map((p) => ({
+    codigoempresa: p.codigoempresa,
+    codigofunccontr: PJ_CONTRATO_OFFSET + p.id,
+    nome: p.nome,
+    dataadm: p.dataadm,
+    codigoestab: 0, // PJ não tem estabelecimento do Questor
+    classiforgan: p.classiforgan,
+    setor: p.setor,
+    cargo: p.cargo,
+  }));
 }
 
 // ── Configuração da experiência (qual formulário e antecedência por marco) ────
@@ -150,11 +198,42 @@ export async function carregarRespostaExperiencia(
   };
 }
 
-/** Um contrato específico (para reenvio pontual do formulário). */
+/** Um contrato específico (para reenvio pontual do formulário). PJ (contrato
+ *  sintético) vem do app-db; CLT vem do Questor. */
 export async function buscarUmContrato(
   codigoempresa: number,
   contrato: number
 ): Promise<ContratoExperiencia | null> {
+  if (ehContratoPj(contrato)) {
+    const [pj] = await appQuery<{
+      codigoempresa: number;
+      nome: string;
+      dataadm: string;
+      classiforgan: string | null;
+      cargo: string | null;
+      setor: string | null;
+    }>(
+      `select p.codigoempresa, p.nome,
+              to_char(p.data_inicio, 'YYYY-MM-DD') as dataadm,
+              p.classiforgan, p.cargo,
+              coalesce(s.nome, p.classiforgan) as setor
+         from rh_pessoa_pj p
+         left join rh_setor s on s.classiforgan = p.classiforgan and s.ativo
+        where p.id = $1 and p.ativo`,
+      [pjIdDoContrato(contrato)]
+    );
+    if (!pj || !pj.dataadm) return null;
+    return {
+      codigoempresa: pj.codigoempresa,
+      codigofunccontr: contrato,
+      nome: pj.nome,
+      dataadm: pj.dataadm,
+      codigoestab: 0,
+      classiforgan: pj.classiforgan,
+      setor: pj.setor,
+      cargo: pj.cargo,
+    };
+  }
   const [row] = await query<ContratoExperiencia>(
     `select f.codigoempresa, f.codigofunccontr, f.nomefunc as nome,
             to_char(f.dataadm, 'YYYY-MM-DD') as dataadm,

@@ -212,10 +212,11 @@ async function fichaPj(contrato: number): Promise<FolhaFicha | null> {
     cargo: string | null;
     classiforgan: string | null;
     data_inicio: string | null;
+    tem_experiencia: boolean;
     extra: Record<string, unknown>;
   }>(
     `select nome, cpf_cnpj, cargo, classiforgan,
-            to_char(data_inicio, 'YYYY-MM-DD') as data_inicio, extra
+            to_char(data_inicio, 'YYYY-MM-DD') as data_inicio, tem_experiencia, extra
        from rh_pessoa_pj where id = $1 and ativo`,
     [id]
   );
@@ -254,5 +255,6 @@ async function fichaPj(contrato: number): Promise<FolhaFicha | null> {
     motivoDesligamento: null,
     cidade: str(e.cidade),
     uf: str(e.uf),
+    temExperiencia: p.tem_experiencia,
   };
 }

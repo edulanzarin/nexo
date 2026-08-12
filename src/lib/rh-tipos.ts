@@ -29,6 +29,7 @@ export interface PessoaPj {
   classiforgan: string | null;
   email: string | null;
   dataInicio: string | null; // YYYY-MM-DD
+  temExperiencia: boolean; // entra na trilha de experiência (marcos 45/90 pela data de início)
   ativo: boolean;
 }
 

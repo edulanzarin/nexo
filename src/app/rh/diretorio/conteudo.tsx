@@ -324,6 +324,7 @@ function ModalNovoPj({
   const [cpfCnpj, setCpfCnpj] = useState("");
   const [email, setEmail] = useState("");
   const [dataInicio, setDataInicio] = useState("");
+  const [temExperiencia, setTemExperiencia] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
   const criar = async () => {
@@ -341,6 +342,7 @@ function ModalNovoPj({
         cpfCnpj,
         email,
         dataInicio: dataInicio || null,
+        temExperiencia,
       });
       toast.success("Pessoa PJ adicionada");
       onCriado();
@@ -403,6 +405,20 @@ function ModalNovoPj({
           <label className="text-[11px] uppercase tracking-wide text-muted">Início</label>
           <input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} className={`${INPUT} mt-0.5`} />
         </div>
+        <label className="flex cursor-pointer items-start gap-2 sm:col-span-2">
+          <input
+            type="checkbox"
+            checked={temExperiencia}
+            onChange={(e) => setTemExperiencia(e.target.checked)}
+            className="mt-0.5 size-3.5 accent-ink"
+          />
+          <span className="text-xs text-ink-2">
+            Tem contrato de experiência
+            <span className="block text-[11px] text-muted">
+              Entra no painel de Experiência com os marcos de 45 e 90 dias a partir da data de início.
+            </span>
+          </span>
+        </label>
       </div>
       <footer className="flex items-center justify-end gap-2 border-t border-hairline px-6 py-3">
         <button

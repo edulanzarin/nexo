@@ -207,6 +207,8 @@ function FichaEdicao({
   const { data: setores } = useRhSetores();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<FormFicha>(() => daFicha(f));
+  // Flag de experiência: só PJ, fora do FormFicha (é booleano, não texto).
+  const [temExp, setTemExp] = useState<boolean>(!!f.temExperiencia);
   const [salvando, setSalvando] = useState(false);
 
   const set = (k: keyof FormFicha, v: string) => setForm((o) => ({ ...o, [k]: v }));
@@ -230,6 +232,8 @@ function FichaEdicao({
 
   const salvar = async () => {
     const campos = montarCampos();
+    // PJ: a caixinha de experiência é enviada junto quando mudou.
+    if (ehPj && temExp !== !!f.temExperiencia) campos.temExperiencia = temExp;
     if (!Object.keys(campos).length) {
       onPronto();
       return;
@@ -302,6 +306,22 @@ function FichaEdicao({
         <EntradaTexto rotulo="Escolaridade" valor={form.escolaridade} onMudar={(v) => set("escolaridade", v)} />
         <EntradaTexto rotulo="Cidade" valor={form.cidade} onMudar={(v) => set("cidade", v)} />
         <EntradaTexto rotulo="UF" valor={form.uf} onMudar={(v) => set("uf", v.toUpperCase().slice(0, 2))} />
+        {ehPj && (
+          <label className="flex cursor-pointer items-start gap-2 sm:col-span-2">
+            <input
+              type="checkbox"
+              checked={temExp}
+              onChange={(e) => setTemExp(e.target.checked)}
+              className="mt-0.5 size-3.5 accent-ink"
+            />
+            <span className="text-xs text-ink-2">
+              Tem contrato de experiência
+              <span className="block text-[11px] text-muted">
+                Marcos de 45 e 90 dias a partir da data de início.
+              </span>
+            </span>
+          </label>
+        )}
       </div>
 
       <footer className="flex items-center justify-between gap-2 border-t border-hairline px-6 py-3">

@@ -15,7 +15,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const SELECT = `select id, codigoempresa, nome, cpf_cnpj as "cpfCnpj", cargo,
         classiforgan, email::text as email,
-        to_char(data_inicio, 'YYYY-MM-DD') as "dataInicio", ativo
+        to_char(data_inicio, 'YYYY-MM-DD') as "dataInicio", tem_experiencia as "temExperiencia", ativo
    from rh_pessoa_pj`;
 
 export const GET = apiRoute(() =>
@@ -37,11 +37,13 @@ export const POST = apiRoute(async (req) => {
 
   const [row] = await appQuery<PessoaPj>(
     `insert into rh_pessoa_pj
-        (codigoempresa, nome, cpf_cnpj, cargo, classiforgan, email, data_inicio)
-     values ($1, $2, $3, $4, $5, $6, $7)
+        (codigoempresa, nome, cpf_cnpj, cargo, classiforgan, email, data_inicio, tem_experiencia)
+     values ($1, $2, $3, $4, $5, $6, $7, $8)
      returning id, codigoempresa, nome, cpf_cnpj as "cpfCnpj", cargo, classiforgan,
-               email::text as email, to_char(data_inicio, 'YYYY-MM-DD') as "dataInicio", ativo`,
-    [codigoempresa, nome, limpar(b.cpfCnpj), limpar(b.cargo), limpar(b.classiforgan), email, limpar(b.dataInicio)]
+               email::text as email, to_char(data_inicio, 'YYYY-MM-DD') as "dataInicio",
+               tem_experiencia as "temExperiencia", ativo`,
+    [codigoempresa, nome, limpar(b.cpfCnpj), limpar(b.cargo), limpar(b.classiforgan), email,
+     limpar(b.dataInicio), b.temExperiencia === true]
   );
   return row;
 });
@@ -71,7 +73,9 @@ export const PATCH = apiRoute(async (req) => {
   if ("cpf" in campos) push("cpf_cnpj", limpar(campos.cpf));
   if ("cargo" in campos) push("cargo", limpar(campos.cargo));
   if ("classiforgan" in campos) push("classiforgan", limpar(campos.classiforgan));
+  if ("email" in campos) push("email", limpar(campos.email)?.toLowerCase() ?? null);
   if ("dataadm" in campos) push("data_inicio", limpar(campos.dataadm));
+  if ("temExperiencia" in campos) push("tem_experiencia", campos.temExperiencia === true);
 
   // Campos sem coluna própria acumulam em `extra` (merge, preservando o resto).
   const extra: Record<string, unknown> = {};
@@ -86,7 +90,8 @@ export const PATCH = apiRoute(async (req) => {
   const [row] = await appQuery<PessoaPj>(
     `update rh_pessoa_pj set ${sets.join(", ")} where id = $1
      returning id, codigoempresa, nome, cpf_cnpj as "cpfCnpj", cargo, classiforgan,
-               email::text as email, to_char(data_inicio, 'YYYY-MM-DD') as "dataInicio", ativo`,
+               email::text as email, to_char(data_inicio, 'YYYY-MM-DD') as "dataInicio",
+               tem_experiencia as "temExperiencia", ativo`,
     params
   );
   if (!row) throw new FilterError("Pessoa não encontrada");

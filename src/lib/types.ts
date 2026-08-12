@@ -849,6 +849,8 @@ export interface FolhaFicha {
   motivoDesligamento: string | null;
   cidade: string | null;
   uf: string | null;
+  /** Só PJ (rh_pessoa_pj): entra na trilha de experiência (marcos 45/90). */
+  temExperiencia?: boolean;
 }
 
 // ── Análise de Balancete (motor determinístico + laudo opcional por IA) ──────
