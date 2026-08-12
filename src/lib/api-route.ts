@@ -5,7 +5,10 @@ import { getSessaoOpcional, podeSecao, podeAcessarModuloSync, podeVerEmpresa } f
 import { secoesDoEndpoint } from "./api-secoes";
 import type { ModuloId } from "./modulos";
 
-type Handler = (req: NextRequest) => Promise<unknown>;
+/** Contexto do route handler do Next (o 2º argumento). `params` é uma Promise
+ *  no App Router — rotas dinâmicas (`[id]`) leem o segmento por ele. */
+type RouteCtx = { params: Promise<Record<string, string>> };
+type Handler = (req: NextRequest, ctx: RouteCtx) => Promise<unknown>;
 
 /**
  * A rota declara o módulo pelo próprio caminho: /api/fiscal/..., /api/contabil/...
@@ -32,7 +35,7 @@ export async function assertEmpresaVisivel(codigo: number): Promise<void> {
 }
 
 export function apiRoute(handler: Handler) {
-  return async (req: NextRequest) => {
+  return async (req: NextRequest, ctx: RouteCtx) => {
     try {
       const { pathname } = req.nextUrl;
 
@@ -67,7 +70,7 @@ export function apiRoute(handler: Handler) {
         }
       }
 
-      const data = await handler(req);
+      const data = await handler(req, ctx);
       return NextResponse.json(data);
     } catch (err) {
       if (err instanceof FilterError) {
