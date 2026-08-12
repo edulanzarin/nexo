@@ -26,6 +26,21 @@ services:
       retries: 5
       start_period: 20s
 
+  # Agendador embutido: bate as rotas de cron do RH (experiência + campanhas/
+  # regras) sozinho, pela rede interna (app:3000). Substitui o crontab do host —
+  # o disparo automático passa a funcionar só com `docker compose up`. Reusa a
+  # imagem do app; o entrypoint próprio pula as migrations (quem migra é o app).
+  scheduler:
+    image: nexo-app
+    container_name: nexo-scheduler
+    restart: unless-stopped
+    entrypoint: ["node", "scripts/scheduler.mjs"]
+    env_file:
+      - .env
+    depends_on:
+      app:
+        condition: service_healthy
+
   app-db:
     image: postgres:17-alpine
     container_name: nexo-db
