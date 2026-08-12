@@ -198,6 +198,14 @@ export async function carregarRespostaExperiencia(
   };
 }
 
+/** Exclui uma avaliação de experiência e tudo que pende dela (resposta e
+ *  lembretes vão junto por on delete cascade). Usado para descartar envios de
+ *  teste: como o painel projeta do contrato do Questor/PJ, a linha some e a
+ *  pessoa volta a aparecer como pendente. */
+export async function excluirExperiencia(id: number): Promise<void> {
+  await appQuery(`delete from rh_experiencia where id = $1`, [id]);
+}
+
 /** Um contrato específico (para reenvio pontual do formulário). PJ (contrato
  *  sintético) vem do app-db; CLT vem do Questor. */
 export async function buscarUmContrato(

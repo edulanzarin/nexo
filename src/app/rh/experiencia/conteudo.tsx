@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlertTriangle, Eye, Send, CheckCircle2, Clock, Settings, UserRound } from "lucide-react";
+import { AlertTriangle, Eye, Send, CheckCircle2, Clock, Settings, Trash2, UserRound } from "lucide-react";
 import clsx from "clsx";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -163,6 +163,7 @@ export default function Conteudo() {
   const { data, isLoading } = useRhExperiencia(qsAplicado ?? "", qsAplicado != null);
   const queryClient = useQueryClient();
   const [enviando, setEnviando] = useState<string | null>(null);
+  const [excluindo, setExcluindo] = useState<number | null>(null);
   const [configAberta, setConfigAberta] = useState(false);
   const [verResp, setVerResp] = useState<number | null>(null);
 
@@ -208,6 +209,26 @@ export default function Conteudo() {
       toast.error(e instanceof Error ? e.message : "Falha ao enviar");
     } finally {
       setEnviando(null);
+    }
+  };
+
+  const excluir = async (i: ExperienciaItem) => {
+    if (i.id == null) return;
+    if (
+      !confirm(
+        `Excluir a avaliação de ${i.marco} dias de ${i.nome}? As respostas e o histórico de avisos vão junto. A pessoa volta a aparecer como pendente.`
+      )
+    )
+      return;
+    setExcluindo(i.id);
+    try {
+      await mutar(`/api/rh/experiencia?id=${i.id}`, "DELETE");
+      queryClient.invalidateQueries({ queryKey: ["rh-experiencia"] });
+      toast.success("Avaliação excluída");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao excluir");
+    } finally {
+      setExcluindo(null);
     }
   };
 
@@ -337,26 +358,39 @@ export default function Conteudo() {
                       <span className="text-ink-2 tabular-nums">{i.gestores}</span>
                     )}
                   </td>
-                  <td className="py-3 pl-3 pr-4 text-right">
-                    {i.status === "respondido" ? (
-                      <button
-                        onClick={() => setVerResp(i.id)}
-                        disabled={i.id == null}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-hairline px-2.5 py-1.5 text-xs font-medium text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-40"
-                      >
-                        <Eye className="size-3.5" /> Ver respostas
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => reenviar(i)}
-                        disabled={i.gestores === 0 || enviando === chave(i)}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-hairline px-2.5 py-1.5 text-xs font-medium text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-40"
-                        title={i.gestores === 0 ? "Cadastre um gestor no setor" : "Enviar formulário agora"}
-                      >
-                        <Send className="size-3.5" />
-                        {enviando === chave(i) ? "Enviando…" : i.ultimoLembrete ? "Reenviar" : "Enviar"}
-                      </button>
-                    )}
+                  <td className="py-3 pl-3 pr-4">
+                    <div className="flex items-center justify-end gap-1.5">
+                      {i.status === "respondido" ? (
+                        <button
+                          onClick={() => setVerResp(i.id)}
+                          disabled={i.id == null}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-hairline px-2.5 py-1.5 text-xs font-medium text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-40"
+                        >
+                          <Eye className="size-3.5" /> Ver respostas
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => reenviar(i)}
+                          disabled={i.gestores === 0 || enviando === chave(i)}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-hairline px-2.5 py-1.5 text-xs font-medium text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-40"
+                          title={i.gestores === 0 ? "Cadastre um gestor no setor" : "Enviar formulário agora"}
+                        >
+                          <Send className="size-3.5" />
+                          {enviando === chave(i) ? "Enviando…" : i.ultimoLembrete ? "Reenviar" : "Enviar"}
+                        </button>
+                      )}
+                      {i.id != null && (
+                        <button
+                          onClick={() => excluir(i)}
+                          disabled={excluindo === i.id}
+                          className="grid size-8 shrink-0 place-items-center rounded-lg border border-hairline text-muted transition-colors hover:bg-critical/12 hover:text-critical disabled:opacity-40"
+                          title="Excluir avaliação e respostas"
+                          aria-label="Excluir avaliação"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
