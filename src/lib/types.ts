@@ -836,6 +836,7 @@ export interface FolhaFicha {
   cargo: string | null;
   funcao: string | null;
   setor: string | null;
+  classiforgan: string | null;
   estabelecimento: string | null;
   categoria: string | null;
   tipoVinculo: string | null;

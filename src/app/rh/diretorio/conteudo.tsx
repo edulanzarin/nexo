@@ -1,24 +1,29 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, Search, UserRound } from "lucide-react";
+import { Check, Pencil, Plus, Search, UserRound } from "lucide-react";
 import clsx from "clsx";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Dropdown, ItemLista } from "@/components/ui/dropdown";
+import { Modal } from "@/components/ui/modal";
 import { FichaModal, tempoCasa } from "@/components/folha-ficha-modal";
 import { SeloEmpresa } from "@/components/rh-selo-empresa";
 import { BotaoExecutar } from "@/components/filters/botao-executar";
 import { FiltroPendente } from "@/components/filtro-pendente";
+import { mutar } from "@/hooks/mutar";
 import { useRhFuncionarios, useRhSetores } from "@/hooks/use-api";
 import { useEstadoModulo } from "@/hooks/use-estado-modulo";
 import { EMPRESAS_RH, nomeEmpresaRh } from "@/lib/rh";
 import { dataBR } from "@/lib/format";
-import type { FuncionarioDiretorio } from "@/lib/rh-tipos";
+import type { FuncionarioDiretorio, SetorRh } from "@/lib/rh-tipos";
 
-type FiltroEmpresa = "todas" | number;
+type FiltroEmpresa = "todas" | "pj" | number;
 
 function diasDeCasa(dataadm: string): number {
-  return Math.max(0, Math.floor((Date.now() - Date.parse(dataadm)) / 86_400_000));
+  const t = Date.parse(dataadm);
+  if (Number.isNaN(t)) return 0;
+  return Math.max(0, Math.floor((Date.now() - t) / 86_400_000));
 }
 
 function normalizar(s: string): string {
@@ -41,6 +46,7 @@ export default function Conteudo() {
   const [empresa, setEmpresa] = useEstadoModulo<FiltroEmpresa>("rh/diretorio:empresa", "todas");
   const [classif, setClassif] = useEstadoModulo<string | null>("rh/diretorio:classif", null);
   const [busca, setBusca] = useEstadoModulo("rh/diretorio:busca", "");
+  const [novoPj, setNovoPj] = useState(false);
 
   const executar = () => {
     setAplicado(true);
@@ -49,11 +55,11 @@ export default function Conteudo() {
 
   const todos = useMemo(() => data ?? [], [data]);
 
-  const porEmpresa = useMemo(
-    () =>
-      empresa === "todas" ? todos : todos.filter((f) => f.codigoempresa === empresa),
-    [todos, empresa]
-  );
+  const porEmpresa = useMemo(() => {
+    if (empresa === "pj") return todos.filter((f) => f.origem === "pj");
+    if (empresa === "todas") return todos;
+    return todos.filter((f) => f.codigoempresa === empresa);
+  }, [todos, empresa]);
 
   // Contagem por setor na empresa atual — só faz sentido com os dados carregados.
   const contagemSetor = useMemo(() => {
@@ -81,6 +87,8 @@ export default function Conteudo() {
     return c;
   }, [todos]);
 
+  const qtdPj = useMemo(() => todos.filter((f) => f.origem === "pj").length, [todos]);
+
   const [aberto, setAberto] = useState<FuncionarioDiretorio | null>(null);
 
   const segmentos: { valor: FiltroEmpresa; rotulo: string; qtd: number }[] = [
@@ -90,6 +98,7 @@ export default function Conteudo() {
       rotulo: nomeEmpresaRh(cod),
       qtd: contagem[cod] ?? 0,
     })),
+    { valor: "pj", rotulo: "PJ", qtd: qtdPj },
   ];
 
   return (
@@ -177,6 +186,12 @@ export default function Conteudo() {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setNovoPj(true)}
+            className="flex h-9 items-center gap-1.5 rounded-lg border border-hairline px-3 text-sm font-medium text-ink-2 transition-colors hover:bg-surface-2"
+          >
+            <Plus className="size-4" /> Adicionar PJ
+          </button>
           <div className="relative">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted" />
             <input
@@ -198,7 +213,7 @@ export default function Conteudo() {
       <div className="card overflow-hidden">
         <div className="flex items-center justify-between border-b border-hairline px-4 py-2.5">
           <p className="text-sm text-muted">
-            {isLoading ? "Carregando…" : `${filtrados.length} funcionário${filtrados.length === 1 ? "" : "s"}`}
+            {isLoading ? "Carregando…" : `${filtrados.length} colaborador${filtrados.length === 1 ? "" : "es"}`}
           </p>
         </div>
         <div className={clsx("max-h-[38rem] overflow-y-auto overflow-x-auto", isFetching && "refetching")}>
@@ -225,6 +240,16 @@ export default function Conteudo() {
                         <UserRound className="size-3.5" />
                       </span>
                       <span className="font-medium text-ink">{f.nome}</span>
+                      {f.origem === "pj" && (
+                        <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted">
+                          PJ
+                        </span>
+                      )}
+                      {f.editado && (
+                        <span title="Corrigido no RH">
+                          <Pencil className="size-3 text-muted" />
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td className="py-2.5 px-3">
@@ -234,16 +259,18 @@ export default function Conteudo() {
                     <p className="text-ink-2">{f.cargo ?? "—"}</p>
                     <p className="text-[11px] text-muted">{f.setor ?? "—"}</p>
                   </td>
-                  <td className="py-2.5 px-3 text-right tabular-nums text-ink-2">{dataBR(f.dataadm)}</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums text-ink-2">
+                    {f.dataadm ? dataBR(f.dataadm) : "—"}
+                  </td>
                   <td className="py-2.5 pl-3 pr-4 text-right tabular-nums text-ink-2">
-                    {tempoCasa(diasDeCasa(f.dataadm))}
+                    {f.dataadm ? tempoCasa(diasDeCasa(f.dataadm)) : "—"}
                   </td>
                 </tr>
               ))}
               {!isLoading && filtrados.length === 0 && (
                 <tr>
                   <td colSpan={5} className="py-10 text-center text-sm text-muted">
-                    Nenhum funcionário no filtro.
+                    Nenhum colaborador no filtro.
                   </td>
                 </tr>
               )}
@@ -260,6 +287,138 @@ export default function Conteudo() {
         contrato={aberto?.contrato ?? null}
         onFechar={() => setAberto(null)}
       />
+
+      {novoPj && (
+        <ModalNovoPj
+          setores={setoresLookup ?? []}
+          onFechar={() => setNovoPj(false)}
+          onCriado={() => {
+            queryClient.invalidateQueries({ queryKey: ["rh-funcionarios"] });
+            queryClient.invalidateQueries({ queryKey: ["rh-setores"] });
+            setNovoPj(false);
+          }}
+        />
+      )}
     </>
+  );
+}
+
+// ── Cadastro de pessoa PJ ─────────────────────────────────────────────────────
+
+const INPUT =
+  "h-9 w-full rounded-lg border border-hairline bg-surface px-2.5 text-sm outline-none focus:border-ink/30";
+
+function ModalNovoPj({
+  setores,
+  onFechar,
+  onCriado,
+}: {
+  setores: SetorRh[];
+  onFechar: () => void;
+  onCriado: () => void;
+}) {
+  const [codigoempresa, setCodigoempresa] = useState<number>(EMPRESAS_RH[0]);
+  const [nome, setNome] = useState("");
+  const [cargo, setCargo] = useState("");
+  const [classiforgan, setClassiforgan] = useState("");
+  const [cpfCnpj, setCpfCnpj] = useState("");
+  const [email, setEmail] = useState("");
+  const [dataInicio, setDataInicio] = useState("");
+  const [salvando, setSalvando] = useState(false);
+
+  const criar = async () => {
+    if (!nome.trim()) {
+      toast.error("Informe o nome");
+      return;
+    }
+    setSalvando(true);
+    try {
+      await mutar("/api/rh/pessoa-pj", "POST", {
+        codigoempresa,
+        nome,
+        cargo,
+        classiforgan: classiforgan || null,
+        cpfCnpj,
+        email,
+        dataInicio: dataInicio || null,
+      });
+      toast.success("Pessoa PJ adicionada");
+      onCriado();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao adicionar");
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  return (
+    <Modal aberto onFechar={onFechar} largura="max-w-lg" titulo="Adicionar pessoa PJ">
+      <div className="grid grid-cols-1 gap-x-4 gap-y-3 overflow-y-auto px-6 py-5 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <label className="text-[11px] uppercase tracking-wide text-muted">Nome</label>
+          <input value={nome} onChange={(e) => setNome(e.target.value)} className={`${INPUT} mt-0.5`} autoFocus />
+        </div>
+        <div>
+          <label className="text-[11px] uppercase tracking-wide text-muted">Empresa</label>
+          <select
+            value={codigoempresa}
+            onChange={(e) => setCodigoempresa(Number(e.target.value))}
+            className={`${INPUT} mt-0.5`}
+          >
+            {EMPRESAS_RH.map((cod) => (
+              <option key={cod} value={cod}>
+                {nomeEmpresaRh(cod)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="text-[11px] uppercase tracking-wide text-muted">Setor</label>
+          <select
+            value={classiforgan}
+            onChange={(e) => setClassiforgan(e.target.value)}
+            className={`${INPUT} mt-0.5`}
+          >
+            <option value="">— sem setor —</option>
+            {setores.map((s) => (
+              <option key={s.classiforgan} value={s.classiforgan}>
+                {s.nome}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="text-[11px] uppercase tracking-wide text-muted">Cargo</label>
+          <input value={cargo} onChange={(e) => setCargo(e.target.value)} className={`${INPUT} mt-0.5`} />
+        </div>
+        <div>
+          <label className="text-[11px] uppercase tracking-wide text-muted">CPF/CNPJ</label>
+          <input value={cpfCnpj} onChange={(e) => setCpfCnpj(e.target.value)} className={`${INPUT} mt-0.5`} />
+        </div>
+        <div>
+          <label className="text-[11px] uppercase tracking-wide text-muted">E-mail</label>
+          <input value={email} onChange={(e) => setEmail(e.target.value)} className={`${INPUT} mt-0.5`} />
+        </div>
+        <div>
+          <label className="text-[11px] uppercase tracking-wide text-muted">Início</label>
+          <input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} className={`${INPUT} mt-0.5`} />
+        </div>
+      </div>
+      <footer className="flex items-center justify-end gap-2 border-t border-hairline px-6 py-3">
+        <button
+          onClick={onFechar}
+          className="flex h-8 items-center rounded-lg px-3 text-xs font-medium text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={criar}
+          disabled={salvando}
+          className="flex h-8 items-center gap-1.5 rounded-lg bg-ink px-3 text-xs font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
+        >
+          <Plus className="size-3.5" /> Adicionar
+        </button>
+      </footer>
+    </Modal>
   );
 }

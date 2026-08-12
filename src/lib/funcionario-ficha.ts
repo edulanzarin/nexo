@@ -20,6 +20,7 @@ interface Row {
   cargo: string | null;
   funcao: string | null;
   setor: string | null;
+  classiforgan: string | null;
   estabelecimento: string | null;
   categoria: string | null;
   tipovinculo: string | null;
@@ -47,6 +48,7 @@ export async function fichaFuncionario(
             nullif(btrim(ca.descrcargo), '') as cargo,
             nullif(btrim(fu.descrfuncao), '') as funcao,
             nullif(btrim(o.descrorgan), '') as setor,
+            f.classiforgan,
             coalesce(nullif(btrim(es.apelidoestab), ''), nullif(btrim(es.nomeestab), '')) as estabelecimento,
             f.categoria, f.tipovinculo,
             f.sexo, to_char(f.datanasc, 'YYYY-MM-DD') as nascimento,
@@ -86,6 +88,7 @@ export async function fichaFuncionario(
     cargo: r.cargo,
     funcao: r.funcao,
     setor: r.setor,
+    classiforgan: r.classiforgan,
     estabelecimento: r.estabelecimento,
     categoria: r.categoria,
     tipoVinculo: r.tipovinculo,

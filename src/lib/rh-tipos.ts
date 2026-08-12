@@ -7,12 +7,29 @@ import type { Marco, StatusExperiencia } from "./rh-experiencia";
 /** Linha do Diretório: funcionário ativo de uma das empresas do RH. */
 export interface FuncionarioDiretorio {
   codigoempresa: number;
-  contrato: number;
+  contrato: number; // PJ usa o contrato sintético (PJ_CONTRATO_OFFSET + id)
   nome: string;
   cargo: string | null;
   setor: string | null;
   classiforgan: string | null;
-  dataadm: string; // YYYY-MM-DD
+  dataadm: string; // YYYY-MM-DD (PJ: data_inicio)
+  /** "questor" = base do Questor (com eventual overlay); "pj" = pessoa local. */
+  origem: "questor" | "pj";
+  /** Tem correções (overlay) por cima do Questor. Sempre false para PJ. */
+  editado: boolean;
+}
+
+/** Pessoa PJ (rh_pessoa_pj): prestador local, fora do Questor. DTO do CRUD. */
+export interface PessoaPj {
+  id: number;
+  codigoempresa: number;
+  nome: string;
+  cpfCnpj: string | null;
+  cargo: string | null;
+  classiforgan: string | null;
+  email: string | null;
+  dataInicio: string | null; // YYYY-MM-DD
+  ativo: boolean;
 }
 
 /**
@@ -23,8 +40,10 @@ export interface FuncionarioDiretorio {
  */
 export interface SetorRh {
   classiforgan: string;
-  nome: string; // descrorgan (representativo)
+  nome: string; // descrorgan (ou nome limpo de rh_setor, se renomeado)
   ativos: number;
+  /** "questor" = derivado do organograma; "app" = setor próprio criado no RH. */
+  origem: "questor" | "app";
 }
 
 /** Gestor cadastrado num departamento (recebe o formulário de experiência). */

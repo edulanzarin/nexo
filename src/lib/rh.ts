@@ -8,6 +8,24 @@
 export const EMPRESAS_RH = [1, 888, 746] as const;
 export type EmpresaRh = (typeof EMPRESAS_RH)[number];
 
+/**
+ * "Contrato" sintético de uma pessoa PJ = OFFSET + id local. O Questor não tem
+ * contrato para PJ, mas o Diretório e os envios ("sobre um colaborador") chaveiam
+ * por `codigofunccontr`; este offset alto isola o PJ do espaço de contratos reais
+ * do Questor sem chance de colisão. Ver rh_pessoa_pj (migration 021).
+ */
+export const PJ_CONTRATO_OFFSET = 900_000_000;
+
+/** Verdadeiro se o "contrato" é de uma pessoa PJ (id sintético, não do Questor). */
+export function ehContratoPj(contrato: number): boolean {
+  return contrato >= PJ_CONTRATO_OFFSET;
+}
+
+/** id local do PJ a partir do contrato sintético (inverso de PJ_CONTRATO_OFFSET). */
+export function pjIdDoContrato(contrato: number): number {
+  return contrato - PJ_CONTRATO_OFFSET;
+}
+
 const NOME_EMPRESA: Record<number, string> = {
   1: "NAVECON",
   888: "FOUR",

@@ -116,6 +116,9 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     // Diretório
     funcionarios: ["diretorio"],
     funcionario: ["diretorio", "rotatividade"], // ficha reusada no drill da rotatividade
+    "pessoa-pj": ["diretorio"], // CRUD das pessoas PJ (não existem no Questor)
+    "funcionario-override": ["diretorio"], // correções sobre um funcionário do Questor
+    setor: ["diretorio", "gestores"], // CRUD de setor próprio / renomear (singular)
     setores: ["diretorio", "gestores"], // lista de setores serve filtro e cadastro
     // Experiência
     experiencia: ["experiencia"],
