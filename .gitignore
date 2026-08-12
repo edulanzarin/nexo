@@ -45,3 +45,4 @@ next-env.d.ts
 # Material de referência local: extratos reais (com CPF, conta e nomes de
 # terceiros) e dumps de schema do Questor. Nada daqui vai para o repositório.
 knowledge/
+docs/
