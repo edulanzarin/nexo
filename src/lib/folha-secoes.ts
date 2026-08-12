@@ -1,4 +1,12 @@
-import { Gauge, Plane, Repeat, ShieldCheck, Wallet } from "lucide-react";
+import {
+  ClipboardList,
+  Gauge,
+  LayoutDashboard,
+  Plane,
+  Repeat,
+  ShieldCheck,
+  Wallet,
+} from "lucide-react";
 import type { SecaoFiscal } from "./fiscal-secoes";
 
 /**
@@ -49,6 +57,25 @@ export const SECOES_FOLHA: SecaoFiscal[] = [
     path: "/folha/ferias",
     metrica: false,
     descricao: "Férias vencidas e a vencer — risco de dobro",
+  },
+  // Relatório Post Mortem do DP. Duas seções pela doutrina de permissão binária
+  // (restringir o que se faz = separar em outra seção): o analista preenche e vê
+  // os SEUS; o gestor tem também a de Gestão, que vê TODOS.
+  {
+    id: "post-mortem",
+    icone: ClipboardList,
+    rotulo: "Relatório Post Mortem",
+    path: "/folha/post-mortem",
+    metrica: false,
+    descricao: "Análise de incidente do DP: preencha e acompanhe os seus",
+  },
+  {
+    id: "post-mortem-gestao",
+    icone: LayoutDashboard,
+    rotulo: "Post Mortem · Gestão",
+    path: "/folha/post-mortem-gestao",
+    metrica: false,
+    descricao: "Todos os relatórios do DP: consulta, extração e indicadores",
   },
 ];
 

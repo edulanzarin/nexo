@@ -108,6 +108,9 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     esocial: ["esocial"],
     // Controle de férias (vencidas / a vencer)
     ferias: ["ferias"],
+    // Relatório Post Mortem: analista (post-mortem) e gestor (post-mortem-gestao)
+    // batem no mesmo endpoint; o handler recorta por dono (meus x todos).
+    "post-mortem": ["post-mortem", "post-mortem-gestao"],
   },
   rh: {
     // Diretório

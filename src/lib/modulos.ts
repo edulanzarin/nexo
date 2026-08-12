@@ -38,10 +38,12 @@ export const MODULOS: Modulo[] = [
   },
   {
     id: "folha",
-    titulo: "Folha",
-    descricao: "Rotatividade de pessoal (turnover)",
+    titulo: "DP",
+    descricao: "Departamento Pessoal: rotatividade, custo, eSocial e post mortem",
     icone: "/images/folha.png",
-    home: "/folha/rotatividade",
+    // Home = o índice do módulo, que redireciona pra 1ª seção que a pessoa vê.
+    // Analista do DP (só Post Mortem) cai direto na dele; quem tem tudo, na 1ª.
+    home: "/folha",
   },
   {
     id: "rh",

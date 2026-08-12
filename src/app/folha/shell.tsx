@@ -30,28 +30,39 @@ export function FolhaShell({ children }: { children: React.ReactNode }) {
   );
 
   const ehProdutividade = secao?.id === "produtividade";
+  // O Post Mortem é self-contained (não lê o Questor por empresa/período): não
+  // mostra a barra de filtro nem espera "aplicar" — como as telas internas do RH.
+  const semFiltro = secao?.id?.startsWith("post-mortem") ?? false;
 
   return (
     <ProdutividadeTabsProvider>
       <div className="mx-auto max-w-7xl px-6 py-6">
         <ModuloHeader
-          titulo={secao?.rotulo ?? "Folha"}
+          titulo={secao?.rotulo ?? "DP"}
           carregando={carregando}
           direita={
-            <p className="hidden text-xs text-muted sm:block">
-              {dataBR(filtros.inicio)} – {dataBR(filtros.fim)}
-            </p>
+            semFiltro ? undefined : (
+              <p className="hidden text-xs text-muted sm:block">
+                {dataBR(filtros.inicio)} – {dataBR(filtros.fim)}
+              </p>
+            )
           }
         />
 
-        {/* Abas da Produtividade acima da barra de filtros, como na Conciliação. */}
-        {ehProdutividade && <ProdutividadeMenus />}
+        {semFiltro ? (
+          <div className="mt-5 space-y-4">{children}</div>
+        ) : (
+          <>
+            {/* Abas da Produtividade acima da barra de filtros, como na Conciliação. */}
+            {ehProdutividade && <ProdutividadeMenus />}
 
-        {/* Rotatividade se lê por empresa (uma por vez); Produtividade é o retrato
-            do escritório, então empresa vira filtro opcional (todas por padrão). */}
-        <ConfFilterBar mostrarFilial={false} empresaOpcional={ehProdutividade} />
+            {/* Rotatividade se lê por empresa (uma por vez); Produtividade é o retrato
+                do escritório, então empresa vira filtro opcional (todas por padrão). */}
+            <ConfFilterBar mostrarFilial={false} empresaOpcional={ehProdutividade} />
 
-        <div className="mt-5 space-y-4">{aplicado ? children : <FiltroPendente />}</div>
+            <div className="mt-5 space-y-4">{aplicado ? children : <FiltroPendente />}</div>
+          </>
+        )}
       </div>
     </ProdutividadeTabsProvider>
   );
