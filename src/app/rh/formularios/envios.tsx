@@ -313,6 +313,11 @@ export function EnviarModal({
                         className="size-3.5 accent-ink"
                       />
                       <span className="min-w-0 flex-1 truncate text-sm text-ink">{f.nome}</span>
+                      {f.origem === "pj" && (
+                        <span className="shrink-0 rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted">
+                          PJ
+                        </span>
+                      )}
                       {semGestor ? (
                         <span className="inline-flex shrink-0 items-center gap-1 text-[11px] text-warning">
                           <AlertTriangle className="size-3" /> sem gestor

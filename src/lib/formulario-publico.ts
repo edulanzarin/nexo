@@ -3,7 +3,8 @@ import { appQuery } from "./app-db";
 import { carregarFormulario } from "./formularios";
 import { validarRespostas, type Formulario, type RespostaValores } from "./formularios-tipos";
 import { buscarUmContrato } from "./rh-experiencia-dados";
-import { nomeEmpresaRh } from "./rh";
+import { nomeEmpresaRh, ehContratoPj, pjIdDoContrato } from "./rh";
+import { nomesDeSetor } from "./rh-diretorio";
 import { rotuloMarco, type Marco, type StatusExperiencia } from "./rh-experiencia";
 
 /**
@@ -103,7 +104,10 @@ async function resolverEnvio(token: string): Promise<FormularioPublico | null> {
   let subtitulo: string | null = null;
   const contexto: { rotulo: string; valor: string }[] = [];
   if (d.codigoempresa != null && d.codigofunccontr != null) {
-    const c = await buscarUmContrato(d.codigoempresa, d.codigofunccontr);
+    // PJ tem "contrato" sintético e não existe no Questor — resolve no app-db.
+    const c = ehContratoPj(d.codigofunccontr)
+      ? await contextoPj(d.codigofunccontr)
+      : await buscarUmContrato(d.codigoempresa, d.codigofunccontr);
     subtitulo = "Sobre um colaborador";
     contexto.push(
       { rotulo: "Colaborador", valor: c?.nome ?? d.funcionario_nome ?? "Colaborador" },
@@ -122,6 +126,19 @@ async function resolverEnvio(token: string): Promise<FormularioPublico | null> {
     mensagem: d.mensagem,
     jaRespondido: d.status === "respondido",
   };
+}
+
+/** Contexto (nome/cargo/setor) de uma pessoa PJ, para o cabeçalho do formulário. */
+async function contextoPj(
+  contrato: number
+): Promise<{ nome: string; cargo: string | null; setor: string | null } | null> {
+  const [p] = await appQuery<{ nome: string; cargo: string | null; classiforgan: string | null }>(
+    `select nome, cargo, classiforgan from rh_pessoa_pj where id = $1`,
+    [pjIdDoContrato(contrato)]
+  );
+  if (!p) return null;
+  const setor = p.classiforgan ? (await nomesDeSetor()).get(p.classiforgan) ?? null : null;
+  return { nome: p.nome, cargo: p.cargo, setor };
 }
 
 let _envioExiste: boolean | undefined;
