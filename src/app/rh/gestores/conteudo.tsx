@@ -5,7 +5,7 @@ import { useRhGestores, useRhSetores } from "@/hooks/use-api";
 import type { GestorRh, SetorRh } from "@/lib/rh-tipos";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
-import { Check, Pencil, Plus, Trash2, Users, X } from "lucide-react";
+import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -52,7 +52,11 @@ function SetorCard({
   const queryClient = useQueryClient();
   const invalidar = () =>
     queryClient.invalidateQueries({ queryKey: ["rh-gestores"] });
+  const invalidarSetores = () =>
+    queryClient.invalidateQueries({ queryKey: ["rh-setores"] });
 
+  const [renomeando, setRenomeando] = useState(false);
+  const [nomeSetor, setNomeSetor] = useState(setor.nome);
   const [addNome, setAddNome] = useState("");
   const [addEmail, setAddEmail] = useState("");
   const [addPapel, setAddPapel] = useState<GestorRh["papel"]>("supervisor");
@@ -120,11 +124,101 @@ function SetorCard({
     }
   };
 
+  const salvarNome = async () => {
+    const nome = nomeSetor.trim();
+    if (!nome) {
+      toast.error("Informe o nome do setor");
+      return;
+    }
+    try {
+      await mutar("/api/rh/setor", "PATCH", { classiforgan: setor.classiforgan, nome });
+      setRenomeando(false);
+      invalidarSetores();
+      toast.success("Setor renomeado");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao renomear");
+    }
+  };
+
+  const removerSetor = async () => {
+    if (!confirm(`Remover o setor próprio "${setor.nome}"?`)) return;
+    try {
+      await mutar(`/api/rh/setor?classiforgan=${encodeURIComponent(setor.classiforgan)}`, "DELETE");
+      invalidarSetores();
+      toast.success("Setor removido");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao remover");
+    }
+  };
+
   return (
     <div className="card break-inside-avoid overflow-hidden">
       <header className="flex items-center justify-between gap-3 border-b border-hairline px-4 py-3">
-        <h3 className="font-semibold text-ink">{setor.nome}</h3>
-        <span className="text-xs text-muted">{setor.ativos} ativos</span>
+        {renomeando ? (
+          <div className="flex flex-1 items-center gap-1.5">
+            <input
+              value={nomeSetor}
+              onChange={(e) => setNomeSetor(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") salvarNome();
+                if (e.key === "Escape") {
+                  setRenomeando(false);
+                  setNomeSetor(setor.nome);
+                }
+              }}
+              className="h-8 flex-1 rounded-lg border border-hairline bg-surface px-2.5 text-sm font-semibold outline-none focus:border-ink/30"
+              autoFocus
+            />
+            <button
+              onClick={salvarNome}
+              className="grid size-8 place-items-center rounded-lg text-good transition-colors hover:bg-good/12"
+              aria-label="Salvar nome"
+            >
+              <Check className="size-4" />
+            </button>
+            <button
+              onClick={() => {
+                setRenomeando(false);
+                setNomeSetor(setor.nome);
+              }}
+              className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+              aria-label="Cancelar"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex min-w-0 items-center gap-1.5">
+              <h3 className="truncate font-semibold text-ink">{setor.nome}</h3>
+              {setor.origem === "app" && (
+                <span className="shrink-0 rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted">
+                  próprio
+                </span>
+              )}
+              <button
+                onClick={() => {
+                  setNomeSetor(setor.nome);
+                  setRenomeando(true);
+                }}
+                className="grid size-6 shrink-0 place-items-center rounded text-muted transition-colors hover:text-ink"
+                aria-label="Renomear setor"
+              >
+                <Pencil className="size-3" />
+              </button>
+              {setor.origem === "app" && (
+                <button
+                  onClick={removerSetor}
+                  className="grid size-6 shrink-0 place-items-center rounded text-muted transition-colors hover:text-critical"
+                  aria-label="Remover setor"
+                >
+                  <Trash2 className="size-3" />
+                </button>
+              )}
+            </div>
+            <span className="shrink-0 text-xs text-muted">{setor.ativos} ativos</span>
+          </>
+        )}
       </header>
 
       <div className="divide-y divide-hairline/60">
@@ -239,6 +333,53 @@ function SetorCard({
   );
 }
 
+/** Card para criar um setor próprio (origem 'app'), fora do organograma do Questor. */
+function NovoSetorCard() {
+  const queryClient = useQueryClient();
+  const [nome, setNome] = useState("");
+  const [salvando, setSalvando] = useState(false);
+
+  const criar = async () => {
+    if (!nome.trim()) {
+      toast.error("Informe o nome do setor");
+      return;
+    }
+    setSalvando(true);
+    try {
+      await mutar("/api/rh/setor", "POST", { nome: nome.trim() });
+      setNome("");
+      queryClient.invalidateQueries({ queryKey: ["rh-setores"] });
+      toast.success("Setor criado");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao criar setor");
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  return (
+    <div className="card break-inside-avoid border-dashed p-4">
+      <h3 className="mb-2 text-sm font-medium text-ink-2">Novo setor próprio</h3>
+      <div className="flex gap-2">
+        <input
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && criar()}
+          placeholder="Nome do setor"
+          className="h-8 flex-1 rounded-lg border border-hairline bg-surface px-2.5 text-sm outline-none placeholder:text-muted focus:border-ink/30"
+        />
+        <button
+          onClick={criar}
+          disabled={salvando}
+          className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-ink px-3 text-xs font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
+        >
+          <Plus className="size-3.5" /> Criar
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Conteudo() {
   const { data: setores, isLoading } = useRhSetores();
   const { data: gestores } = useRhGestores();
@@ -258,7 +399,8 @@ export default function Conteudo() {
   return (
     <>
       <p className="max-w-3xl text-sm text-muted">
-        Cadastre os supervisores e coordenadores de cada departamento.
+        Cadastre os supervisores e coordenadores de cada departamento. Você pode
+        renomear os setores que vêm do Questor ou criar um setor próprio.
       </p>
 
       {isLoading ? (
@@ -266,11 +408,6 @@ export default function Conteudo() {
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="skeleton h-40" />
           ))}
-        </div>
-      ) : (setores ?? []).length === 0 ? (
-        <div className="card grid place-items-center gap-2 py-16 text-center text-muted">
-          <Users className="size-8 opacity-40" />
-          <p>Nenhum departamento com funcionários ativos.</p>
         </div>
       ) : (
         // Masonry (colunas): cada carta ocupa só a sua altura, sem esticar para
@@ -283,6 +420,7 @@ export default function Conteudo() {
               gestores={porSetor.get(s.classiforgan) ?? []}
             />
           ))}
+          <NovoSetorCard />
         </div>
       )}
     </>
