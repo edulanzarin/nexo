@@ -139,7 +139,7 @@ const SELECT_COMPLETO = `
   select pm.*, u.nome as autor_nome, g.nome as grupo_nome
     from folha_postmortem pm
     join usuario u on u.id = pm.autor_id
-    left join empresa_grupo g on g.id = pm.grupo_id`;
+    left join grupo_empresarial g on g.id = pm.grupo_id`;
 
 /** Um relatório completo, ou null. A checagem de posse é do handler. */
 export async function obterPostMortem(id: number): Promise<RelatorioPM | null> {
@@ -159,7 +159,7 @@ const SELECT_RESUMO = `
          u.nome as autor_nome, g.nome as grupo_nome
     from folha_postmortem pm
     join usuario u on u.id = pm.autor_id
-    left join empresa_grupo g on g.id = pm.grupo_id`;
+    left join grupo_empresarial g on g.id = pm.grupo_id`;
 
 function paraResumo(r: LinhaBanco): ResumoPM {
   return {
@@ -272,5 +272,5 @@ export async function excluirPostMortem(id: number, autorId: string): Promise<vo
 
 /** Grupos de empresa (admin) para o seletor do formulário. */
 export async function listarGruposPostMortem(): Promise<GrupoOpcao[]> {
-  return appQuery<GrupoOpcao>(`select id, nome from empresa_grupo order by nome`);
+  return appQuery<GrupoOpcao>(`select id, nome from grupo_empresarial order by nome`);
 }

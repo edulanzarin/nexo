@@ -2,8 +2,9 @@ import { SECOES_FISCAL, type SecaoFiscal } from "./fiscal-secoes";
 import { SECOES_CONTABIL } from "./contabil-secoes";
 import { SECOES_FOLHA } from "./folha-secoes";
 import { SECOES_RH } from "./rh-secoes";
+import { SECOES_CONFIG } from "./config-secoes";
 
-export type ModuloId = "fiscal" | "contabil" | "folha" | "rh";
+export type ModuloId = "fiscal" | "contabil" | "folha" | "rh" | "config";
 
 /**
  * Catálogo dos módulos do Nexo. É a fonte única: dirige o launcher, a
@@ -52,6 +53,13 @@ export const MODULOS: Modulo[] = [
     icone: "/images/rh.png",
     home: "/rh/diretorio",
   },
+  {
+    id: "config",
+    titulo: "Configurações",
+    descricao: "Configs de domínio do sistema, como grupos de empresa",
+    icone: "/images/config.png",
+    home: "/config",
+  },
 ];
 
 export function getModulo(id: string): Modulo | undefined {
@@ -63,6 +71,7 @@ const SECOES: Record<ModuloId, SecaoFiscal[]> = {
   contabil: SECOES_CONTABIL,
   folha: SECOES_FOLHA,
   rh: SECOES_RH,
+  config: SECOES_CONFIG,
 };
 
 /** Seções que a sidebar do módulo lista. A sidebar só usa o recorte SecaoFiscal. */

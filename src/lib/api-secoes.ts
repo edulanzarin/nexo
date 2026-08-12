@@ -138,6 +138,9 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     pessoas: ["rotatividade"],
     // /api/rh/cron/experiencia é público (segredo próprio) — NÃO passa por apiRoute.
   },
+  // Configurações não tem rotas de API: o CRUD roda por Server Action (gateada
+  // por assertSecao). Mapa vazio; nenhum endpoint /api/config existe.
+  config: {},
 };
 
 /**
