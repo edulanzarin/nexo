@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processarEnviosAgendados } from "@/lib/envios";
+import { processarRegrasRecorrentes } from "@/lib/envio-regras";
 
 /**
  * Job das campanhas AGENDADAS. Igual ao cron da experiência: fora do apiRoute
@@ -13,8 +14,12 @@ async function handler(req: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
   try {
-    const resumo = await processarEnviosAgendados();
-    return NextResponse.json({ ok: true, ...resumo });
+    // Campanhas agendadas (one-shot) + regras recorrentes materializam campanhas.
+    const [agendados, regras] = await Promise.all([
+      processarEnviosAgendados(),
+      processarRegrasRecorrentes(),
+    ]);
+    return NextResponse.json({ ok: true, agendados, regras });
   } catch (err) {
     console.error("[rh:cron:envios]", err);
     return NextResponse.json({ error: "Falha ao rodar o job" }, { status: 500 });

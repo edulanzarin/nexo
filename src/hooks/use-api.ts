@@ -60,6 +60,7 @@ import type {
 import type { Formulario, FormularioResumo } from "@/lib/formularios-tipos";
 import type { DpResumo, DpLinha, DpQuebra, DpTipo } from "@/lib/dp-tipos";
 import type { EnvioDetalhe, EnvioResumo } from "@/lib/envios";
+import type { EnvioRegra } from "@/lib/envio-regras";
 import type { RespostaExperienciaDetalhe } from "@/lib/rh-experiencia-dados";
 import type { DenunciaDashboard, DenunciaDetalhe, DenunciaResumo } from "@/lib/denuncia-tipos";
 import type { ClimaDashboard, RodadaResumo } from "@/lib/clima-tipos";
@@ -643,6 +644,10 @@ export const useExperienciaResposta = (id: number | null) =>
 export const useEnvios = () => useApiQuery<EnvioResumo[]>(["rh-envios"], `/api/rh/envios`);
 export const useEnvio = (id: number | null) =>
   useApiQuery<EnvioDetalhe>(["rh-envio", id], `/api/rh/envios?id=${id}`, id != null);
+
+/** Regras de envio automático recorrente. */
+export const useEnvioRegras = () =>
+  useApiQuery<EnvioRegra[]>(["rh-envio-regras"], `/api/rh/envio-regras`);
 
 // ── Canal de denúncia + Clima (avaliação anônima) ────────────────────────────
 

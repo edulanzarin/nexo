@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import { CamposFormulario } from "@/components/formulario-campos";
 import { EnviarModal, EnviosLista } from "./envios";
+import { RegrasLista } from "./regras";
 import { mutar } from "@/hooks/mutar";
 import { useFormulario, useFormularios } from "@/hooks/use-api";
 import { dataBR } from "@/lib/format";
@@ -152,7 +153,7 @@ export default function Conteudo() {
 function Lista({ onEditar }: { onEditar: (id: number) => void }) {
   const { data, isLoading } = useFormularios();
   const queryClient = useQueryClient();
-  const [aba, setAba] = useState<"formularios" | "envios">("formularios");
+  const [aba, setAba] = useState<"formularios" | "envios" | "automatico">("formularios");
   const [criando, setCriando] = useState(false);
   const [novoNome, setNovoNome] = useState("");
   const [enviarForm, setEnviarForm] = useState<{ id: number; nome: string } | null>(null);
@@ -199,7 +200,7 @@ function Lista({ onEditar }: { onEditar: (id: number) => void }) {
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="inline-flex rounded-lg border border-hairline bg-surface p-0.5">
-          {(["formularios", "envios"] as const).map((a) => (
+          {(["formularios", "envios", "automatico"] as const).map((a) => (
             <button
               key={a}
               onClick={() => setAba(a)}
@@ -208,7 +209,7 @@ function Lista({ onEditar }: { onEditar: (id: number) => void }) {
                 aba === a ? "bg-surface-2 text-ink" : "text-muted hover:text-ink"
               )}
             >
-              {a === "formularios" ? "Formulários" : "Envios"}
+              {a === "formularios" ? "Formulários" : a === "envios" ? "Envios" : "Automático"}
             </button>
           ))}
         </div>
@@ -234,6 +235,8 @@ function Lista({ onEditar }: { onEditar: (id: number) => void }) {
 
       {aba === "envios" ? (
         <EnviosLista />
+      ) : aba === "automatico" ? (
+        <RegrasLista />
       ) : isLoading ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
