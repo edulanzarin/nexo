@@ -72,6 +72,7 @@ interface PjRow {
   cargo: string | null;
   classiforgan: string | null;
   data_inicio: string | null;
+  email: string | null;
 }
 
 /** String não-vazia de um valor de overlay (jsonb), senão null. */
@@ -99,7 +100,7 @@ export async function listarDiretorio(): Promise<FuncionarioDiretorio[]> {
     ),
     appQuery<PjRow>(
       `select id, codigoempresa, nome, cargo, classiforgan,
-              to_char(data_inicio, 'YYYY-MM-DD') as data_inicio
+              to_char(data_inicio, 'YYYY-MM-DD') as data_inicio, email::text as email
          from rh_pessoa_pj where ativo`
     ),
     carregarOverrides(),
@@ -125,6 +126,7 @@ export async function listarDiretorio(): Promise<FuncionarioDiretorio[]> {
       setor,
       classiforgan,
       dataadm: texto(c.dataadm) ?? f.dataadm,
+      email: texto(c.email), // Questor não tem e-mail; só vem do overlay
       origem: "questor",
       editado: !!ov && Object.keys(c).length > 0,
     });
@@ -139,6 +141,7 @@ export async function listarDiretorio(): Promise<FuncionarioDiretorio[]> {
       setor: p.classiforgan ? setores.get(p.classiforgan) ?? null : null,
       classiforgan: p.classiforgan,
       dataadm: p.data_inicio ?? "",
+      email: p.email,
       origem: "pj",
       editado: false,
     });
@@ -154,7 +157,7 @@ export async function listarDiretorio(): Promise<FuncionarioDiretorio[]> {
 const CAMPOS_FICHA_TEXTO = [
   "nome", "cpf", "cargo", "funcao", "estabelecimento", "categoria", "tipoVinculo",
   "sexo", "nascimento", "escolaridade", "tipoSalario", "cidade", "uf",
-  "dataadm", "datadem", "motivoDesligamento", "setor",
+  "dataadm", "datadem", "motivoDesligamento", "setor", "email",
 ] as const;
 
 /** Idade em anos a partir de uma data 'YYYY-MM-DD', ou null. */
@@ -213,10 +216,12 @@ async function fichaPj(contrato: number): Promise<FolhaFicha | null> {
     classiforgan: string | null;
     data_inicio: string | null;
     tem_experiencia: boolean;
+    email: string | null;
     extra: Record<string, unknown>;
   }>(
     `select nome, cpf_cnpj, cargo, classiforgan,
-            to_char(data_inicio, 'YYYY-MM-DD') as data_inicio, tem_experiencia, extra
+            to_char(data_inicio, 'YYYY-MM-DD') as data_inicio, tem_experiencia,
+            email::text as email, extra
        from rh_pessoa_pj where id = $1 and ativo`,
     [id]
   );
@@ -255,6 +260,7 @@ async function fichaPj(contrato: number): Promise<FolhaFicha | null> {
     motivoDesligamento: null,
     cidade: str(e.cidade),
     uf: str(e.uf),
+    email: p.email,
     temExperiencia: p.tem_experiencia,
   };
 }

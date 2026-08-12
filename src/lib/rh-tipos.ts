@@ -13,6 +13,8 @@ export interface FuncionarioDiretorio {
   setor: string | null;
   classiforgan: string | null;
   dataadm: string; // YYYY-MM-DD (PJ: data_inicio)
+  /** E-mail do colaborador (PJ: coluna; Questor: só via overlay). null = sem e-mail. */
+  email: string | null;
   /** "questor" = base do Questor (com eventual overlay); "pj" = pessoa local. */
   origem: "questor" | "pj";
   /** Tem correções (overlay) por cima do Questor. Sempre false para PJ. */

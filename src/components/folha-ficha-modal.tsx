@@ -165,6 +165,7 @@ type FormFicha = {
   cargo: string;
   classiforgan: string;
   dataadm: string;
+  email: string;
   salario: string;
   nascimento: string;
   cidade: string;
@@ -179,6 +180,7 @@ function daFicha(f: FolhaFicha): FormFicha {
     cargo: f.cargo ?? "",
     classiforgan: f.classiforgan ?? "",
     dataadm: f.dataadm ?? "",
+    email: f.email ?? "",
     salario: f.salario != null ? String(f.salario) : "",
     nascimento: f.nascimento ?? "",
     cidade: f.cidade ?? "",
@@ -301,6 +303,7 @@ function FichaEdicao({
           </select>
         </div>
         <EntradaTexto rotulo={ehPj ? "Início" : "Admissão"} tipo="date" valor={form.dataadm} onMudar={(v) => set("dataadm", v)} />
+        <EntradaTexto rotulo="E-mail" valor={form.email} onMudar={(v) => set("email", v)} />
         <EntradaTexto rotulo="Salário" tipo="number" valor={form.salario} onMudar={(v) => set("salario", v)} />
         <EntradaTexto rotulo="Nascimento" tipo="date" valor={form.nascimento} onMudar={(v) => set("nascimento", v)} />
         <EntradaTexto rotulo="Escolaridade" valor={form.escolaridade} onMudar={(v) => set("escolaridade", v)} />

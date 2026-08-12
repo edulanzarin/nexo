@@ -11,8 +11,10 @@ import { ehEmpresaRh } from "@/lib/rh";
  */
 
 // Campos aceitos (subconjunto da FolhaFicha + classiforgan para reatribuir setor).
+// `email` mora aqui porque o Questor não guarda e-mail de ninguém — a RH cadastra
+// à mão para poder enviar formulário direto ao colaborador.
 const PERMITIDOS = new Set([
-  "nome", "cpf", "cargo", "classiforgan", "dataadm",
+  "nome", "cpf", "cargo", "classiforgan", "dataadm", "email",
   "salario", "nascimento", "cidade", "uf", "escolaridade",
 ]);
 
@@ -31,6 +33,7 @@ export const PUT = apiRoute(async (req) => {
   for (const [k, v] of Object.entries(b.campos ?? {})) {
     if (!PERMITIDOS.has(k)) continue;
     if (k === "salario") campos[k] = typeof v === "number" ? v : null;
+    else if (k === "email") campos[k] = typeof v === "string" && v.trim() ? v.trim().toLowerCase() : null;
     else campos[k] = typeof v === "string" ? v.trim() : null;
   }
   if (!Object.keys(campos).length) throw new FilterError("Nada para corrigir");
