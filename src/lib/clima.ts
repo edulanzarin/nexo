@@ -1,34 +1,28 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
 import { appQuery } from "./app-db";
-import {
-  MIN_RESPOSTAS_RECORTE,
-  NOTA_TEMA_MAX,
-  NOTA_TEMA_MIN,
-  validarRespostaClima,
-  type ClimaDashboard,
-  type EnpsBreakdown,
-  type RespostaClimaInput,
-  type RodadaPublica,
-  type RodadaResumo,
-  type StatusRodada,
-  type TemaClima,
+import type {
+  ClimaDashboard,
+  RespostaClimaInput,
+  RodadaPublica,
+  RodadaResumo,
+  StatusRodada,
 } from "./clima-tipos";
+import {
+  validarRespostas,
+  valorPreenchido,
+  type CampoConfig,
+  type FormularioCampo,
+  type RespostaValores,
+  type TipoCampo,
+} from "./formularios-tipos";
 
 /**
- * CLIMA (avaliação anônima da empresa) — lógica no servidor. Link público aberto
- * por rodada (slug); cada pessoa responde uma vez, anonimamente. Nenhuma coluna
- * de identidade: o que sai daqui não amarra resposta a pessoa.
+ * CLIMA (avaliação anônima da empresa) — lógica no servidor. A rodada aponta para
+ * um FORMULÁRIO do construtor; o link público (slug) renderiza os campos dele e
+ * cada pessoa responde uma vez, anonimamente. Nenhuma coluna de identidade: o que
+ * sai daqui não amarra resposta a pessoa.
  */
-
-const TEMAS_PADRAO: TemaClima[] = [
-  { id: "lideranca", rotulo: "Liderança" },
-  { id: "ambiente", rotulo: "Ambiente de trabalho" },
-  { id: "remuneracao", rotulo: "Remuneração e benefícios" },
-  { id: "carga", rotulo: "Carga de trabalho" },
-  { id: "reconhecimento", rotulo: "Reconhecimento" },
-  { id: "comunicacao", rotulo: "Comunicação" },
-];
 
 function slugify(texto: string): string {
   return texto
@@ -40,6 +34,44 @@ function slugify(texto: string): string {
     .slice(0, 40) || "rodada";
 }
 
+interface CampoRow {
+  id: number;
+  ordem: number;
+  tipo: TipoCampo;
+  rotulo: string;
+  ajuda: string | null;
+  obrigatorio: boolean;
+  config: CampoConfig;
+}
+
+async function camposDoFormulario(formularioId: number): Promise<FormularioCampo[]> {
+  const rows = await appQuery<CampoRow>(
+    `select id, ordem, tipo, rotulo, ajuda, obrigatorio, config
+       from formulario_campo where formulario_id = $1
+      order by ordem, id`,
+    [formularioId]
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    ordem: r.ordem,
+    tipo: r.tipo,
+    rotulo: r.rotulo,
+    ajuda: r.ajuda,
+    obrigatorio: r.obrigatorio,
+    config: r.config ?? {},
+  }));
+}
+
+/** Mantém só os valores de campos que existem no formulário (defesa contra lixo). */
+function sanitizarValores(campos: FormularioCampo[], valores: RespostaValores): RespostaValores {
+  const limpos: RespostaValores = {};
+  for (const c of campos) {
+    const v = valores[String(c.id)];
+    if (valorPreenchido(c.tipo, v)) limpos[String(c.id)] = v;
+  }
+  return limpos;
+}
+
 // ── Público ──────────────────────────────────────────────────────────────────
 
 interface LinhaRodada {
@@ -48,47 +80,40 @@ interface LinhaRodada {
   descricao: string | null;
   slug: string;
   status: StatusRodada;
-  temas: TemaClima[];
+  formulario_id: number | null;
 }
 
 export async function rodadaAbertaPorSlug(slug: string): Promise<RodadaPublica | null> {
   const [r] = await appQuery<LinhaRodada>(
-    `select id, titulo, descricao, slug, status, temas
+    `select id, titulo, descricao, slug, status, formulario_id
        from clima_rodada where slug = $1 and status = 'aberta'`,
     [slug]
   );
-  if (!r) return null;
-  return { slug: r.slug, titulo: r.titulo, descricao: r.descricao, temas: r.temas };
+  if (!r || r.formulario_id == null) return null;
+  const campos = await camposDoFormulario(r.formulario_id);
+  return { slug: r.slug, titulo: r.titulo, descricao: r.descricao, campos };
 }
 
 export async function salvarRespostaClima(
   slug: string,
   input: RespostaClimaInput
 ): Promise<{ ok: boolean; erro?: string }> {
-  const [r] = await appQuery<{ id: number; temas: TemaClima[] }>(
-    `select id, temas from clima_rodada where slug = $1 and status = 'aberta'`,
+  const [r] = await appQuery<LinhaRodada>(
+    `select id, titulo, descricao, slug, status, formulario_id
+       from clima_rodada where slug = $1 and status = 'aberta'`,
     [slug]
   );
-  if (!r) return { ok: false, erro: "Esta avaliação não está mais disponível" };
+  if (!r || r.formulario_id == null) return { ok: false, erro: "Esta avaliação não está mais disponível" };
 
-  const erros = validarRespostaClima(r.temas, input);
-  if (Object.keys(erros).length) return { ok: false, erro: "Revise as notas antes de enviar" };
+  const campos = await camposDoFormulario(r.formulario_id);
+  const erros = validarRespostas(campos, input.valores ?? {});
+  if (Object.keys(erros).length) return { ok: false, erro: "Revise as respostas antes de enviar" };
 
-  // Só guarda notas de temas que existem na rodada, dentro da faixa.
-  const idsValidos = new Set(r.temas.map((t) => t.id));
-  const notas: Record<string, number> = {};
-  for (const [id, n] of Object.entries(input.notas)) {
-    if (idsValidos.has(id) && Number.isInteger(n) && n >= NOTA_TEMA_MIN && n <= NOTA_TEMA_MAX) {
-      notas[id] = n;
-    }
-  }
-  const comentario = input.comentario?.trim() || null;
-  const setor = input.setor?.trim() || null;
+  const valores = sanitizarValores(campos, input.valores ?? {});
 
   await appQuery(
-    `insert into clima_resposta (rodada_id, nota_recomendacao, notas, comentario, setor)
-     values ($1, $2, $3, $4, $5)`,
-    [r.id, input.notaRecomendacao, JSON.stringify(notas), comentario, setor]
+    `insert into clima_resposta (rodada_id, valores) values ($1, $2)`,
+    [r.id, JSON.stringify(valores)]
   );
   return { ok: true };
 }
@@ -124,20 +149,34 @@ export async function listarRodadas(): Promise<RodadaResumo[]> {
 export async function criarRodada(dados: {
   titulo: string;
   descricao?: string | null;
-  temas?: TemaClima[];
+  formularioId: number;
 }): Promise<{ ok: boolean; erro?: string; id?: number; slug?: string }> {
   const titulo = String(dados.titulo || "").trim();
   if (!titulo) return { ok: false, erro: "Dê um título à rodada" };
-  const temas = dados.temas?.length ? dados.temas : TEMAS_PADRAO;
+
+  const formularioId = Number(dados.formularioId);
+  if (!Number.isInteger(formularioId) || formularioId <= 0) {
+    return { ok: false, erro: "Escolha um formulário para a rodada" };
+  }
+  const [form] = await appQuery<{ id: number; status: string; campos: number }>(
+    `select f.id, f.status,
+            (select count(*)::int from formulario_campo c where c.formulario_id = f.id) as campos
+       from formulario f where f.id = $1`,
+    [formularioId]
+  );
+  if (!form) return { ok: false, erro: "Formulário não encontrado" };
+  if (form.status !== "ativo") return { ok: false, erro: "Só dá para usar um formulário ativo" };
+  if (form.campos === 0) return { ok: false, erro: "O formulário escolhido não tem perguntas" };
+
   const base = slugify(titulo);
 
   for (let tentativa = 0; tentativa < 5; tentativa++) {
     const slug = tentativa === 0 ? base : `${base}-${randomBytes(2).toString("hex")}`;
     try {
       const [linha] = await appQuery<{ id: number; slug: string }>(
-        `insert into clima_rodada (titulo, descricao, slug, temas)
+        `insert into clima_rodada (titulo, descricao, slug, formulario_id)
          values ($1, $2, $3, $4) returning id, slug`,
-        [titulo, dados.descricao?.trim() || null, slug, JSON.stringify(temas)]
+        [titulo, dados.descricao?.trim() || null, slug, formularioId]
       );
       return { ok: true, id: linha.id, slug: linha.slug };
     } catch (err) {
@@ -163,128 +202,29 @@ export async function definirStatusRodada(
   return { ok: true };
 }
 
-/** eNPS a partir das notas de recomendação (0..10). null se não há respostas. */
-function calcularEnps(notas: number[]): EnpsBreakdown | null {
-  if (!notas.length) return null;
-  let promotores = 0;
-  let detratores = 0;
-  let neutros = 0;
-  for (const n of notas) {
-    if (n >= 9) promotores++;
-    else if (n <= 6) detratores++;
-    else neutros++;
-  }
-  const score = Math.round(((promotores - detratores) / notas.length) * 100);
-  return { score, promotores, neutros, detratores };
-}
-
 export async function dashboardClima(rodadaId: number): Promise<ClimaDashboard | null> {
   const [rodada] = await appQuery<LinhaRodada>(
-    `select id, titulo, descricao, slug, status, temas from clima_rodada where id = $1`,
+    `select id, titulo, descricao, slug, status, formulario_id from clima_rodada where id = $1`,
     [rodadaId]
   );
   if (!rodada) return null;
 
-  const respostas = await appQuery<{
-    nota_recomendacao: number;
-    notas: Record<string, number>;
-    comentario: string | null;
-    setor: string | null;
-    criado_em: Date;
-  }>(
-    `select nota_recomendacao, notas, comentario, setor, criado_em
-       from clima_resposta where rodada_id = $1 order by criado_em desc`,
+  const campos = rodada.formulario_id != null ? await camposDoFormulario(rodada.formulario_id) : [];
+
+  const linhas = await appQuery<{ valores: RespostaValores; criado_em: Date }>(
+    `select valores, criado_em from clima_resposta where rodada_id = $1 order by criado_em desc`,
     [rodadaId]
   );
 
-  const total = respostas.length;
-  const enps = calcularEnps(respostas.map((r) => r.nota_recomendacao));
-
-  // Distribuição 0..10 (mostra buracos como zero).
-  const dist = new Array(11).fill(0) as number[];
-  for (const r of respostas) dist[r.nota_recomendacao]++;
-  const distribuicao = dist.map((qtd, nota) => ({ nota, qtd }));
-
-  // Média por tema.
-  const temas = rodada.temas.map((t) => {
-    let soma = 0;
-    let n = 0;
-    for (const r of respostas) {
-      const v = r.notas?.[t.id];
-      if (typeof v === "number") {
-        soma += v;
-        n++;
-      }
-    }
-    return { id: t.id, rotulo: t.rotulo, media: n ? soma / n : null, respostas: n };
-  });
-
-  const comentarios = respostas
-    .filter((r) => r.comentario)
-    .map((r) => ({
-      comentario: r.comentario as string,
-      nota: r.nota_recomendacao,
-      setor: r.setor,
-      criadoEm: r.criado_em.toISOString(),
-    }));
-
-  // Recorte por setor — só com N mínimo, para não deanonimizar time pequeno.
-  const grupos = new Map<string, { notas: number[]; temaSoma: number; temaN: number }>();
-  for (const r of respostas) {
-    if (!r.setor) continue;
-    const g = grupos.get(r.setor) ?? { notas: [], temaSoma: 0, temaN: 0 };
-    g.notas.push(r.nota_recomendacao);
-    for (const v of Object.values(r.notas ?? {})) {
-      if (typeof v === "number") {
-        g.temaSoma += v;
-        g.temaN++;
-      }
-    }
-    grupos.set(r.setor, g);
-  }
-  const porSetor = [...grupos.entries()]
-    .filter(([, g]) => g.notas.length >= MIN_RESPOSTAS_RECORTE)
-    .map(([setor, g]) => ({
-      setor,
-      respostas: g.notas.length,
-      enps: calcularEnps(g.notas)?.score ?? null,
-      mediaGeral: g.temaN ? g.temaSoma / g.temaN : null,
-    }))
-    .sort((a, b) => (b.enps ?? -101) - (a.enps ?? -101));
-
-  // Tendência: eNPS por rodada (todas), mais antiga -> mais nova.
-  const tend = await appQuery<{
-    id: number;
-    titulo: string;
-    total: number;
-    prom: number;
-    detr: number;
-    aberto_em: Date;
-  }>(
-    `select r.id, r.titulo, r.aberto_em,
-            count(c.*)::int as total,
-            count(c.*) filter (where c.nota_recomendacao >= 9)::int as prom,
-            count(c.*) filter (where c.nota_recomendacao <= 6)::int as detr
-       from clima_rodada r
-       left join clima_resposta c on c.rodada_id = r.id
-      group by r.id, r.titulo, r.aberto_em
-      order by r.aberto_em asc`
-  );
-  const tendencia = tend.map((t) => ({
-    rodadaId: t.id,
-    titulo: t.titulo,
-    total: t.total,
-    enps: t.total ? Math.round(((t.prom - t.detr) / t.total) * 100) : null,
+  const respostas = linhas.map((l) => ({
+    valores: l.valores ?? {},
+    criadoEm: l.criado_em.toISOString(),
   }));
 
   return {
-    rodada: { id: rodada.id, titulo: rodada.titulo, slug: rodada.slug, status: rodada.status, temas: rodada.temas },
-    total,
-    enps,
-    distribuicao,
-    temas,
-    comentarios,
-    porSetor,
-    tendencia,
+    rodada: { id: rodada.id, titulo: rodada.titulo, slug: rodada.slug, status: rodada.status },
+    campos,
+    total: respostas.length,
+    respostas,
   };
 }

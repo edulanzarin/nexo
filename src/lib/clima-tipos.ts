@@ -1,55 +1,28 @@
 /**
  * CLIMA (avaliação anônima da empresa) — parte PURA (sem servidor). Enums e DTOs
  * compartilhados entre o formulário público (client), a gestão (client) e o
- * serviço (server). eNPS (0..10) + notas por tema (1..5) + comentário.
+ * serviço (server).
+ *
+ * A rodada de clima usa um FORMULÁRIO do construtor: as perguntas são os campos
+ * daquele formulário e a resposta guarda os `valores` deles — anônima, sem
+ * nenhum vínculo com pessoa. Por isso os tipos aqui reaproveitam os do builder.
  */
 
-export interface TemaClima {
-  id: string;
-  rotulo: string;
-}
-
-/** Escala das notas por tema (1..5). Índice 0 = nota 1. */
-export const ESCALA_TEMA = ["Ruim", "Fraco", "Regular", "Bom", "Ótimo"] as const;
-export const NOTA_TEMA_MIN = 1;
-export const NOTA_TEMA_MAX = 5;
-
-/** Abaixo disto, o recorte por setor NÃO é exibido (evita deanonimizar time pequeno). */
-export const MIN_RESPOSTAS_RECORTE = 4;
+import type { FormularioCampo, RespostaValores } from "./formularios-tipos";
 
 export type StatusRodada = "aberta" | "fechada";
 
-/** O que o funcionário vê no link público /clima/<slug>. */
+/** O que o funcionário vê no link público /clima/<slug>: o formulário da rodada. */
 export interface RodadaPublica {
   slug: string;
   titulo: string;
   descricao: string | null;
-  temas: TemaClima[];
+  campos: FormularioCampo[];
 }
 
+/** Envio anônimo: só os valores dos campos do formulário. */
 export interface RespostaClimaInput {
-  notaRecomendacao: number; // 0..10
-  notas: Record<string, number>; // tema_id -> 1..5
-  comentario?: string | null;
-  setor?: string | null;
-}
-
-/** Valida a resposta no cliente (o servidor revalida). Mapa erro por chave. */
-export function validarRespostaClima(
-  temas: TemaClima[],
-  r: RespostaClimaInput
-): Record<string, string> {
-  const erros: Record<string, string> = {};
-  if (!Number.isInteger(r.notaRecomendacao) || r.notaRecomendacao < 0 || r.notaRecomendacao > 10) {
-    erros.recomendacao = "Escolha uma nota de 0 a 10";
-  }
-  for (const t of temas) {
-    const n = r.notas[t.id];
-    if (!Number.isInteger(n) || n < NOTA_TEMA_MIN || n > NOTA_TEMA_MAX) {
-      erros[t.id] = "Dê uma nota";
-    }
-  }
-  return erros;
+  valores: RespostaValores;
 }
 
 // ── Gestão ───────────────────────────────────────────────────────────────────
@@ -64,24 +37,17 @@ export interface RodadaResumo {
   fechadoEm: string | null;
 }
 
-export interface EnpsBreakdown {
-  score: number; // -100..100
-  promotores: number;
-  neutros: number;
-  detratores: number;
+/** Uma resposta anônima já registrada (para a lista no painel). */
+export interface RespostaClima {
+  valores: RespostaValores;
+  criadoEm: string;
 }
 
 export interface ClimaDashboard {
-  rodada: { id: number; titulo: string; slug: string; status: StatusRodada; temas: TemaClima[] };
+  rodada: { id: number; titulo: string; slug: string; status: StatusRodada };
+  /** Campos do formulário da rodada (para renderizar cada resposta). */
+  campos: FormularioCampo[];
   total: number;
-  enps: EnpsBreakdown | null;
-  /** Distribuição da nota de recomendação (0..10). */
-  distribuicao: { nota: number; qtd: number }[];
-  /** Média por tema (1..5) e quantas responderam. */
-  temas: { id: string; rotulo: string; media: number | null; respostas: number }[];
-  comentarios: { comentario: string; nota: number; setor: string | null; criadoEm: string }[];
-  /** Recorte por setor — só setores com respostas >= MIN_RESPOSTAS_RECORTE. */
-  porSetor: { setor: string; respostas: number; enps: number | null; mediaGeral: number | null }[];
-  /** eNPS ao longo das rodadas (para tendência). Mais antiga -> mais nova. */
-  tendencia: { rodadaId: number; titulo: string; enps: number | null; total: number }[];
+  /** Respostas anônimas, mais recentes primeiro. */
+  respostas: RespostaClima[];
 }

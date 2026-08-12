@@ -660,6 +660,6 @@ export const useDenuncia = (id: number | null) =>
 /** Rodadas de clima (lista com contagem de respostas). */
 export const useRodadasClima = () =>
   useApiQuery<{ rodadas: RodadaResumo[] }>(["rh-clima-rodadas"], `/api/rh/clima`);
-/** Dashboard de uma rodada de clima (eNPS, temas, distribuição, comentários). */
+/** Dashboard de uma rodada de clima (respostas anônimas do formulário da rodada). */
 export const useClimaDashboard = (id: number | null) =>
   useApiQuery<ClimaDashboard>(["rh-clima", id], `/api/rh/clima?id=${id}`, id != null);

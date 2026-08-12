@@ -21,6 +21,7 @@ export const POST = apiRoute(async (req) => {
   const r = await criarRodada({
     titulo: String(body.titulo ?? ""),
     descricao: body.descricao ? String(body.descricao) : null,
+    formularioId: Number(body.formularioId),
   });
   if (!r.ok) throw new FilterError(r.erro ?? "Falha ao criar a rodada");
   return { id: r.id, slug: r.slug };
