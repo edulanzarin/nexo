@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Check, Search, Users, X } from "lucide-react";
 import { Dropdown, ItemLista } from "@/components/ui/dropdown";
+import { Badge } from "@/components/ui";
 import type { DpColaborador } from "@/lib/dp-tipos";
 import { num } from "@/lib/format";
 
@@ -88,9 +89,9 @@ export function DpFuncionarioFiltro({ dados, valor, onMudar }: Props) {
                     {c.nome}
                   </span>
                   {c.inativo && !c.auto && (
-                    <span className="shrink-0 rounded bg-critical/12 px-1 text-[10px] uppercase text-critical">
+                    <Badge tone="critical" size="xs" uppercase className="shrink-0">
                       inativo
-                    </span>
+                    </Badge>
                   )}
                   <span className="shrink-0 text-[11px] tabular-nums text-muted">{num(c.total)}</span>
                 </ItemLista>

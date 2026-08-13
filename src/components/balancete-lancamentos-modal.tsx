@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import clsx from "clsx";
 import { ListaModal } from "@/components/lista-modal";
+import { Badge, Button } from "@/components/ui";
 import { useBalanceteLancamentos } from "@/hooks/use-api";
 import { brl, dataBR, num } from "@/lib/format";
 
@@ -109,23 +109,25 @@ export function BalanceteLancamentosModal({
           </span>
           {totalPaginas > 1 && (
             <div className="flex items-center gap-1">
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setPagina((p) => Math.max(1, p - 1))}
                 disabled={pag <= 1}
-                className="flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-surface-2 hover:text-ink disabled:opacity-40 disabled:hover:bg-transparent"
               >
                 <ChevronLeft className="size-3.5" /> Anterior
-              </button>
+              </Button>
               <span className="tnum px-1">
                 {pag} / {num(totalPaginas)}
               </span>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
                 disabled={pag >= totalPaginas}
-                className="flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-surface-2 hover:text-ink disabled:opacity-40 disabled:hover:bg-transparent"
               >
                 Próxima <ChevronRight className="size-3.5" />
-              </button>
+              </Button>
             </div>
           )}
           <span className="tnum font-medium text-ink">{brl(total)}</span>
@@ -158,19 +160,15 @@ export function BalanceteLancamentosModal({
                   {lado === "fiscal" && (
                     <td className="py-1.5 pr-3">
                       <span
-                        className={clsx(
-                          "rounded px-1.5 py-0.5 text-[10px] font-medium",
-                          l.tipo === "espelho"
-                            ? "bg-surface-2 text-muted"
-                            : "bg-ent/12 text-ent"
-                        )}
                         title={
                           l.tipo === "espelho"
                             ? "Espelhado do contábil real (consolidação, apuração ou conta sem regra)"
                             : "Valor esperado que o motor gerou para a nota"
                         }
                       >
-                        {l.tipo === "espelho" ? "Espelho" : "Regra"}
+                        <Badge tone={l.tipo === "espelho" ? "neutral" : "ent"} size="xs">
+                          {l.tipo === "espelho" ? "Espelho" : "Regra"}
+                        </Badge>
                       </span>
                     </td>
                   )}
@@ -179,17 +177,15 @@ export function BalanceteLancamentosModal({
                   <td className="py-1.5 pr-3">
                     {l.especie ? (
                       <span
-                        className={clsx(
-                          "rounded px-1.5 py-0.5 text-[10px] font-medium",
-                          l.especie === "NFSE" ? "bg-warn/12 text-warn" : "bg-surface-2 text-muted"
-                        )}
                         title={
                           l.especie === "NFSE"
                             ? "NFSE (serviço) — o motor não reproduz; confira manualmente"
                             : l.especie
                         }
                       >
-                        {l.especie}
+                        <Badge tone={l.especie === "NFSE" ? "warning" : "neutral"} size="xs">
+                          {l.especie}
+                        </Badge>
                       </span>
                     ) : (
                       <span className="text-muted">—</span>

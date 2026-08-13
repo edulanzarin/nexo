@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
+import { Card } from "@/components/ui";
 import type { CustoGrupo } from "@/lib/types";
 import { brl, num } from "@/lib/format";
 
@@ -29,7 +30,7 @@ export function CustoQuebra({
   }, [dados, busca]);
 
   return (
-    <section className="card anim-fade-up p-5">
+    <Card as="section">
       <header className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold">{titulo}</h2>
@@ -86,6 +87,6 @@ export function CustoQuebra({
           </tbody>
         </table>
       </div>
-    </section>
+    </Card>
   );
 }

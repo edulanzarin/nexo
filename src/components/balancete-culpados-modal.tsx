@@ -1,40 +1,40 @@
 "use client";
 
 import { useState } from "react";
-import clsx from "clsx";
 import { ListaModal } from "@/components/lista-modal";
+import { Badge, type BadgeTone } from "@/components/ui";
 import { useBalanceteCulpados } from "@/hooks/use-api";
 import { brl, num } from "@/lib/format";
 import type { BalanceteLinha } from "@/lib/types";
 
 const ORIGEM: Record<string, string> = { ME: "Nota entrada", MS: "Nota saída" };
 
-const TIPO: Record<string, { rotulo: string; cor: string; titulo: string }> = {
+const TIPO: Record<string, { rotulo: string; tone: BadgeTone; titulo: string }> = {
   valor: {
     rotulo: "Valor diferente",
-    cor: "bg-critical/12 text-critical",
+    tone: "critical",
     titulo: "Lançada, mas com valor diferente do esperado pela regra",
   },
   faltando: {
     rotulo: "Não lançada aqui",
-    cor: "bg-warn/12 text-warn",
+    tone: "warning",
     titulo: "Esperada nesta conta pela regra, mas não lançada aqui (foi para outra)",
   },
   conta_errada: {
     rotulo: "Conta errada",
-    cor: "bg-critical/12 text-critical",
+    tone: "critical",
     titulo:
       "Lançada em conta diferente da que o plano manda — veja a coluna Conta onde ela está",
   },
   interno: {
     rotulo: "Conta errada no grupo",
-    cor: "bg-warn/12 text-warn",
+    tone: "warning",
     titulo:
       "Lançada em outra conta DENTRO deste grupo (veja na coluna Conta: esperada → lançada). Não altera o total da sintética — por isso a diferença é zero —, mas as duas analíticas ficam erradas",
   },
   extra: {
     rotulo: "Sem regra reproduzível",
-    cor: "bg-surface-2 text-muted",
+    tone: "neutral",
     titulo:
       "Lançada sem o motor esperar e sem plano reproduzível (NFSE/serviço ou CFOP sem tabela) — confira manualmente",
   },
@@ -171,13 +171,11 @@ export function CulpadosModal({
                   <td className="py-1.5 pr-3">
                     {c.especie ? (
                       <span
-                        className={clsx(
-                          "rounded px-1.5 py-0.5 text-[10px] font-medium",
-                          nfse ? "bg-warn/12 text-warn" : "bg-surface-2 text-muted"
-                        )}
                         title={nfse ? "NFSE (serviço) — o motor não reproduz; confira manualmente" : c.especie}
                       >
-                        {c.especie}
+                        <Badge tone={nfse ? "warning" : "neutral"} size="xs">
+                          {c.especie}
+                        </Badge>
                       </span>
                     ) : (
                       <span className="text-muted">—</span>
@@ -206,18 +204,16 @@ export function CulpadosModal({
                   )}
                   <td className="py-1.5 pr-3">
                     {nfse && c.tipo === "extra" ? (
-                      <span
-                        className="rounded bg-warn/12 px-1.5 py-0.5 text-[10px] font-medium text-warn"
-                        title="Serviço (NFSE) — o motor não reproduz; confira a contabilização manualmente"
-                      >
-                        Verificar manual
+                      <span title="Serviço (NFSE) — o motor não reproduz; confira a contabilização manualmente">
+                        <Badge tone="warning" size="xs">
+                          Verificar manual
+                        </Badge>
                       </span>
                     ) : (
-                      <span
-                        className={clsx("rounded px-1.5 py-0.5 text-[10px] font-medium", TIPO[c.tipo].cor)}
-                        title={TIPO[c.tipo].titulo}
-                      >
-                        {TIPO[c.tipo].rotulo}
+                      <span title={TIPO[c.tipo].titulo}>
+                        <Badge tone={TIPO[c.tipo].tone} size="xs">
+                          {TIPO[c.tipo].rotulo}
+                        </Badge>
                       </span>
                     )}
                   </td>

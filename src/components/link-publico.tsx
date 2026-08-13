@@ -2,6 +2,7 @@
 
 import { useState, useSyncExternalStore } from "react";
 import { Check, Copy, ExternalLink } from "lucide-react";
+import { IconButton } from "@/components/ui";
 
 /**
  * Caixa do LINK PÚBLICO do canal (denúncia ou clima) — para o RH copiar e
@@ -33,14 +34,15 @@ export function LinkPublico({ caminho }: { caminho: string }) {
       <code className="min-w-0 flex-1 truncate rounded-lg border border-hairline bg-surface-2 px-3 py-2 text-xs text-ink-2">
         {url}
       </code>
-      <button
+      <IconButton
+        tone="bordered"
+        size="sm"
         onClick={copiar}
-        className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-hairline text-muted transition-colors hover:text-ink"
         aria-label="Copiar link"
         title="Copiar link"
       >
         {copiado ? <Check className="size-4 text-good" /> : <Copy className="size-4" />}
-      </button>
+      </IconButton>
       <a
         href={url}
         target="_blank"

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { ArrowDown } from "lucide-react";
 import clsx from "clsx";
+import { Card, Badge } from "@/components/ui";
 import type { DpColaborador } from "@/lib/dp-tipos";
 import { num } from "@/lib/format";
 
@@ -44,7 +45,7 @@ export function DpRankingTabela({ dados, carregando, recarregando, selecionado, 
   );
 
   return (
-    <section className="card anim-fade-up p-5">
+    <Card as="section">
       <header className="mb-4 flex items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold">Ranking de colaboradores do DP</h2>
@@ -107,14 +108,14 @@ export function DpRankingTabela({ dados, carregando, recarregando, selecionado, 
                           {c.nome}
                         </span>
                         {c.auto && (
-                          <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted">
+                          <Badge tone="neutral" size="xs" uppercase>
                             automático
-                          </span>
+                          </Badge>
                         )}
                         {c.inativo && !c.auto && (
-                          <span className="rounded bg-critical/12 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-critical">
+                          <Badge tone="critical" size="xs" uppercase>
                             inativo
-                          </span>
+                          </Badge>
                         )}
                       </div>
                       <div className="mt-1 h-1 w-full max-w-[260px] overflow-hidden rounded-full bg-surface-2">
@@ -141,6 +142,6 @@ export function DpRankingTabela({ dados, carregando, recarregando, selecionado, 
           </table>
         </div>
       )}
-    </section>
+    </Card>
   );
 }

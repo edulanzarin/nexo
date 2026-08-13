@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Download, Search } from "lucide-react";
 import clsx from "clsx";
+import { Card, Segmented } from "@/components/ui";
 import { FichaModal } from "@/components/folha-ficha-modal";
 import { PessoasTabela } from "@/components/folha-pessoas-tabela";
 import { useMovimentacoes } from "@/hooks/use-api";
@@ -78,7 +79,7 @@ export function FolhaMovimentacoes({ qs, modulo = "folha" }: Props) {
   };
 
   return (
-    <section className="card anim-fade-up p-5">
+    <Card as="section">
       <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold">
@@ -96,20 +97,15 @@ export function FolhaMovimentacoes({ qs, modulo = "folha" }: Props) {
       </header>
 
       {/* Alternador de visão */}
-      <div className="mb-3 inline-flex rounded-lg border border-hairline bg-surface-2 p-0.5">
-        {(["movimentacoes", "efetivo"] as Escopo[]).map((e) => (
-          <button
-            key={e}
-            onClick={() => setEscopo(e)}
-            className={clsx(
-              "rounded-md px-3 py-1.5 text-xs transition-colors",
-              escopo === e ? "bg-surface font-medium text-ink shadow-sm" : "text-muted hover:text-ink"
-            )}
-          >
-            {e === "movimentacoes" ? "Movimentações" : "Efetivo atual"}
-          </button>
-        ))}
-      </div>
+      <Segmented<Escopo>
+        className="mb-3"
+        value={escopo}
+        onChange={setEscopo}
+        options={[
+          { value: "movimentacoes", label: "Movimentações" },
+          { value: "efetivo", label: "Efetivo atual" },
+        ]}
+      />
 
       <div className="mb-3 flex flex-wrap items-center gap-2">
         {escopo === "movimentacoes" &&
@@ -158,6 +154,6 @@ export function FolhaMovimentacoes({ qs, modulo = "folha" }: Props) {
         contrato={aberto?.contrato ?? null}
         onFechar={() => setAberto(null)}
       />
-    </section>
+    </Card>
   );
 }

@@ -2,6 +2,7 @@
 
 import { UserRound } from "lucide-react";
 import clsx from "clsx";
+import { Badge } from "@/components/ui";
 import { tempoCasa } from "@/components/folha-ficha-modal";
 import type { FolhaMovimentacao } from "@/lib/types";
 import { dataBR } from "@/lib/format";
@@ -50,14 +51,14 @@ export function PessoasTabela({
               <td className="py-2.5 px-3">
                 <div className="flex flex-wrap gap-1">
                   {m.admitido && (
-                    <span className="rounded bg-good/12 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-good">
+                    <Badge tone="good" size="xs" uppercase>
                       admitido
-                    </span>
+                    </Badge>
                   )}
                   {m.desligado && (
-                    <span className="rounded bg-critical/12 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-critical">
+                    <Badge tone="critical" size="xs" uppercase>
                       desligado
-                    </span>
+                    </Badge>
                   )}
                 </div>
                 {m.desligado && m.motivo && (

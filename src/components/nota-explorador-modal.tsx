@@ -1,6 +1,7 @@
 "use client";
 
 import { Modal } from "@/components/ui/modal";
+import { Badge } from "@/components/ui";
 import { ItensNota } from "@/components/itens-nota";
 import { brl, dataBR, documento, num } from "@/lib/format";
 import type { NotaLista } from "@/lib/types";
@@ -56,9 +57,9 @@ export function NotaExploradorModal({
             {nota.contraparte ?? "Nota sem contraparte"}
           </h3>
           {nota.cancelada && (
-            <span className="shrink-0 rounded bg-sai/12 px-1.5 py-0.5 text-xs text-sai">
+            <Badge tone="sai" className="shrink-0">
               cancelada
-            </span>
+            </Badge>
           )}
         </div>
       }

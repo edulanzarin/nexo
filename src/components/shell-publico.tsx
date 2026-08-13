@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import { Card } from "@/components/ui";
 import { MarcaPublicaRh } from "@/components/logo-marca";
 
 /**
@@ -27,11 +28,11 @@ export function AvisoPublico({
   tom?: "neutro" | "bom";
 }) {
   return (
-    <div className="card px-6 py-8 text-center">
+    <Card padding="none" animate="none" className="px-6 py-8 text-center">
       <h1 className={clsx("text-lg font-semibold", tom === "bom" ? "text-good" : "text-ink")}>
         {titulo}
       </h1>
       <p className="mt-2 text-sm text-muted">{texto}</p>
-    </div>
+    </Card>
   );
 }

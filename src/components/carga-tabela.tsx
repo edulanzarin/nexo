@@ -1,6 +1,7 @@
 "use client";
 
 import clsx from "clsx";
+import { Card } from "@/components/ui";
 import type { TributosCargaEmpresa } from "@/lib/types";
 import { brl, brlCompact } from "@/lib/format";
 
@@ -14,7 +15,7 @@ export function CargaTabela({ dados, carregando, recarregando }: Props) {
   const maxCarga = dados?.length ? Math.max(...dados.map((e) => e.carga)) : 0;
 
   return (
-    <section className="card anim-fade-up p-5">
+    <Card as="section">
       <header className="mb-4">
         <h2 className="text-sm font-semibold">Carga tributária por empresa</h2>
       </header>
@@ -73,6 +74,6 @@ export function CargaTabela({ dados, carregando, recarregando }: Props) {
           </table>
         </div>
       )}
-    </section>
+    </Card>
   );
 }

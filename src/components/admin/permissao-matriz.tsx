@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge, Card } from "@/components/ui";
 import { MODULOS, secoesDoModulo } from "@/lib/modulos";
 
 const check = "size-4 accent-[var(--ent)]";
@@ -31,7 +32,7 @@ export function PermissaoMatriz({
           <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
             {m.titulo}
           </p>
-          <div className="card divide-y divide-hairline">
+          <Card padding="none" animate="none" className="divide-y divide-hairline">
             {secoesDoModulo(m.id).map((s) => {
               const chave = `${m.id}/${s.id}`;
               const liberado = !!valor[chave];
@@ -45,14 +46,14 @@ export function PermissaoMatriz({
                   <span className="flex min-w-0 items-center gap-2 text-sm">
                     <span className="truncate">{s.rotulo}</span>
                     {base !== undefined && (
-                      <span className="shrink-0 rounded bg-surface-2 px-1.5 py-0.5 text-[10px] text-muted">
+                      <Badge tone="neutral" size="xs" className="shrink-0">
                         cargo: {noCargo ? "sim" : "—"}
-                      </span>
+                      </Badge>
                     )}
                     {diverge && (
-                      <span className="shrink-0 rounded bg-ent/12 px-1.5 py-0.5 text-[10px] font-medium text-ent">
+                      <Badge tone="ent" size="xs" className="shrink-0">
                         exceção
-                      </span>
+                      </Badge>
                     )}
                   </span>
                   <input
@@ -65,7 +66,7 @@ export function PermissaoMatriz({
                 </label>
               );
             })}
-          </div>
+          </Card>
         </div>
       ))}
     </div>

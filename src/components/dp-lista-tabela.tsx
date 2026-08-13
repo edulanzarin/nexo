@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import clsx from "clsx";
+import { Badge, type BadgeTone } from "@/components/ui";
 import type { DpLinha, DpTipo, EsocialStatus } from "@/lib/dp-tipos";
 import { dataBR, num } from "@/lib/format";
 
@@ -14,15 +15,13 @@ function dataHoraBR(iso: string | null | undefined): string {
 }
 
 function EsocialBadge({ status }: { status: EsocialStatus | undefined }) {
-  const mapa: Record<EsocialStatus, { rotulo: string; cor: string }> = {
-    ok: { rotulo: "Transmitida", cor: "bg-ent/12 text-ent" },
-    pendente: { rotulo: "Pendente", cor: "bg-warning/12 text-warning" },
-    nao_enviado: { rotulo: "Não enviada", cor: "bg-surface-2 text-muted" },
+  const mapa: Record<EsocialStatus, { rotulo: string; tone: BadgeTone }> = {
+    ok: { rotulo: "Transmitida", tone: "ent" },
+    pendente: { rotulo: "Pendente", tone: "warning" },
+    nao_enviado: { rotulo: "Não enviada", tone: "neutral" },
   };
   const s = mapa[status ?? "nao_enviado"];
-  return (
-    <span className={clsx("rounded px-1.5 py-0.5 text-[11px] font-medium", s.cor)}>{s.rotulo}</span>
-  );
+  return <Badge tone={s.tone}>{s.rotulo}</Badge>;
 }
 
 interface Coluna {
@@ -206,9 +205,9 @@ export function DpListaTabela({ tipo, dados, carregando, recarregando }: Props) 
                   className={clsx("size-4 shrink-0 text-muted transition-transform", aberto && "rotate-90")}
                 />
                 <span className="flex-1 truncate font-semibold text-ink">{g.usuario}</span>
-                <span className="rounded-full bg-ent/12 px-2.5 py-0.5 text-xs font-medium text-ent">
+                <Badge tone="ent" shape="pill" className="text-xs">
                   {num(g.linhas.length)} {g.linhas.length === 1 ? "registro" : "registros"}
-                </span>
+                </Badge>
               </button>
               {aberto && <TabelaRegistros cols={cols} linhas={g.linhas} />}
             </div>

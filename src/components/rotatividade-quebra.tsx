@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { ArrowDown, Search } from "lucide-react";
 import clsx from "clsx";
+import { Card } from "@/components/ui";
 import type { TurnoverGrupo } from "@/lib/types";
 import { num } from "@/lib/format";
 
@@ -73,7 +74,7 @@ export function RotatividadeQuebra({
   }, [dados, busca, soMovimento, ordenar]);
 
   return (
-    <section className="card anim-fade-up p-5">
+    <Card as="section">
       <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold">{titulo}</h2>
@@ -204,6 +205,6 @@ export function RotatividadeQuebra({
           </table>
         </div>
       )}
-    </section>
+    </Card>
   );
 }

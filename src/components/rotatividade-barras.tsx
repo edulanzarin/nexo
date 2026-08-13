@@ -1,6 +1,7 @@
 "use client";
 
 import clsx from "clsx";
+import { Card } from "@/components/ui";
 import { num } from "@/lib/format";
 
 interface Item {
@@ -45,7 +46,7 @@ export function RotatividadeBarras({
   const clicavel = !!(dim && onDrill);
 
   return (
-    <section className="card anim-fade-up flex flex-col p-5">
+    <Card as="section" className="flex flex-col">
       <header className="mb-4">
         <h2 className="text-sm font-semibold">{titulo}</h2>
         {subtitulo && <p className="mt-0.5 text-xs text-muted">{subtitulo}</p>}
@@ -91,6 +92,6 @@ export function RotatividadeBarras({
           })}
         </div>
       )}
-    </section>
+    </Card>
   );
 }
