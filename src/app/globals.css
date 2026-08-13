@@ -45,6 +45,20 @@
   /* Vidro da chrome (sidebar/topo): superfície translúcida sobre o fundo. */
   --glass: rgba(255, 255, 255, 0.72);
   --glass-border: rgba(20, 20, 27, 0.07);
+  /* Vidro do OVERLAY (dropdown/menu/popover): mais opaco que a chrome, pra o
+     texto ler sobre qualquer conteúdo. Ver "vidro flutuante precisa de superfície
+     mais opaca que a chrome". */
+  --glass-panel: rgba(255, 255, 255, 0.9);
+  --glass-panel-border: rgba(20, 20, 27, 0.1);
+
+  /* Controle segmentado: trilho e pastilha ativa. */
+  --seg-bg: var(--surface-2);
+  --seg-active: var(--surface);
+  /* Anel do chip de ícone dos stat tiles. */
+  --tile-icon-ring: var(--hairline);
+
+  /* Curva de saída com leve mola — hover de botão/tile sobe com vida. */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   /* Elevação em camadas — profundidade por sombra, não só por borda. */
   --shadow-1: 0 1px 2px rgba(20, 20, 40, 0.06), 0 1px 3px rgba(20, 20, 40, 0.05);
@@ -91,6 +105,12 @@
 
   --glass: rgba(20, 20, 28, 0.62);
   --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-panel: rgba(26, 26, 36, 0.86);
+  --glass-panel-border: rgba(255, 255, 255, 0.1);
+
+  --seg-bg: rgba(255, 255, 255, 0.04);
+  --seg-active: var(--surface-2);
+  --tile-icon-ring: var(--hairline);
 
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
   --shadow-2: 0 2px 6px -2px rgba(0, 0, 0, 0.55), 0 10px 24px -12px rgba(0, 0, 0, 0.6);
@@ -125,6 +145,7 @@
   --radius-lg: 0.625rem;   /* 10px */
   --radius-xl: 0.875rem;   /* 14px */
   --radius-2xl: 1.125rem;  /* 18px */
+  --radius-3xl: 1.375rem;  /* 22px */
 }
 
 /* ---- Base ---------------------------------------------------------------- */
@@ -206,12 +227,23 @@ body {
     box-shadow: var(--shadow-2), var(--sheen);
   }
 
-  /* Chrome de vidro: sidebar e barras fixas. Translúcida sobre o fundo. */
+  /* Dois níveis de vidro. CHROME (sidebar/topo): arejada, blur amplo, realce de
+     luz no topo. PANEL (dropdown/menu/popover): mais opaca e elevada, pra o texto
+     ler sobre qualquer conteúdo. `.glass` é alias histórico da chrome. */
+  .glass-chrome,
   .glass {
     background: var(--glass);
-    -webkit-backdrop-filter: saturate(1.4) blur(16px);
-    backdrop-filter: saturate(1.4) blur(16px);
+    -webkit-backdrop-filter: saturate(1.8) blur(20px);
+    backdrop-filter: saturate(1.8) blur(20px);
     border-color: var(--glass-border);
+    box-shadow: var(--sheen);
+  }
+  .glass-panel {
+    background: var(--glass-panel);
+    -webkit-backdrop-filter: saturate(1.6) blur(24px);
+    backdrop-filter: saturate(1.6) blur(24px);
+    border: 1px solid var(--glass-panel-border);
+    box-shadow: var(--shadow-3), var(--sheen);
   }
 
   /* Botão primário de marca — gradiente índigo→violeta com brilho de acento. */
