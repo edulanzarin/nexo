@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, Repeat, UserMinus, UserPlus, Users } from "lucide-react";
 import clsx from "clsx";
 import { useQueryClient } from "@tanstack/react-query";
+import { Card } from "@/components/ui";
 import { TurnoverSerieChart } from "@/components/charts/turnover-serie-chart";
 import { RotatividadeQuebra } from "@/components/rotatividade-quebra";
 import { RotatividadeBarras } from "@/components/rotatividade-barras";
@@ -68,7 +69,7 @@ function Kpi({
   secundario: React.ReactNode;
 }) {
   return (
-    <div className="card anim-fade-up flex flex-col gap-2 p-5">
+    <Card className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <p className="text-xs text-ink-2">{rotulo}</p>
         <span className={clsx("grid size-8 place-items-center rounded-lg", corIcone)} style={estiloIcone}>
@@ -77,16 +78,16 @@ function Kpi({
       </div>
       <p className="text-3xl font-semibold tracking-tight">{valor}</p>
       <p className="text-xs text-muted">{secundario}</p>
-    </div>
+    </Card>
   );
 }
 
 function Stat({ rotulo, valor, cor }: { rotulo: string; valor: string; cor?: string }) {
   return (
-    <div className="card flex flex-col gap-1 p-4">
+    <Card padding="sm" animate="none" className="flex flex-col gap-1">
       <p className="text-[11px] uppercase tracking-wide text-muted">{rotulo}</p>
       <p className={clsx("text-xl font-semibold tracking-tight", cor)}>{valor}</p>
-    </div>
+    </Card>
   );
 }
 

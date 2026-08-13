@@ -17,7 +17,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Badge, Button, EmptyState, IconButton, type BadgeTone } from "@/components/ui";
+import { Badge, Button, Card, EmptyState, IconButton, type BadgeTone } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { CamposFormulario } from "@/components/formulario-campos";
 import { EnviarModal, EnviosLista } from "./envios";
@@ -246,7 +246,7 @@ function Lista({ onEditar }: { onEditar: (id: number) => void }) {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {(data ?? []).map((f) => (
-            <div key={f.id} className="card flex flex-col p-4">
+            <Card key={f.id} padding="sm" animate="none" className="flex flex-col">
               <div className="flex items-start justify-between gap-2">
                 <button onClick={() => onEditar(f.id)} className="min-w-0 text-left">
                   <h3 className="truncate font-semibold text-ink hover:underline">{f.nome}</h3>
@@ -284,7 +284,7 @@ function Lista({ onEditar }: { onEditar: (id: number) => void }) {
                   <Trash2 className="size-3.5" />
                 </IconButton>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}
@@ -405,7 +405,7 @@ function Editor({ id, onVoltar }: { id: number; onVoltar: () => void }) {
       </div>
 
       {/* Meta */}
-      <div className="card space-y-3 p-4">
+      <Card padding="sm" animate="none" className="space-y-3">
         <input
           value={nome}
           onChange={(e) => setNome(e.target.value)}
@@ -419,10 +419,10 @@ function Editor({ id, onVoltar }: { id: number; onVoltar: () => void }) {
           placeholder="Descrição / instruções para quem responde (opcional)"
           className="w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-sm outline-none focus:border-ink/30"
         />
-      </div>
+      </Card>
 
       {preview ? (
-        <div className="card px-6 py-5">
+        <Card padding="none" animate="none" className="px-6 py-5">
           <h2 className="text-lg font-semibold text-ink">{nome || "Formulário"}</h2>
           {descricao && <p className="mt-1 text-sm text-muted">{descricao}</p>}
           <div className="mt-5">
@@ -436,7 +436,7 @@ function Editor({ id, onVoltar }: { id: number; onVoltar: () => void }) {
               />
             )}
           </div>
-        </div>
+        </Card>
       ) : (
         <>
           {/* Campos */}
@@ -455,7 +455,7 @@ function Editor({ id, onVoltar }: { id: number; onVoltar: () => void }) {
           </div>
 
           {/* Adicionar campo */}
-          <div className="card p-4">
+          <Card padding="sm" animate="none">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-2">
               Adicionar pergunta
             </p>
@@ -466,7 +466,7 @@ function Editor({ id, onVoltar }: { id: number; onVoltar: () => void }) {
                 </Button>
               ))}
             </div>
-          </div>
+          </Card>
         </>
       )}
     </>
@@ -495,7 +495,7 @@ function CampoEditor({
 }) {
   const selec = campo.tipo === "selecao_unica" || campo.tipo === "selecao_multipla";
   return (
-    <div className="card p-4">
+    <Card padding="sm" animate="none">
       <div className="flex items-start gap-3">
         <div className="mt-1 flex flex-col items-center gap-0.5 text-muted">
           <button
@@ -601,6 +601,6 @@ function CampoEditor({
           <Trash2 className="size-4" />
         </IconButton>
       </div>
-    </div>
+    </Card>
   );
 }

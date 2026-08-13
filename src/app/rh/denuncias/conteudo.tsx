@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { Link2, Loader2, MessageSquare, Send } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { LinkPublico } from "@/components/link-publico";
 import { StatusDenunciaBadge } from "@/components/denuncia-status";
@@ -42,7 +42,7 @@ export default function Conteudo() {
   return (
     <div className="space-y-4">
       {/* Divulgação do canal */}
-      <div className="card p-4">
+      <Card padding="sm" animate="none">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold text-ink">Canal público de denúncia</h2>
@@ -58,7 +58,7 @@ export default function Conteudo() {
             <LinkPublico caminho="/denuncia" />
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Mini-dashboard */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -92,7 +92,7 @@ export default function Conteudo() {
       </div>
 
       {/* Fila */}
-      <div className="card overflow-hidden">
+      <Card overflow padding="none" animate="none">
         {isLoading ? (
           <div className="space-y-2 p-4">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -136,7 +136,7 @@ export default function Conteudo() {
             ))}
           </ul>
         )}
-      </div>
+      </Card>
 
       {abrir != null && <DetalheModal id={abrir} onFechar={() => setAbrir(null)} />}
     </div>
@@ -145,10 +145,10 @@ export default function Conteudo() {
 
 function Tile({ rotulo, valor, tom }: { rotulo: string; valor: string | number; tom?: string }) {
   return (
-    <div className="card p-4">
+    <Card padding="sm" animate="none">
       <p className="text-xs text-muted">{rotulo}</p>
       <p className={clsx("mt-1 text-2xl font-semibold tnum", tom ?? "text-ink")}>{valor}</p>
-    </div>
+    </Card>
   );
 }
 

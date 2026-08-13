@@ -5,7 +5,7 @@ import { Check, Pencil, Plus, Search, UserRound } from "lucide-react";
 import clsx from "clsx";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Badge, Button } from "@/components/ui";
+import { Badge, Button, Card } from "@/components/ui";
 import { Dropdown, ItemLista } from "@/components/ui/dropdown";
 import { Modal } from "@/components/ui/modal";
 import { FichaModal, tempoCasa } from "@/components/folha-ficha-modal";
@@ -208,7 +208,7 @@ export default function Conteudo() {
       ) : (
       <>
       {/* Tabela */}
-      <div className="card overflow-hidden">
+      <Card overflow padding="none" animate="none">
         <div className="flex items-center justify-between border-b border-hairline px-4 py-2.5">
           <p className="text-sm text-muted">
             {isLoading ? "Carregando…" : `${filtrados.length} colaborador${filtrados.length === 1 ? "" : "es"}`}
@@ -275,7 +275,7 @@ export default function Conteudo() {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
       </>
       )}
 

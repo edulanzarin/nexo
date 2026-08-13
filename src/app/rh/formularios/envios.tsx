@@ -16,7 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Badge, Button, EmptyState } from "@/components/ui";
+import { Badge, Button, Card, EmptyState } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { CamposFormulario } from "@/components/formulario-campos";
 import { mutar } from "@/hooks/mutar";
@@ -481,7 +481,7 @@ export function EnviosLista() {
 
   return (
     <>
-      <div className="card overflow-hidden">
+      <Card overflow padding="none" animate="none">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] border-collapse text-sm">
             <thead className="bg-surface">
@@ -528,7 +528,7 @@ export function EnviosLista() {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
       {verId != null && <RespostasModal envioId={verId} onFechar={() => setVerId(null)} />}
     </>

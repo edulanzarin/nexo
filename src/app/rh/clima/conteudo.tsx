@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { LinkPublico } from "@/components/link-publico";
 import { CamposFormulario } from "@/components/formulario-campos";
@@ -43,7 +43,7 @@ export default function Conteudo() {
   return (
     <div className="space-y-4">
       {/* Barra de rodada: seletor + status + nova */}
-      <div className="card p-4">
+      <Card padding="sm" animate="none">
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={selId ?? ""}
@@ -81,7 +81,7 @@ export default function Conteudo() {
             <LinkPublico caminho={`/clima/${rodadaSel.slug}`} />
           </div>
         )}
-      </div>
+      </Card>
 
       {carregandoDash || !dash ? (
         <div className="grid gap-3 sm:grid-cols-2">
@@ -117,13 +117,13 @@ function Respostas({ dash }: { dash: ClimaDashboard }) {
         {dash.total === 1 ? "resposta anônima" : "respostas anônimas"}
       </p>
       {dash.respostas.map((r, i) => (
-        <div key={i} className="card p-5">
+        <Card key={i} padding="md" animate="none">
           <div className="mb-3 flex items-center justify-between text-xs text-muted">
             <span>Resposta {dash.total - i}</span>
             <span>{dataBR(r.criadoEm)}</span>
           </div>
           <CamposFormulario campos={dash.campos} valores={r.valores} somenteLeitura />
-        </div>
+        </Card>
       ))}
     </div>
   );

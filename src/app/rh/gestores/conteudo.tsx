@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge, Button, IconButton } from "@/components/ui";
+import { Badge, Button, Card, IconButton } from "@/components/ui";
 import { mutar } from "@/hooks/mutar";
 import { useRhGestores, useRhSetores } from "@/hooks/use-api";
 import type { GestorRh, SetorRh } from "@/lib/rh-tipos";
@@ -153,7 +153,7 @@ function SetorCard({
   };
 
   return (
-    <div className="card break-inside-avoid overflow-hidden">
+    <Card overflow padding="none" animate="none" className="break-inside-avoid">
       <header className="flex items-center justify-between gap-3 border-b border-hairline px-4 py-3">
         {renomeando ? (
           <div className="flex flex-1 items-center gap-1.5">
@@ -307,7 +307,7 @@ function SetorCard({
           </Button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -336,7 +336,7 @@ function NovoSetorCard() {
   };
 
   return (
-    <div className="card break-inside-avoid border-dashed p-4">
+    <Card padding="sm" animate="none" className="break-inside-avoid border-dashed">
       <h3 className="mb-2 text-sm font-medium text-ink-2">Novo setor próprio</h3>
       <div className="flex gap-2">
         <input
@@ -350,7 +350,7 @@ function NovoSetorCard() {
           <Plus className="size-3.5" /> Criar
         </Button>
       </div>
-    </div>
+    </Card>
   );
 }
 

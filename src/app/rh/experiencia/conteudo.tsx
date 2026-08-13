@@ -8,7 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { SeloEmpresa } from "@/components/rh-selo-empresa";
 import { BotaoExecutar } from "@/components/filters/botao-executar";
 import { FiltroPendente } from "@/components/filtro-pendente";
-import { Badge, Button, IconButton, type BadgeTone } from "@/components/ui";
+import { Badge, Button, Card, IconButton, type BadgeTone } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { CamposFormulario } from "@/components/formulario-campos";
 import { useExperienciaConfig, useExperienciaResposta, useRhExperiencia } from "@/hooks/use-api";
@@ -144,10 +144,10 @@ function RespostasExperienciaModal({ id, onFechar }: { id: number; onFechar: () 
 
 function Kpi({ rotulo, valor, tom }: { rotulo: string; valor: number; tom: string }) {
   return (
-    <div className="card px-4 py-3">
+    <Card padding="none" animate="none" className="px-4 py-3">
       <p className="text-xs text-muted">{rotulo}</p>
       <p className={clsx("mt-0.5 text-2xl font-semibold tabular-nums", tom)}>{valor}</p>
-    </div>
+    </Card>
   );
 }
 
@@ -272,7 +272,7 @@ export default function Conteudo() {
         <Kpi rotulo="Sem gestor" valor={kpis.semGestor} tom="text-warning" />
       </div>
 
-      <div className="card overflow-hidden">
+      <Card overflow padding="none" animate="none">
         <div className="max-h-[42rem] overflow-y-auto overflow-x-auto">
           <table className="w-full min-w-[860px] border-collapse text-sm">
             <thead className="sticky top-0 z-10 bg-surface">
@@ -399,7 +399,7 @@ export default function Conteudo() {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
       </>
       )}
 

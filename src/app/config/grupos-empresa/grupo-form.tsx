@@ -1,4 +1,5 @@
 import { EmpresaPicker } from "@/components/admin/empresa-picker";
+import { Button } from "@/components/ui";
 import type { EmpresaOpcao } from "@/app/admin/dados";
 import type { GrupoEmpresaDetalhe } from "@/lib/grupos-empresa";
 import { salvarGrupoEmpresa, excluirGrupoEmpresa } from "./actions";
@@ -39,22 +40,15 @@ export function GrupoEmpresaForm({
 
       <div className="flex items-center justify-between border-t border-hairline pt-4">
         {grupo ? (
-          <button
-            type="submit"
-            formAction={excluirGrupoEmpresa}
-            className="h-9 rounded-lg border border-critical/40 px-3 text-sm font-medium text-critical transition-colors hover:bg-critical/10"
-          >
+          <Button type="submit" variant="danger" formAction={excluirGrupoEmpresa}>
             Excluir
-          </button>
+          </Button>
         ) : (
           <span />
         )}
-        <button
-          type="submit"
-          className="h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-        >
+        <Button type="submit" variant="primary" size="lg">
           {grupo ? "Salvar" : "Criar grupo"}
-        </button>
+        </Button>
       </div>
     </form>
   );

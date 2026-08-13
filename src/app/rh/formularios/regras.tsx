@@ -15,7 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Badge, Button, EmptyState, IconButton } from "@/components/ui";
+import { Badge, Button, Card, EmptyState, IconButton } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { mutar } from "@/hooks/mutar";
 import { useEnvioRegras, useFormularios, useRhFuncionarios, useRhSetores } from "@/hooks/use-api";
@@ -81,7 +81,7 @@ export function RegrasLista() {
       ) : (data ?? []).length === 0 ? (
         <EmptyState icon={<AlarmClock className="size-5" />} titulo="Nenhuma regra automática." />
       ) : (
-        <div className="card overflow-hidden">
+        <Card overflow padding="none" animate="none">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] border-collapse text-sm">
               <thead className="bg-surface">
@@ -139,7 +139,7 @@ export function RegrasLista() {
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       )}
 
       {editar != null && (
