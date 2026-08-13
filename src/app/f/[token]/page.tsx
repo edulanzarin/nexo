@@ -1,4 +1,5 @@
 import { MarcaPublicaRh } from "@/components/logo-marca";
+import { Card } from "@/components/ui";
 import { resolverTokenPublico } from "@/lib/formulario-publico";
 import { FormularioPublicoView } from "./formulario-publico-view";
 
@@ -35,9 +36,9 @@ export default async function Page({ params }: { params: Promise<{ token: string
 
 function Aviso({ titulo, texto }: { titulo: string; texto: string }) {
   return (
-    <div className="card px-6 py-8 text-center">
+    <Card padding="none" animate="none" className="px-6 py-8 text-center">
       <h1 className="text-lg font-semibold text-ink">{titulo}</h1>
       <p className="mt-2 text-sm text-muted">{texto}</p>
-    </div>
+    </Card>
   );
 }

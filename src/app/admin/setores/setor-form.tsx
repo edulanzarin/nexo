@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui";
 import { salvarSetor, excluirSetor } from "../actions";
 import type { SetorOpcao } from "../dados";
 
@@ -17,22 +18,15 @@ export function SetorForm({ setor }: { setor: SetorOpcao | null }) {
 
       <div className="flex items-center justify-between border-t border-hairline pt-4">
         {setor ? (
-          <button
-            type="submit"
-            formAction={excluirSetor}
-            className="h-9 rounded-lg border border-critical/40 px-3 text-sm font-medium text-critical transition-colors hover:bg-critical/10"
-          >
+          <Button type="submit" formAction={excluirSetor} variant="danger">
             Excluir
-          </button>
+          </Button>
         ) : (
           <span />
         )}
-        <button
-          type="submit"
-          className="h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-        >
+        <Button type="submit" variant="primary" size="lg">
           {setor ? "Salvar" : "Criar setor"}
-        </button>
+        </Button>
       </div>
     </form>
   );

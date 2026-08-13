@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Plus, Save, Send, Trash2 } from "lucide-react";
-import clsx from "clsx";
+import { ArrowLeft, Plus, Save, Send, Trash2 } from "lucide-react";
 import { mutar } from "@/hooks/mutar";
 import { StatusPmBadge } from "@/components/postmortem-badge";
+import { Button, Card, IconButton } from "@/components/ui";
 import {
   CRITICIDADES,
   CRITICIDADE_DEF,
@@ -36,7 +36,7 @@ function Secao({
   children: React.ReactNode;
 }) {
   return (
-    <section className="card p-5">
+    <Card as="section" animate="none">
       <header className="mb-4 border-b border-hairline pb-3">
         <h2 className="text-sm font-semibold">
           <span className="mr-2 text-muted">{n}.</span>
@@ -45,7 +45,7 @@ function Secao({
         {sub && <p className="mt-1 text-xs text-muted">{sub}</p>}
       </header>
       <div className="space-y-4">{children}</div>
-    </section>
+    </Card>
   );
 }
 
@@ -115,27 +115,28 @@ function Repetivel<T extends Record<string, string>>({
                 </label>
               ))}
               {!somenteLeitura && (
-                <button
-                  type="button"
+                <IconButton
+                  tone="danger"
+                  size="sm"
                   onClick={() => onChange(rows.filter((_, j) => j !== i))}
-                  className="grid size-8 shrink-0 place-items-center rounded-md text-muted hover:bg-surface-2 hover:text-critical"
                   aria-label="Remover"
                 >
                   <Trash2 className="size-4" />
-                </button>
+                </IconButton>
               )}
             </div>
           ))}
         </div>
       )}
       {!somenteLeitura && (
-        <button
-          type="button"
+        <Button
+          variant="secondary"
+          size="sm"
+          className="mt-2 text-xs"
           onClick={() => onChange([...rows, novo()])}
-          className="mt-2 flex items-center gap-1.5 rounded-lg border border-hairline px-2.5 py-1.5 text-xs text-ink-2 hover:bg-surface-2 hover:text-ink"
         >
           <Plus className="size-3.5" /> {addRotulo}
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -219,12 +220,14 @@ export function FormularioPM({
       {/* Barra de ações */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
+            className="text-xs"
             onClick={() => router.push("/folha/post-mortem")}
-            className="flex items-center gap-1.5 rounded-lg border border-hairline px-2.5 py-1.5 text-xs text-ink-2 hover:bg-surface-2 hover:text-ink"
           >
             <ArrowLeft className="size-4" /> Voltar
-          </button>
+          </Button>
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold tabular-nums">
               {inicial.numero ? `Nº ${String(inicial.numero).padStart(4, "0")}` : "Rascunho"}
@@ -234,32 +237,38 @@ export function FormularioPM({
         </div>
         {!ro && (
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
+              className="text-xs"
               onClick={salvar}
               disabled={salvando || enviando}
-              className="flex items-center gap-1.5 rounded-lg border border-hairline px-3 py-2 text-xs font-medium text-ink-2 hover:bg-surface-2 hover:text-ink disabled:opacity-60"
+              loading={salvando}
             >
-              {salvando ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+              {!salvando && <Save className="size-4" />}
               Salvar rascunho
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              className="text-xs"
               onClick={enviar}
               disabled={salvando || enviando}
-              className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-xs font-medium text-white hover:bg-accent/90 disabled:opacity-60"
+              loading={enviando}
             >
-              {enviando ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+              {!enviando && <Send className="size-4" />}
               Enviar relatório
-            </button>
+            </Button>
           </div>
         )}
       </div>
 
       {ro && (
-        <div className="card border-accent/30 bg-accent/5 px-4 py-3 text-xs text-ink-2">
+        <Card tone="accent" animate="none" padding="none" className="px-4 py-3 text-xs text-ink-2">
           {inicial.status === "enviado"
             ? "Relatório enviado — leitura apenas. Preenchido por " + inicial.autorNome + "."
             : "Você está vendo o rascunho de " + inicial.autorNome + " (leitura apenas)."}
-        </div>
+        </Card>
       )}
 
       {/* 1. Identificação */}
@@ -506,24 +515,28 @@ export function FormularioPM({
 
       {!ro && (
         <div className="flex justify-end gap-2">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
+            className="text-xs"
             onClick={salvar}
             disabled={salvando || enviando}
-            className={clsx(
-              "flex items-center gap-1.5 rounded-lg border border-hairline px-3 py-2 text-xs font-medium text-ink-2 hover:bg-surface-2 hover:text-ink disabled:opacity-60"
-            )}
+            loading={salvando}
           >
-            {salvando ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+            {!salvando && <Save className="size-4" />}
             Salvar rascunho
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            className="text-xs"
             onClick={enviar}
             disabled={salvando || enviando}
-            className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-xs font-medium text-white hover:bg-accent/90 disabled:opacity-60"
+            loading={enviando}
           >
-            {enviando ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+            {!enviando && <Send className="size-4" />}
             Enviar relatório
-          </button>
+          </Button>
         </div>
       )}
     </div>

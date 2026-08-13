@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { Link2, Loader2, MessageSquare, Send } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { LinkPublico } from "@/components/link-publico";
 import { StatusDenunciaBadge } from "@/components/denuncia-status";
@@ -47,13 +48,10 @@ export default function Conteudo() {
             <h2 className="text-sm font-semibold text-ink">Canal público de denúncia</h2>
             <p className="text-xs text-muted">Divulgue este link no comunicado interno / intranet. O acesso é anônimo.</p>
           </div>
-          <button
-            onClick={() => setMostrarLink((v) => !v)}
-            className="flex h-9 shrink-0 items-center gap-2 rounded-lg border border-hairline px-3 text-sm font-medium text-ink-2 transition-colors hover:text-ink"
-          >
+          <Button variant="secondary" onClick={() => setMostrarLink((v) => !v)} className="shrink-0">
             <Link2 className="size-4" />
             {mostrarLink ? "Ocultar link" : "Ver link"}
-          </button>
+          </Button>
         </div>
         {mostrarLink && (
           <div className="mt-3">
@@ -292,14 +290,16 @@ function DetalheModal({ id, onFechar }: { id: number; onFechar: () => void }) {
                   className="min-w-0 flex-1 rounded-lg border border-hairline bg-surface px-3 py-2 text-sm outline-none focus:border-ink/30"
                   placeholder="Responder ao denunciante (anônimo)…"
                 />
-                <button
+                <Button
+                  variant="primary"
+                  size="lg"
                   onClick={responder}
                   disabled={enviando}
-                  className="flex h-10 shrink-0 items-center gap-2 rounded-lg bg-ink px-4 text-sm font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
+                  className="shrink-0"
                 >
                   {enviando ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
                   Enviar
-                </button>
+                </Button>
               </div>
             )}
           </div>

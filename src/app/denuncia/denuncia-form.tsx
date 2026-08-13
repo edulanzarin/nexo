@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Check, Copy, Loader2, ShieldCheck } from "lucide-react";
+import { Check, Copy, ShieldCheck } from "lucide-react";
+import { Button, Card, IconButton } from "@/components/ui";
 import { mutar } from "@/hooks/mutar";
 import {
   CATEGORIAS_DENUNCIA,
@@ -42,7 +43,7 @@ export function DenunciaForm() {
   if (criada) return <Recibo protocolo={criada.protocolo} senha={criada.senha} />;
 
   return (
-    <div className="card overflow-hidden">
+    <Card overflow padding="none" animate="none">
       <header className="border-b border-hairline px-6 py-5">
         <h1 className="text-lg font-semibold text-ink">Canal de denúncia</h1>
         <p className="mt-1 flex items-start gap-1.5 text-sm text-muted">
@@ -94,14 +95,9 @@ export function DenunciaForm() {
 
         {erro && <p className="text-sm text-critical">{erro}</p>}
 
-        <button
-          onClick={enviar}
-          disabled={enviando}
-          className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-ink text-sm font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
-        >
-          {enviando && <Loader2 className="size-4 animate-spin" />}
+        <Button variant="primary" size="lg" onClick={enviar} loading={enviando} className="w-full">
           {enviando ? "Enviando…" : "Enviar denúncia"}
-        </button>
+        </Button>
 
         <p className="text-center text-xs text-muted">
           Já tem um protocolo?{" "}
@@ -110,13 +106,13 @@ export function DenunciaForm() {
           </Link>
         </p>
       </div>
-    </div>
+    </Card>
   );
 }
 
 function Recibo({ protocolo, senha }: { protocolo: string; senha: string }) {
   return (
-    <div className="card overflow-hidden">
+    <Card overflow padding="none" animate="none">
       <div className="border-b border-hairline px-6 py-5 text-center">
         <Check className="mx-auto size-10 text-good" />
         <h1 className="mt-3 text-lg font-semibold text-ink">Denúncia registrada</h1>
@@ -128,14 +124,13 @@ function Recibo({ protocolo, senha }: { protocolo: string; senha: string }) {
       <div className="space-y-3 px-6 py-5">
         <CampoCopia rotulo="Protocolo" valor={protocolo} />
         <CampoCopia rotulo="Senha" valor={senha} />
-        <Link
-          href={`/denuncia/acompanhar?p=${encodeURIComponent(protocolo)}`}
-          className="mt-2 flex h-10 w-full items-center justify-center rounded-lg bg-ink text-sm font-medium text-surface transition-opacity hover:opacity-90"
-        >
-          Acompanhar agora
-        </Link>
+        <Button asChild variant="primary" size="lg" className="mt-2 w-full">
+          <Link href={`/denuncia/acompanhar?p=${encodeURIComponent(protocolo)}`}>
+            Acompanhar agora
+          </Link>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -157,13 +152,13 @@ function CampoCopia({ rotulo, valor }: { rotulo: string; valor: string }) {
         <code className="flex-1 rounded-lg border border-hairline bg-surface-2 px-3 py-2 text-sm font-semibold tracking-wide text-ink">
           {valor}
         </code>
-        <button
+        <IconButton
+          tone="bordered"
           onClick={copiar}
-          className="flex size-9 items-center justify-center rounded-lg border border-hairline text-muted transition-colors hover:text-ink"
           aria-label={`Copiar ${rotulo.toLowerCase()}`}
         >
           {copiado ? <Check className="size-4 text-good" /> : <Copy className="size-4" />}
-        </button>
+        </IconButton>
       </div>
     </div>
   );

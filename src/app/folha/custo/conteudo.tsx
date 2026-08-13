@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { AlertTriangle, Banknote, Building2, Receipt, Users, Wallet } from "lucide-react";
 import { Kpi } from "@/components/kpi-conf";
 import { CustoQuebra } from "@/components/custo-quebra";
+import { Card, EmptyState } from "@/components/ui";
 import { useFiltros } from "@/hooks/use-filters";
 import { useCustoFolha } from "@/hooks/use-api";
 import { brl, brlCompact, num } from "@/lib/format";
@@ -63,29 +64,21 @@ export default function CustoFolhaPage() {
 
   if (!temEmpresa) {
     return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
-          <Building2 className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
-        <p className="max-w-md text-xs text-muted">
-          O custo de folha é apurado de uma empresa por vez, no período escolhido.
-        </p>
-      </section>
+      <EmptyState
+        icon={<Building2 className="size-6" />}
+        titulo="Selecione uma empresa"
+        descricao="O custo de folha é apurado de uma empresa por vez, no período escolhido."
+      />
     );
   }
 
   if (res.isError) {
     return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-critical/12 text-critical">
-          <AlertTriangle className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Não foi possível apurar o custo</p>
-        <p className="max-w-md text-xs text-muted">
-          {res.error instanceof Error ? res.error.message : "Tente novamente em instantes."}
-        </p>
-      </section>
+      <EmptyState
+        icon={<AlertTriangle className="size-6" />}
+        titulo="Não foi possível apurar o custo"
+        descricao={res.error instanceof Error ? res.error.message : "Tente novamente em instantes."}
+      />
     );
   }
 
@@ -143,7 +136,7 @@ export default function CustoFolhaPage() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Composição por tipo de folha */}
-        <section className="card anim-fade-up p-5">
+        <Card as="section">
           <h2 className="text-sm font-semibold">Composição por tipo de folha</h2>
           <ul className="space-y-3">
             {dados.porTipo.map((t) => (
@@ -163,10 +156,10 @@ export default function CustoFolhaPage() {
               </li>
             ))}
           </ul>
-        </section>
+        </Card>
 
         {/* Evolução mensal */}
-        <section className="card anim-fade-up p-5">
+        <Card as="section">
           <h2 className="text-sm font-semibold">Evolução mensal</h2>
           {dados.serie.length === 0 ? (
             <p className="py-10 text-center text-xs text-muted">Sem competências no período</p>
@@ -186,17 +179,17 @@ export default function CustoFolhaPage() {
               ))}
             </div>
           )}
-        </section>
+        </Card>
       </div>
 
       {/* Rubricas (memória do custo) */}
-      <section className="card anim-fade-up p-5">
+      <Card as="section">
         <h2 className="text-sm font-semibold">Principais rubricas</h2>
         <div className="grid gap-6 sm:grid-cols-2">
           <RubricaLista titulo="Proventos" itens={proventos} />
           <RubricaLista titulo="Descontos" itens={descontos} />
         </div>
-      </section>
+      </Card>
 
       {/* Quebras */}
       <div className="grid gap-4 lg:grid-cols-2">

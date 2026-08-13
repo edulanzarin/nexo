@@ -15,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Badge, Button, EmptyState, IconButton } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { mutar } from "@/hooks/mutar";
 import { useEnvioRegras, useFormularios, useRhFuncionarios, useRhSetores } from "@/hooks/use-api";
@@ -66,12 +67,9 @@ export function RegrasLista() {
   return (
     <>
       <div className="mb-3 flex items-center justify-end gap-3">
-        <button
-          onClick={() => setEditar("nova")}
-          className="flex h-9 items-center gap-1.5 rounded-lg bg-ink px-3 text-sm font-medium text-surface transition-opacity hover:opacity-90"
-        >
+        <Button variant="primary" onClick={() => setEditar("nova")}>
           <Plus className="size-4" /> Nova regra
-        </button>
+        </Button>
       </div>
 
       {isLoading ? (
@@ -81,10 +79,7 @@ export function RegrasLista() {
           ))}
         </div>
       ) : (data ?? []).length === 0 ? (
-        <div className="card grid place-items-center gap-2 py-16 text-center text-muted">
-          <AlarmClock className="size-8 opacity-40" />
-          <p>Nenhuma regra automática.</p>
-        </div>
+        <EmptyState icon={<AlarmClock className="size-5" />} titulo="Nenhuma regra automática." />
       ) : (
         <div className="card overflow-hidden">
           <div className="overflow-x-auto">
@@ -105,9 +100,9 @@ export function RegrasLista() {
                     <td className="py-3 pl-4 pr-3">
                       <span className="font-medium text-ink">{r.formularioNome}</span>
                       {!r.ativo && (
-                        <span className="ml-2 rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted">
+                        <Badge tone="neutral" size="xs" uppercase className="ml-2">
                           pausada
-                        </span>
+                        </Badge>
                       )}
                     </td>
                     <td className="py-3 px-3 text-ink-2">{rotuloDestino(r)}</td>
@@ -118,22 +113,25 @@ export function RegrasLista() {
                     </td>
                     <td className="py-3 pl-3 pr-4">
                       <div className="flex items-center justify-end gap-1.5">
-                        <button
+                        <IconButton
+                          tone="bordered"
+                          size="sm"
                           onClick={() => setEditar(r)}
-                          className="grid size-8 place-items-center rounded-lg border border-hairline text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
                           title="Editar regra"
                           aria-label="Editar regra"
                         >
                           <Pencil className="size-3.5" />
-                        </button>
-                        <button
+                        </IconButton>
+                        <IconButton
+                          tone="danger"
+                          size="sm"
                           onClick={() => excluir(r)}
-                          className="grid size-8 place-items-center rounded-lg border border-hairline text-muted transition-colors hover:bg-critical/12 hover:text-critical"
+                          className="border border-hairline"
                           title="Excluir regra"
                           aria-label="Excluir regra"
                         >
                           <Trash2 className="size-3.5" />
-                        </button>
+                        </IconButton>
                       </div>
                     </td>
                   </tr>
@@ -479,20 +477,13 @@ function RegraModal({ regra, onFechar }: { regra: EnvioRegra | null; onFechar: (
       </div>
 
       <footer className="flex items-center justify-end gap-2 border-t border-hairline px-6 py-3">
-        <button
-          onClick={onFechar}
-          className="flex h-9 items-center rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:bg-surface-2 hover:text-ink"
-        >
+        <Button variant="ghost" onClick={onFechar}>
           Cancelar
-        </button>
-        <button
-          onClick={salvar}
-          disabled={salvando}
-          className="flex h-9 items-center gap-1.5 rounded-lg bg-ink px-3 text-sm font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
-        >
+        </Button>
+        <Button variant="primary" onClick={salvar} disabled={salvando}>
           {salvando ? <Loader2 className="size-4 animate-spin" /> : <CalendarClock className="size-4" />}
           {salvando ? "Salvando…" : regra ? "Salvar" : "Criar regra"}
-        </button>
+        </Button>
       </footer>
     </Modal>
   );

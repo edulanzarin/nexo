@@ -16,6 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Badge, Button, EmptyState } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { CamposFormulario } from "@/components/formulario-campos";
 import { mutar } from "@/hooks/mutar";
@@ -310,9 +311,9 @@ export function EnviarModal({
             <div className="mb-1.5 flex items-center justify-between">
               <span className="text-xs font-medium text-ink-2">Gestores cadastrados</span>
               {lista.length > 0 && (
-                <button onClick={marcarTodos} className="text-xs font-medium text-accent hover:underline">
+                <Button variant="link" onClick={marcarTodos} className="text-xs">
                   {todosMarcados ? "Limpar" : "Selecionar todos"}
-                </button>
+                </Button>
               )}
             </div>
             {lista.length === 0 ? (
@@ -359,12 +360,9 @@ export function EnviarModal({
             <div className="mb-1.5 flex items-center justify-between">
               <span className="text-xs font-medium text-ink-2">Colaboradores</span>
               {chavesFiltradas.length > 0 && (
-                <button
-                  onClick={marcarTodosColab}
-                  className="text-xs font-medium text-accent hover:underline"
-                >
+                <Button variant="link" onClick={marcarTodosColab} className="text-xs">
                   {todosColabMarcados ? "Limpar" : "Selecionar todos"}
-                </button>
+                </Button>
               )}
             </div>
             <div className="relative mb-2">
@@ -453,14 +451,10 @@ export function EnviarModal({
 
       <footer className="flex items-center justify-between gap-3 border-t border-hairline px-6 py-3">
         <span className="text-xs text-muted">{`${total} ${rotuloAlvo}`}</span>
-        <button
-          onClick={enviar}
-          disabled={enviando}
-          className="flex h-9 items-center gap-1.5 rounded-lg bg-ink px-3 text-sm font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
-        >
+        <Button variant="primary" onClick={enviar} disabled={enviando}>
           {enviando ? <Loader2 className="size-4 animate-spin" /> : agendar ? <CalendarClock className="size-4" /> : <Send className="size-4" />}
           {enviando ? "Enviando…" : agendar ? "Agendar" : "Enviar agora"}
-        </button>
+        </Button>
       </footer>
     </Modal>
   );
@@ -482,12 +476,7 @@ export function EnviosLista() {
     );
   }
   if ((data ?? []).length === 0) {
-    return (
-      <div className="card grid place-items-center gap-2 py-16 text-center text-muted">
-        <Send className="size-8 opacity-40" />
-        <p>Nenhuma campanha ainda.</p>
-      </div>
-    );
+    return <EmptyState icon={<Send className="size-5" />} titulo="Nenhuma campanha ainda." />;
   }
 
   return (
@@ -529,12 +518,9 @@ export function EnviosLista() {
                       {e.respondidos} / {e.total}
                     </td>
                     <td className="py-3 pl-3 pr-4 text-right">
-                      <button
-                        onClick={() => setVerId(e.id)}
-                        className="rounded-lg border border-hairline px-2.5 py-1.5 text-xs font-medium text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
-                      >
+                      <Button variant="secondary" size="sm" onClick={() => setVerId(e.id)}>
                         Ver respostas
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 );
@@ -586,14 +572,14 @@ function RespostasModal({ envioId, onFechar }: { envioId: number; onFechar: () =
                           : d.email}
                       </p>
                     </div>
-                    <span
-                      className={clsx(
-                        "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide",
-                        respondeu ? "bg-good/12 text-good" : d.status === "erro" ? "bg-critical/12 text-critical" : "bg-surface-2 text-muted"
-                      )}
+                    <Badge
+                      tone={respondeu ? "good" : d.status === "erro" ? "critical" : "neutral"}
+                      size="xs"
+                      uppercase
+                      className="shrink-0"
                     >
                       {respondeu ? "Respondido" : d.status === "erro" ? "Erro" : "Aguardando"}
-                    </span>
+                    </Badge>
                   </button>
                   {expandido && respondeu && (
                     <div className="mt-3 rounded-lg border border-hairline p-3">

@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge, Button, IconButton } from "@/components/ui";
 import { mutar } from "@/hooks/mutar";
 import { useRhGestores, useRhSetores } from "@/hooks/use-api";
 import type { GestorRh, SetorRh } from "@/lib/rh-tipos";
@@ -169,32 +170,29 @@ function SetorCard({
               className="h-8 flex-1 rounded-lg border border-hairline bg-surface px-2.5 text-sm font-semibold outline-none focus:border-ink/30"
               autoFocus
             />
-            <button
-              onClick={salvarNome}
-              className="grid size-8 place-items-center rounded-lg text-good transition-colors hover:bg-good/12"
-              aria-label="Salvar nome"
-            >
+            <IconButton tone="good" size="sm" onClick={salvarNome} aria-label="Salvar nome">
               <Check className="size-4" />
-            </button>
-            <button
+            </IconButton>
+            <IconButton
+              tone="ghost"
+              size="sm"
               onClick={() => {
                 setRenomeando(false);
                 setNomeSetor(setor.nome);
               }}
-              className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-ink"
               aria-label="Cancelar"
             >
               <X className="size-4" />
-            </button>
+            </IconButton>
           </div>
         ) : (
           <>
             <div className="flex min-w-0 items-center gap-1.5">
               <h3 className="truncate font-semibold text-ink">{setor.nome}</h3>
               {setor.origem === "app" && (
-                <span className="shrink-0 rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted">
+                <Badge tone="neutral" size="xs" uppercase className="shrink-0">
                   próprio
-                </span>
+                </Badge>
               )}
               <button
                 onClick={() => {
@@ -247,20 +245,12 @@ function SetorCard({
               <div className="flex items-center justify-between gap-2">
                 <PapelSegmentos valor={editPapel} onMudar={setEditPapel} />
                 <div className="flex items-center gap-1">
-                  <button
-                    onClick={salvarEdicao}
-                    className="grid size-8 place-items-center rounded-lg text-good transition-colors hover:bg-good/12"
-                    aria-label="Salvar"
-                  >
+                  <IconButton tone="good" size="sm" onClick={salvarEdicao} aria-label="Salvar">
                     <Check className="size-4" />
-                  </button>
-                  <button
-                    onClick={() => setEditId(null)}
-                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-ink"
-                    aria-label="Cancelar"
-                  >
+                  </IconButton>
+                  <IconButton tone="ghost" size="sm" onClick={() => setEditId(null)} aria-label="Cancelar">
                     <X className="size-4" />
-                  </button>
+                  </IconButton>
                 </div>
               </div>
             </div>
@@ -281,20 +271,12 @@ function SetorCard({
                 <p className="truncate text-xs text-muted">{g.email}</p>
               </div>
               <div className="flex shrink-0 items-center gap-1">
-                <button
-                  onClick={() => abrirEdicao(g)}
-                  className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-ink"
-                  aria-label="Editar"
-                >
+                <IconButton tone="ghost" size="sm" onClick={() => abrirEdicao(g)} aria-label="Editar">
                   <Pencil className="size-3.5" />
-                </button>
-                <button
-                  onClick={() => remover(g)}
-                  className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-critical/12 hover:text-critical"
-                  aria-label="Remover"
-                >
+                </IconButton>
+                <IconButton tone="danger" size="sm" onClick={() => remover(g)} aria-label="Remover">
                   <Trash2 className="size-3.5" />
-                </button>
+                </IconButton>
               </div>
             </div>
           ),
@@ -320,13 +302,9 @@ function SetorCard({
         </div>
         <div className="flex items-center justify-between gap-2">
           <PapelSegmentos valor={addPapel} onMudar={setAddPapel} />
-          <button
-            onClick={adicionar}
-            disabled={salvando}
-            className="flex h-8 items-center gap-1.5 rounded-lg bg-ink px-3 text-xs font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
-          >
+          <Button variant="primary" size="sm" onClick={adicionar} disabled={salvando}>
             <Plus className="size-3.5" /> Adicionar
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -368,13 +346,9 @@ function NovoSetorCard() {
           placeholder="Nome do setor"
           className="h-8 flex-1 rounded-lg border border-hairline bg-surface px-2.5 text-sm outline-none placeholder:text-muted focus:border-ink/30"
         />
-        <button
-          onClick={criar}
-          disabled={salvando}
-          className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-ink px-3 text-xs font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
-        >
+        <Button variant="primary" size="sm" onClick={criar} disabled={salvando} className="shrink-0">
           <Plus className="size-3.5" /> Criar
-        </button>
+        </Button>
       </div>
     </div>
   );

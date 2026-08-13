@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Building2, ShieldCheck } from "lucide-react";
 import { FacetaDropdown } from "@/components/filters/faceta-dropdown";
+import { Badge, Card } from "@/components/ui";
 import type { Faceta } from "@/lib/types";
 import type { CargoResumo } from "../dados";
 
@@ -53,7 +54,7 @@ export function CargosTabela({ cargos }: { cargos: CargoResumo[] }) {
         />
       </div>
 
-      <div className="card mt-4 overflow-hidden">
+      <Card padding="none" animate="none" overflow className="mt-4">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -83,9 +84,9 @@ export function CargosTabela({ cargos }: { cargos: CargoResumo[] }) {
                     <span className="flex items-center gap-2">
                       {c.nome}
                       {c.admin && (
-                        <span className="flex shrink-0 items-center gap-1 rounded-md bg-ent/12 px-1.5 py-0.5 text-[10px] font-medium text-ent">
+                        <Badge tone="ent" size="xs" className="shrink-0">
                           <ShieldCheck className="size-3" /> acesso total
-                        </span>
+                        </Badge>
                       )}
                     </span>
                   </td>
@@ -98,7 +99,7 @@ export function CargosTabela({ cargos }: { cargos: CargoResumo[] }) {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

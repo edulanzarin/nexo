@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import { Kpi } from "@/components/kpi-conf";
+import { Badge, Card, EmptyState } from "@/components/ui";
 import { useFiltros } from "@/hooks/use-filters";
 import { useConformidadeEsocial } from "@/hooks/use-api";
 import { dataBR, num } from "@/lib/format";
@@ -21,14 +22,9 @@ import type { EventoEsocial, PendenciaEsocial } from "@/lib/types";
 function SituacaoBadge({ situacao }: { situacao: PendenciaEsocial["situacao"] }) {
   const nao = situacao === "nao_enviado";
   return (
-    <span
-      className={clsx(
-        "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium",
-        nao ? "bg-critical/12 text-critical" : "bg-warning/15 text-warning"
-      )}
-    >
+    <Badge tone={nao ? "critical" : "warning"} size="xs" className="shrink-0">
       {nao ? "não enviado" : "sem recibo"}
-    </span>
+    </Badge>
   );
 }
 
@@ -45,7 +41,7 @@ function PendenciaLista({
   dados: PendenciaEsocial[];
 }) {
   return (
-    <section className="card overflow-hidden">
+    <Card as="section" overflow padding="none">
       <header className="flex items-center gap-3 border-b border-hairline px-4 py-3">
         <span
           className={clsx(
@@ -89,7 +85,7 @@ function PendenciaLista({
           </table>
         </div>
       )}
-    </section>
+    </Card>
   );
 }
 
@@ -115,29 +111,21 @@ export default function EsocialPage() {
 
   if (!temEmpresa) {
     return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
-          <Building2 className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
-        <p className="max-w-md text-xs text-muted">
-          A conformidade eSocial é verificada de uma empresa por vez, no período escolhido.
-        </p>
-      </section>
+      <EmptyState
+        icon={<Building2 className="size-6" />}
+        titulo="Selecione uma empresa"
+        descricao="A conformidade eSocial é verificada de uma empresa por vez, no período escolhido."
+      />
     );
   }
 
   if (res.isError) {
     return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-critical/12 text-critical">
-          <AlertTriangle className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Não foi possível verificar o eSocial</p>
-        <p className="max-w-md text-xs text-muted">
-          {res.error instanceof Error ? res.error.message : "Tente novamente em instantes."}
-        </p>
-      </section>
+      <EmptyState
+        icon={<AlertTriangle className="size-6" />}
+        titulo="Não foi possível verificar o eSocial"
+        descricao={res.error instanceof Error ? res.error.message : "Tente novamente em instantes."}
+      />
     );
   }
 
@@ -213,7 +201,7 @@ export default function EsocialPage() {
       </div>
 
       {/* Panorama por tipo de evento */}
-      <section className="card overflow-hidden">
+      <Card as="section" overflow padding="none">
         <header className="border-b border-hairline px-4 py-3">
           <h2 className="text-sm font-semibold">Por tipo de evento</h2>
           <p className="text-xs text-muted">Volume transmitido no período e o resultado de cada um</p>
@@ -264,7 +252,7 @@ export default function EsocialPage() {
             </table>
           </div>
         )}
-      </section>
+      </Card>
     </div>
   );
 }

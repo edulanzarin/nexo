@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search, ShieldCheck, Building2, Briefcase } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { FacetaDropdown } from "@/components/filters/faceta-dropdown";
+import { Badge, Card, Segmented } from "@/components/ui";
 import type { Faceta } from "@/lib/types";
 import type { UsuarioLista } from "../dados";
 
@@ -52,18 +53,6 @@ export function UsuariosTabela({ usuarios }: { usuarios: UsuarioLista[] }) {
     });
   }, [usuarios, busca, cargos, status]);
 
-  const statusBtn = (v: Status, rotulo: string) => (
-    <button
-      type="button"
-      onClick={() => setStatus(v)}
-      className={`h-9 rounded-lg px-3 text-sm transition-colors ${
-        status === v ? "bg-accent/12 font-medium text-accent" : "text-ink-2 hover:bg-surface-2"
-      }`}
-    >
-      {rotulo}
-    </button>
-  );
-
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2">
@@ -84,14 +73,19 @@ export function UsuariosTabela({ usuarios }: { usuarios: UsuarioLista[] }) {
           onMudar={setCargos}
           buscavel
         />
-        <div className="flex items-center gap-0.5 rounded-lg border border-hairline p-0.5">
-          {statusBtn("todos", "Todos")}
-          {statusBtn("ativos", "Ativos")}
-          {statusBtn("inativos", "Inativos")}
-        </div>
+        <Segmented<Status>
+          aria-label="Filtrar por status"
+          options={[
+            { value: "todos", label: "Todos" },
+            { value: "ativos", label: "Ativos" },
+            { value: "inativos", label: "Inativos" },
+          ]}
+          value={status}
+          onChange={setStatus}
+        />
       </div>
 
-      <div className="card mt-4 overflow-hidden">
+      <Card padding="none" animate="none" overflow className="mt-4">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -130,14 +124,14 @@ export function UsuariosTabela({ usuarios }: { usuarios: UsuarioLista[] }) {
                         <div className="flex items-center gap-2">
                           <span className="truncate font-medium">{u.nome}</span>
                           {u.admin && (
-                            <span className="flex shrink-0 items-center gap-1 rounded-md bg-ent/12 px-1.5 py-0.5 text-[10px] font-medium text-ent">
+                            <Badge tone="ent" size="xs" className="shrink-0">
                               <ShieldCheck className="size-3" /> admin
-                            </span>
+                            </Badge>
                           )}
                           {!u.ativo && (
-                            <span className="shrink-0 rounded-md bg-critical/12 px-1.5 py-0.5 text-[10px] font-medium text-critical">
+                            <Badge tone="critical" size="xs" className="shrink-0">
                               inativo
-                            </span>
+                            </Badge>
                           )}
                         </div>
                         <span className="truncate text-xs text-muted">{u.email}</span>
@@ -159,7 +153,7 @@ export function UsuariosTabela({ usuarios }: { usuarios: UsuarioLista[] }) {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

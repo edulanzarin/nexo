@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { PermissaoMatriz } from "@/components/admin/permissao-matriz";
 import { ComboCriavel } from "@/components/ui/combo-criavel";
+import { Button, Card } from "@/components/ui";
 import { salvarCargo, excluirCargo } from "../actions";
 import type { CargoDetalhe, SetorOpcao, GrupoResumo } from "../dados";
 
@@ -89,7 +90,7 @@ export function CargoForm({
 
           <section>
             <h2 className="text-sm font-semibold">Grupos de empresa</h2>
-            <div className="card mt-3 max-h-56 max-w-md divide-y divide-hairline overflow-auto">
+            <Card padding="none" animate="none" className="mt-3 max-h-56 max-w-md divide-y divide-hairline overflow-auto">
               {grupos.length === 0 && <p className="px-4 py-3 text-xs text-muted">Nenhum grupo criado.</p>}
               {grupos.map((g) => (
                 <label key={g.id} className="flex items-center gap-2.5 px-4 py-2.5 text-sm">
@@ -104,29 +105,22 @@ export function CargoForm({
                   <span className="ml-auto shrink-0 text-xs text-muted">{g.empresas} empresas</span>
                 </label>
               ))}
-            </div>
+            </Card>
           </section>
         </>
       )}
 
       <div className="flex items-center justify-between border-t border-hairline pt-4">
         {cargo ? (
-          <button
-            type="submit"
-            formAction={excluirCargo}
-            className="h-9 rounded-lg border border-critical/40 px-3 text-sm font-medium text-critical transition-colors hover:bg-critical/10"
-          >
+          <Button type="submit" formAction={excluirCargo} variant="danger">
             Excluir
-          </button>
+          </Button>
         ) : (
           <span />
         )}
-        <button
-          type="submit"
-          className="h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-        >
+        <Button type="submit" variant="primary" size="lg">
           {cargo ? "Salvar" : "Criar cargo"}
-        </button>
+        </Button>
       </div>
     </form>
   );

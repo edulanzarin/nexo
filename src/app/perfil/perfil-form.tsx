@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { MonitorSmartphone } from "lucide-react";
 import { AvatarCampo } from "@/app/admin/usuarios/avatar-campo";
+import { Button } from "@/components/ui";
 import { atualizarPerfil, encerrarSessoes, type PerfilState } from "./actions";
 
 const input =
@@ -98,13 +99,9 @@ export function PerfilForm({
       </section>
 
       <div className="flex justify-end border-t border-hairline pt-4">
-        <button
-          type="submit"
-          disabled={pending}
-          className="h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-        >
+        <Button variant="primary" size="lg" type="submit" disabled={pending}>
           {pending ? "Salvando…" : "Salvar"}
-        </button>
+        </Button>
       </div>
     </form>
 
@@ -121,17 +118,13 @@ export function PerfilForm({
           </div>
         </div>
         <form action={sessAction} className="flex justify-end">
-          <button
-            type="submit"
-            disabled={sessPending || outras === 0}
-            className="h-10 rounded-lg border border-hairline bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-surface-2 disabled:opacity-50"
-          >
+          <Button variant="secondary" size="lg" type="submit" disabled={sessPending || outras === 0}>
             {sessPending
               ? "Encerrando…"
               : outras === 0
                 ? "Nenhuma outra sessão"
                 : `Encerrar outras sessões (${outras})`}
-          </button>
+          </Button>
         </form>
       </section>
     </div>

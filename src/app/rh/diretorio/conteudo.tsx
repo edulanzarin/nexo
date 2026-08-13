@@ -5,6 +5,7 @@ import { Check, Pencil, Plus, Search, UserRound } from "lucide-react";
 import clsx from "clsx";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Badge, Button } from "@/components/ui";
 import { Dropdown, ItemLista } from "@/components/ui/dropdown";
 import { Modal } from "@/components/ui/modal";
 import { FichaModal, tempoCasa } from "@/components/folha-ficha-modal";
@@ -186,12 +187,9 @@ export default function Conteudo() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setNovoPj(true)}
-            className="flex h-9 items-center gap-1.5 rounded-lg border border-hairline px-3 text-sm font-medium text-ink-2 transition-colors hover:bg-surface-2"
-          >
+          <Button variant="secondary" onClick={() => setNovoPj(true)}>
             <Plus className="size-4" /> Adicionar PJ
-          </button>
+          </Button>
           <div className="relative">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted" />
             <input
@@ -241,9 +239,9 @@ export default function Conteudo() {
                       </span>
                       <span className="font-medium text-ink">{f.nome}</span>
                       {f.origem === "pj" && (
-                        <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted">
+                        <Badge tone="neutral" size="xs" uppercase>
                           PJ
-                        </span>
+                        </Badge>
                       )}
                       {f.editado && (
                         <span title="Corrigido no RH">
@@ -421,19 +419,12 @@ function ModalNovoPj({
         </label>
       </div>
       <footer className="flex items-center justify-end gap-2 border-t border-hairline px-6 py-3">
-        <button
-          onClick={onFechar}
-          className="flex h-8 items-center rounded-lg px-3 text-xs font-medium text-muted transition-colors hover:bg-surface-2 hover:text-ink"
-        >
+        <Button variant="ghost" size="sm" onClick={onFechar}>
           Cancelar
-        </button>
-        <button
-          onClick={criar}
-          disabled={salvando}
-          className="flex h-8 items-center gap-1.5 rounded-lg bg-ink px-3 text-xs font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
-        >
+        </Button>
+        <Button variant="primary" size="sm" onClick={criar} disabled={salvando}>
           <Plus className="size-3.5" /> Adicionar
-        </button>
+        </Button>
       </footer>
     </Modal>
   );

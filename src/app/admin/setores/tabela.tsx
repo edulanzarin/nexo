@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
+import { Card } from "@/components/ui";
 import type { SetorResumo } from "../dados";
 
 const inputBusca =
@@ -30,7 +31,7 @@ export function SetoresTabela({ setores }: { setores: SetorResumo[] }) {
         />
       </div>
 
-      <div className="card mt-4 overflow-hidden">
+      <Card padding="none" animate="none" overflow className="mt-4">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -60,7 +61,7 @@ export function SetoresTabela({ setores }: { setores: SetorResumo[] }) {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

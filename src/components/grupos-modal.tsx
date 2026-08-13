@@ -5,6 +5,7 @@ import { Check, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import clsx from "clsx";
 import { Modal } from "@/components/ui/modal";
+import { Button, IconButton } from "@/components/ui";
 import { useEmpresas } from "@/hooks/use-api";
 import { useGruposLocais } from "@/hooks/use-grupos-locais";
 import type { GrupoLocal } from "@/lib/types";
@@ -108,32 +109,33 @@ export function GruposModal({ aberto, onFechar, onAplicar }: Props) {
                   >
                     Aplicar
                   </button>
-                  <button
+                  <IconButton
                     onClick={() => iniciarEdicao(g)}
-                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+                    size="sm"
+                    tone="ghost"
                     title="Editar"
+                    aria-label="Editar"
                   >
                     <Pencil className="size-4" />
-                  </button>
-                  <button
+                  </IconButton>
+                  <IconButton
                     onClick={() => excluirGrupo(g)}
-                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-critical/12 hover:text-critical"
+                    size="sm"
+                    tone="danger"
                     title="Excluir"
+                    aria-label="Excluir"
                   >
                     <Trash2 className="size-4" />
-                  </button>
+                  </IconButton>
                 </li>
               ))}
             </ul>
           </div>
           <footer className="border-t border-hairline px-6 py-4">
-            <button
-              onClick={() => iniciarEdicao(null)}
-              className="flex items-center gap-2 rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
-            >
+            <Button variant="primary" onClick={() => iniciarEdicao(null)}>
               <Plus className="size-4" />
               Novo grupo
-            </button>
+            </Button>
           </footer>
         </div>
       ) : (
@@ -183,18 +185,12 @@ export function GruposModal({ aberto, onFechar, onAplicar }: Props) {
             })}
           </div>
           <footer className="flex justify-between gap-2 border-t border-hairline px-6 py-4">
-            <button
-              onClick={() => setEditando(null)}
-              className="rounded-lg px-3.5 py-2 text-sm text-ink-2 transition-colors hover:bg-surface-2"
-            >
+            <Button variant="ghost" onClick={() => setEditando(null)}>
               Voltar
-            </button>
-            <button
-              onClick={salvarGrupo}
-              className="rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
-            >
+            </Button>
+            <Button variant="primary" onClick={salvarGrupo}>
               {editando.id ? "Salvar alterações" : "Criar grupo"}
-            </button>
+            </Button>
           </footer>
         </div>
       )}

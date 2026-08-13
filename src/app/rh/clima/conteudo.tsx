@@ -2,9 +2,10 @@
 
 import clsx from "clsx";
 import { useState } from "react";
-import { Loader2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { LinkPublico } from "@/components/link-publico";
 import { CamposFormulario } from "@/components/formulario-campos";
@@ -60,20 +61,14 @@ export default function Conteudo() {
           </select>
 
           {rodadaSel && (
-            <button
-              onClick={alternarStatus}
-              className="flex h-9 items-center rounded-lg border border-hairline px-3 text-sm font-medium text-ink-2 transition-colors hover:text-ink"
-            >
+            <Button variant="secondary" onClick={alternarStatus}>
               {rodadaSel.status === "aberta" ? "Fechar rodada" : "Reabrir rodada"}
-            </button>
+            </Button>
           )}
-          <button
-            onClick={() => setNovaAberta(true)}
-            className="flex h-9 items-center gap-1.5 rounded-lg bg-ink px-3 text-sm font-medium text-surface transition-opacity hover:opacity-90"
-          >
+          <Button variant="primary" onClick={() => setNovaAberta(true)}>
             <Plus className="size-4" />
             Nova rodada
-          </button>
+          </Button>
         </div>
 
         {rodadaSel && (
@@ -215,17 +210,18 @@ function NovaRodadaModal({ onFechar, onCriada }: { onFechar: () => void; onCriad
         </label>
 
         <div className="flex justify-end gap-2">
-          <button onClick={onFechar} className="h-9 rounded-lg border border-hairline px-4 text-sm text-ink-2 hover:text-ink">
+          <Button variant="secondary" onClick={onFechar} className="px-4">
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
             onClick={criar}
-            disabled={salvando || ativos.length === 0}
-            className="flex h-9 items-center gap-2 rounded-lg bg-ink px-4 text-sm font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
+            loading={salvando}
+            disabled={ativos.length === 0}
+            className="px-4"
           >
-            {salvando && <Loader2 className="size-4 animate-spin" />}
             Criar rodada
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

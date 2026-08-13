@@ -3,6 +3,7 @@ import { assertAdmin } from "@/lib/sessao";
 import { listarAuditoria } from "@/lib/auditoria";
 import { MODULOS } from "@/lib/modulos";
 import { tituloPagina } from "@/lib/marca";
+import { Button } from "@/components/ui";
 
 /**
  * Trilha de auditoria (só admin). Server component: o filtro por módulo/busca
@@ -148,20 +149,14 @@ export default async function AuditoriaPage({
           </span>
           <div className="flex gap-2">
             {pagina > 1 && (
-              <Link
-                href={comFiltro({ pagina: String(pagina - 1) })}
-                className="rounded-lg border border-hairline px-3 py-1.5 hover:bg-surface-2"
-              >
-                Anterior
-              </Link>
+              <Button asChild variant="secondary" size="sm">
+                <Link href={comFiltro({ pagina: String(pagina - 1) })}>Anterior</Link>
+              </Button>
             )}
             {pagina < paginas && (
-              <Link
-                href={comFiltro({ pagina: String(pagina + 1) })}
-                className="rounded-lg border border-hairline px-3 py-1.5 hover:bg-surface-2"
-              >
-                Próxima
-              </Link>
+              <Button asChild variant="secondary" size="sm">
+                <Link href={comFiltro({ pagina: String(pagina + 1) })}>Próxima</Link>
+              </Button>
             )}
           </div>
         </div>

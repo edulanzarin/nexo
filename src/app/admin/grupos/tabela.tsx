@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
+import { Card } from "@/components/ui";
 import type { GrupoResumo } from "../dados";
 
 const inputBusca =
@@ -30,7 +31,7 @@ export function GruposTabela({ grupos }: { grupos: GrupoResumo[] }) {
         />
       </div>
 
-      <div className="card mt-4 overflow-hidden">
+      <Card padding="none" animate="none" overflow className="mt-4">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -64,7 +65,7 @@ export function GruposTabela({ grupos }: { grupos: GrupoResumo[] }) {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

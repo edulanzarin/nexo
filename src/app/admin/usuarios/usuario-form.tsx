@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
+import { Badge, Button, Card } from "@/components/ui";
 import { salvarUsuario, excluirUsuario } from "../actions";
 import type { UsuarioDetalhe, CargoOpcao } from "../dados";
 import { AvatarCampo } from "./avatar-campo";
@@ -72,15 +73,15 @@ export function UsuarioForm({
       <section>
         <h2 className="text-sm font-semibold">Cargos</h2>
         {cargos.length === 0 ? (
-          <p className="card mt-3 px-4 py-3 text-sm text-muted">
+          <Card as="p" padding="none" animate="none" className="mt-3 px-4 py-3 text-sm text-muted">
             Nenhum cargo criado.{" "}
             <Link href="/admin/cargos/novo" className="text-accent hover:underline">
               Crie um cargo
             </Link>{" "}
             antes de cadastrar o usuário.
-          </p>
+          </Card>
         ) : (
-          <div className="card mt-3 max-h-72 divide-y divide-hairline overflow-auto">
+          <Card padding="none" animate="none" className="mt-3 max-h-72 divide-y divide-hairline overflow-auto">
             {cargos.map((c) => (
               <label key={c.id} className="flex items-center gap-2.5 px-4 py-2.5 text-sm">
                 <input
@@ -93,34 +94,27 @@ export function UsuarioForm({
                 <span className="min-w-0 truncate">{c.nome}</span>
                 {c.setorNome && <span className="shrink-0 text-xs text-muted">· {c.setorNome}</span>}
                 {c.admin && (
-                  <span className="ml-auto flex shrink-0 items-center gap-1 rounded bg-ent/12 px-1.5 py-0.5 text-[10px] font-medium text-ent">
+                  <Badge tone="ent" size="xs" className="ml-auto shrink-0">
                     <ShieldCheck className="size-3" /> acesso total
-                  </span>
+                  </Badge>
                 )}
               </label>
             ))}
-          </div>
+          </Card>
         )}
       </section>
 
       <div className="flex items-center justify-between border-t border-hairline pt-4">
         {usuario ? (
-          <button
-            type="submit"
-            formAction={excluirUsuario}
-            className="h-9 rounded-lg border border-critical/40 px-3 text-sm font-medium text-critical transition-colors hover:bg-critical/10"
-          >
+          <Button type="submit" formAction={excluirUsuario} variant="danger">
             Excluir
-          </button>
+          </Button>
         ) : (
           <span />
         )}
-        <button
-          type="submit"
-          className="h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-        >
+        <Button type="submit" variant="primary" size="lg">
           {usuario ? "Salvar" : "Criar usuário"}
-        </button>
+        </Button>
       </div>
     </form>
   );

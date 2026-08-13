@@ -8,6 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { SeloEmpresa } from "@/components/rh-selo-empresa";
 import { BotaoExecutar } from "@/components/filters/botao-executar";
 import { FiltroPendente } from "@/components/filtro-pendente";
+import { Badge, Button, IconButton, type BadgeTone } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { CamposFormulario } from "@/components/formulario-campos";
 import { useExperienciaConfig, useExperienciaResposta, useRhExperiencia } from "@/hooks/use-api";
@@ -25,11 +26,11 @@ import type { ExperienciaItem } from "@/lib/rh-tipos";
 
 type FiltroEmpresa = "todas" | number;
 
-const STATUS_CLASSE: Record<StatusExperiencia, string> = {
-  pendente: "bg-surface-2 text-muted",
-  enviado: "bg-warning/12 text-warning",
-  atraso: "bg-critical/12 text-critical",
-  respondido: "bg-good/12 text-good",
+const STATUS_TONE: Record<StatusExperiencia, BadgeTone> = {
+  pendente: "neutral",
+  enviado: "warning",
+  atraso: "critical",
+  respondido: "good",
 };
 
 function prazoTexto(dias: number): string {
@@ -253,12 +254,9 @@ export default function Conteudo() {
           ))}
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setConfigAberta(true)}
-            className="flex h-9 items-center gap-1.5 rounded-lg border border-hairline px-3 text-sm font-medium text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
-          >
+          <Button variant="secondary" onClick={() => setConfigAberta(true)}>
             <Settings className="size-4" /> Configurar
-          </button>
+          </Button>
           <BotaoExecutar onClick={executar} dirty={dirty} rotulo="Visualizar" />
         </div>
       </div>
@@ -327,17 +325,12 @@ export default function Conteudo() {
                     </p>
                   </td>
                   <td className="py-3 px-3">
-                    <span
-                      className={clsx(
-                        "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide",
-                        STATUS_CLASSE[i.status]
-                      )}
-                    >
+                    <Badge tone={STATUS_TONE[i.status]} size="xs" uppercase>
                       {i.status === "respondido" && <CheckCircle2 className="size-3" />}
                       {i.status === "atraso" && <AlertTriangle className="size-3" />}
                       {i.status === "enviado" && <Clock className="size-3" />}
                       {STATUS_ROTULO[i.status]}
-                    </span>
+                    </Badge>
                     {i.resposta && (
                       <p className="mt-1 text-[11px] text-muted/80">por {i.resposta.respondidoPor}</p>
                     )}
@@ -359,34 +352,38 @@ export default function Conteudo() {
                   <td className="py-3 pl-3 pr-4">
                     <div className="flex items-center justify-end gap-1.5">
                       {i.status === "respondido" ? (
-                        <button
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={() => setVerResp(i.id)}
                           disabled={i.id == null}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-hairline px-2.5 py-1.5 text-xs font-medium text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-40"
                         >
                           <Eye className="size-3.5" /> Ver respostas
-                        </button>
+                        </Button>
                       ) : (
-                        <button
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={() => reenviar(i)}
                           disabled={i.gestores === 0 || enviando === chave(i)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-hairline px-2.5 py-1.5 text-xs font-medium text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-40"
                           title={i.gestores === 0 ? "Cadastre um gestor no setor" : "Enviar formulário agora"}
                         >
                           <Send className="size-3.5" />
                           {enviando === chave(i) ? "Enviando…" : i.ultimoLembrete ? "Reenviar" : "Enviar"}
-                        </button>
+                        </Button>
                       )}
                       {i.id != null && (
-                        <button
+                        <IconButton
+                          tone="danger"
+                          size="sm"
                           onClick={() => excluir(i)}
                           disabled={excluindo === i.id}
-                          className="grid size-8 shrink-0 place-items-center rounded-lg border border-hairline text-muted transition-colors hover:bg-critical/12 hover:text-critical disabled:opacity-40"
+                          className="border border-hairline"
                           title="Excluir avaliação e respostas"
                           aria-label="Excluir avaliação"
                         >
                           <Trash2 className="size-3.5" />
-                        </button>
+                        </IconButton>
                       )}
                     </div>
                   </td>

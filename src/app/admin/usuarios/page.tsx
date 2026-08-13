@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { Button } from "@/components/ui";
 import { listarUsuarios } from "../dados";
 import { UsuariosTabela } from "./tabela";
 
@@ -15,13 +16,12 @@ export default async function UsuariosPage() {
             {usuarios.length} {usuarios.length === 1 ? "pessoa" : "pessoas"}
           </p>
         </div>
-        <Link
-          href="/admin/usuarios/novo"
-          className="flex h-9 items-center gap-1.5 rounded-lg bg-accent px-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-        >
-          <Plus className="size-4" />
-          Novo usuário
-        </Link>
+        <Button asChild variant="primary">
+          <Link href="/admin/usuarios/novo">
+            <Plus className="size-4" />
+            Novo usuário
+          </Link>
+        </Button>
       </div>
 
       <div className="mt-6">

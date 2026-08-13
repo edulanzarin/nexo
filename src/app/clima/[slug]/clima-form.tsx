@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
+import { Button, Card } from "@/components/ui";
 import { mutar } from "@/hooks/mutar";
 import { CamposFormulario } from "@/components/formulario-campos";
 import { validarRespostas, type RespostaValores, type ValorCampo } from "@/lib/formularios-tipos";
@@ -51,34 +52,31 @@ export function ClimaForm({ rodada }: { rodada: RodadaPublica }) {
 
   if (pronto) {
     return (
-      <div className="card px-6 py-10 text-center">
+      <Card padding="none" animate="none" className="px-6 py-10 text-center">
         <CheckCircle2 className="mx-auto size-10 text-good" />
         <h1 className="mt-3 text-lg font-semibold text-ink">Avaliação enviada</h1>
         <p className="mt-1 text-sm text-muted">Obrigado! Sua resposta é anônima e já foi registrada.</p>
-      </div>
+      </Card>
     );
   }
 
   if (respondeuAntes && !ignorar) {
     return (
-      <div className="card px-6 py-10 text-center">
+      <Card padding="none" animate="none" className="px-6 py-10 text-center">
         <h1 className="text-lg font-semibold text-ink">Você já respondeu</h1>
         <p className="mt-1 text-sm text-muted">
           Este dispositivo já enviou uma avaliação nesta rodada. Se quiser responder de novo, clique
           abaixo.
         </p>
-        <button
-          onClick={() => setIgnorar(true)}
-          className="mt-4 rounded-lg border border-hairline px-4 py-2 text-sm font-medium text-ink-2 transition-colors hover:text-ink"
-        >
+        <Button variant="secondary" onClick={() => setIgnorar(true)} className="mt-4">
           Responder novamente
-        </button>
-      </div>
+        </Button>
+      </Card>
     );
   }
 
   return (
-    <div className="card overflow-hidden">
+    <Card overflow padding="none" animate="none">
       <header className="border-b border-hairline px-6 py-5">
         <h1 className="text-lg font-semibold text-ink">{rodada.titulo}</h1>
         {rodada.descricao && <p className="mt-1 text-sm text-muted">{rodada.descricao}</p>}
@@ -93,15 +91,17 @@ export function ClimaForm({ rodada }: { rodada: RodadaPublica }) {
 
         {erroGeral && <p className="text-sm text-critical">{erroGeral}</p>}
 
-        <button
+        <Button
+          variant="primary"
+          size="lg"
           onClick={enviar}
+          loading={enviando}
           disabled={enviando || rodada.campos.length === 0}
-          className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-ink text-sm font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="w-full"
         >
-          {enviando && <Loader2 className="size-4 animate-spin" />}
           {enviando ? "Enviando…" : "Enviar avaliação"}
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { Button } from "@/components/ui";
 import { listarSetores } from "../dados";
 import { SetoresTabela } from "./tabela";
 
@@ -12,13 +13,12 @@ export default async function SetoresPage() {
         <div>
           <h1 className="text-xl font-semibold tracking-tight">Setores</h1>
         </div>
-        <Link
-          href="/admin/setores/novo"
-          className="flex h-9 items-center gap-1.5 rounded-lg bg-accent px-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-        >
-          <Plus className="size-4" />
-          Novo setor
-        </Link>
+        <Button asChild variant="primary">
+          <Link href="/admin/setores/novo">
+            <Plus className="size-4" />
+            Novo setor
+          </Link>
+        </Button>
       </div>
 
       <div className="mt-6">

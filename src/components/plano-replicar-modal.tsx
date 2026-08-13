@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import clsx from "clsx";
 import { ListaModal } from "@/components/lista-modal";
 import { ComboCriavel } from "@/components/ui/combo-criavel";
+import { Button } from "@/components/ui";
 import { useEmpresas, useReplicarPreview } from "@/hooks/use-api";
 import { num } from "@/lib/format";
 import type { ReplicarItem, ReplicarResp } from "@/lib/types";
@@ -100,14 +101,16 @@ export function ReplicarModal({
               ? "Escolha a empresa de destino"
               : `${num(escolhidos.length)} de ${num(replicaveis.length)} ${replicaveis.length === 1 ? "selecionado" : "selecionados"}`}
           </span>
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={replicar}
             disabled={destino == null || !escolhidos.length || enviando}
-            className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white transition-opacity disabled:opacity-40"
+            className="text-xs"
           >
             {enviando ? <Loader2 className="size-3.5 animate-spin" /> : <Copy className="size-3.5" />}
             {enviando ? "Replicando…" : "Replicar"}
-          </button>
+          </Button>
         </>
       }
     >
@@ -130,7 +133,8 @@ export function ReplicarModal({
           />
         </div>
         {destino != null && replicaveis.length > 0 && (
-          <button
+          <Button
+            variant="link"
             onClick={() =>
               setDesmarcados(
                 escolhidos.length === replicaveis.length
@@ -138,10 +142,10 @@ export function ReplicarModal({
                   : new Set()
               )
             }
-            className="text-xs text-accent hover:underline"
+            className="text-xs"
           >
             {escolhidos.length === replicaveis.length ? "Desmarcar todos" : "Marcar todos"}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -227,7 +231,7 @@ function LinhaItem({
         ) : (
           item.jaExiste && (
             <span
-              className="mt-0.5 inline-block rounded bg-warn/12 px-1.5 py-0.5 text-[10px] font-medium text-warn"
+              className="mt-0.5 inline-block rounded bg-warning/12 px-1.5 py-0.5 text-[10px] font-medium text-warning"
               title="O destino já tem override para este CFOP — replicar substitui"
             >
               substitui existente

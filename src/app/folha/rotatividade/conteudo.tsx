@@ -9,6 +9,7 @@ import { RotatividadeBarras } from "@/components/rotatividade-barras";
 import { FolhaFiltros } from "@/components/folha-filtros";
 import { FolhaMovimentacoes } from "@/components/folha-movimentacoes";
 import { PessoasModal, type Drill } from "@/components/folha-pessoas-modal";
+import { Card } from "@/components/ui";
 import { useFiltros } from "@/hooks/use-filters";
 import { useTurnover, useFolhaFiltros } from "@/hooks/use-api";
 import { deltaPct, num } from "@/lib/format";
@@ -68,7 +69,7 @@ function Kpi({
   secundario: React.ReactNode;
 }) {
   return (
-    <div className="card anim-fade-up flex flex-col gap-2 p-5">
+    <Card className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <p className="text-xs text-ink-2">{rotulo}</p>
         <span
@@ -80,16 +81,16 @@ function Kpi({
       </div>
       <p className="text-3xl font-semibold tracking-tight">{valor}</p>
       <p className="text-xs text-muted">{secundario}</p>
-    </div>
+    </Card>
   );
 }
 
 function Stat({ rotulo, valor, cor }: { rotulo: string; valor: string; cor?: string }) {
   return (
-    <div className="card flex flex-col gap-1 p-4">
+    <Card padding="sm" animate="none" className="flex flex-col gap-1">
       <p className="text-[11px] uppercase tracking-wide text-muted">{rotulo}</p>
       <p className={clsx("text-xl font-semibold tracking-tight", cor)}>{valor}</p>
-    </div>
+    </Card>
   );
 }
 

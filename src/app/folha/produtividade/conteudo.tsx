@@ -8,6 +8,7 @@ import { DpBarras } from "@/components/dp-barras";
 import { DpComposicaoDonut, DpColaboradorStack } from "@/components/dp-composicao";
 import { DpFuncionarioFiltro } from "@/components/dp-funcionario-filtro";
 import { DpSerieChart } from "@/components/charts/dp-serie-chart";
+import { Card } from "@/components/ui";
 import { useFiltros } from "@/hooks/use-filters";
 import { useDpProdutividade, useDpQuebra } from "@/hooks/use-api";
 import { num, deltaPct } from "@/lib/format";
@@ -62,14 +63,14 @@ function Kpi({
   secundario: React.ReactNode;
 }) {
   return (
-    <div className="card anim-fade-up flex flex-col gap-2 p-5">
+    <Card className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <p className="text-xs text-ink-2">{rotulo}</p>
         <span className={clsx("grid size-8 place-items-center rounded-lg", corIcone)}>{icone}</span>
       </div>
       <p className="text-3xl font-semibold tracking-tight">{valor}</p>
       <p className="text-xs">{secundario}</p>
-    </div>
+    </Card>
   );
 }
 

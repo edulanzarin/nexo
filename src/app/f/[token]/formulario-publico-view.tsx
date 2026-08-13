@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
+import { Badge, Button, Card } from "@/components/ui";
 import { CamposFormulario } from "@/components/formulario-campos";
 import { mutar } from "@/hooks/mutar";
 import { validarRespostas, type RespostaValores } from "@/lib/formularios-tipos";
@@ -48,23 +49,23 @@ export function FormularioPublicoView({
 
   if (pronto) {
     return (
-      <div className="card px-6 py-10 text-center">
+      <Card padding="none" animate="none" className="px-6 py-10 text-center">
         <CheckCircle2 className="mx-auto size-10 text-good" />
         <h1 className="mt-3 text-lg font-semibold text-ink">Formulário enviado</h1>
         <p className="mt-1 text-sm text-muted">Obrigado! Sua resposta foi registrada.</p>
-      </div>
+      </Card>
     );
   }
 
   return (
-    <div className="card overflow-hidden">
+    <Card overflow padding="none" animate="none">
       <header className="border-b border-hairline px-6 py-5">
         <div className="flex items-center gap-2">
           <h1 className="text-lg font-semibold text-ink">{dados.titulo}</h1>
           {dados.subtitulo && (
-            <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[11px] font-medium text-ink-2">
+            <Badge tone="neutral" className="text-ink-2">
               {dados.subtitulo}
-            </span>
+            </Badge>
           )}
         </div>
         {formulario.descricao && <p className="mt-1 text-sm text-muted">{formulario.descricao}</p>}
@@ -114,15 +115,10 @@ export function FormularioPublicoView({
 
         {erroGeral && <p className="text-sm text-critical">{erroGeral}</p>}
 
-        <button
-          onClick={enviar}
-          disabled={enviando}
-          className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-ink text-sm font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
-        >
-          {enviando && <Loader2 className="size-4 animate-spin" />}
+        <Button variant="primary" size="lg" onClick={enviar} loading={enviando} className="w-full">
           {enviando ? "Enviando…" : "Enviar"}
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }

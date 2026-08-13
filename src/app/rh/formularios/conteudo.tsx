@@ -17,6 +17,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Badge, Button, EmptyState, IconButton, type BadgeTone } from "@/components/ui";
+import { cn } from "@/lib/cn";
 import { CamposFormulario } from "@/components/formulario-campos";
 import { EnviarModal, EnviosLista } from "./envios";
 import { RegrasLista } from "./regras";
@@ -131,10 +133,10 @@ const STATUS_ROTULO: Record<StatusFormulario, string> = {
   ativo: "Ativo",
   arquivado: "Arquivado",
 };
-const STATUS_CLASSE: Record<StatusFormulario, string> = {
-  rascunho: "bg-surface-2 text-muted",
-  ativo: "bg-good/12 text-good",
-  arquivado: "bg-surface-2 text-muted line-through",
+const STATUS_TONE: Record<StatusFormulario, BadgeTone> = {
+  rascunho: "neutral",
+  ativo: "good",
+  arquivado: "neutral",
 };
 
 // ── Página ───────────────────────────────────────────────────────────────────
@@ -222,13 +224,9 @@ function Lista({ onEditar }: { onEditar: (id: number) => void }) {
               placeholder="Nome do novo formulário"
               className="h-9 w-56 rounded-lg border border-hairline bg-surface px-3 text-sm outline-none focus:border-ink/30"
             />
-            <button
-              onClick={criar}
-              disabled={criando}
-              className="flex h-9 items-center gap-1.5 rounded-lg bg-ink px-3 text-sm font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
-            >
+            <Button variant="primary" onClick={criar} disabled={criando}>
               <Plus className="size-4" /> Criar
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -244,10 +242,7 @@ function Lista({ onEditar }: { onEditar: (id: number) => void }) {
           ))}
         </div>
       ) : (data ?? []).length === 0 ? (
-        <div className="card grid place-items-center gap-2 py-16 text-center text-muted">
-          <FileText className="size-8 opacity-40" />
-          <p>Nenhum formulário ainda.</p>
-        </div>
+        <EmptyState icon={<FileText className="size-5" />} titulo="Nenhum formulário ainda." />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {(data ?? []).map((f) => (
@@ -257,26 +252,23 @@ function Lista({ onEditar }: { onEditar: (id: number) => void }) {
                   <h3 className="truncate font-semibold text-ink hover:underline">{f.nome}</h3>
                   {f.descricao && <p className="mt-0.5 line-clamp-2 text-xs text-muted">{f.descricao}</p>}
                 </button>
-                <span
-                  className={clsx(
-                    "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide",
-                    STATUS_CLASSE[f.status]
-                  )}
+                <Badge
+                  tone={STATUS_TONE[f.status]}
+                  size="xs"
+                  uppercase
+                  className={cn("shrink-0", f.status === "arquivado" && "line-through")}
                 >
                   {STATUS_ROTULO[f.status]}
-                </span>
+                </Badge>
               </div>
               <p className="mt-3 text-xs text-muted">
                 {f.campos} {f.campos === 1 ? "pergunta" : "perguntas"} · atualizado{" "}
                 {dataBR(f.atualizadoEm.slice(0, 10))}
               </p>
               <div className="mt-3 flex items-center gap-1 border-t border-hairline pt-3">
-                <button
-                  onClick={() => onEditar(f.id)}
-                  className="flex-1 rounded-lg border border-hairline px-2.5 py-1.5 text-xs font-medium text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
-                >
+                <Button variant="secondary" size="sm" onClick={() => onEditar(f.id)} className="flex-1">
                   Editar
-                </button>
+                </Button>
                 {f.status === "ativo" && (
                   <button
                     onClick={() => setEnviarForm({ id: f.id, nome: f.nome })}
@@ -285,20 +277,12 @@ function Lista({ onEditar }: { onEditar: (id: number) => void }) {
                     <Send className="size-3.5" /> Enviar
                   </button>
                 )}
-                <button
-                  onClick={() => duplicar(f)}
-                  className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-ink"
-                  aria-label="Duplicar"
-                >
+                <IconButton tone="ghost" size="sm" onClick={() => duplicar(f)} aria-label="Duplicar">
                   <Copy className="size-3.5" />
-                </button>
-                <button
-                  onClick={() => excluir(f)}
-                  className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-critical/12 hover:text-critical"
-                  aria-label="Excluir"
-                >
+                </IconButton>
+                <IconButton tone="danger" size="sm" onClick={() => excluir(f)} aria-label="Excluir">
                   <Trash2 className="size-3.5" />
-                </button>
+                </IconButton>
               </div>
             </div>
           ))}
@@ -407,22 +391,16 @@ function Editor({ id, onVoltar }: { id: number; onVoltar: () => void }) {
               </button>
             ))}
           </div>
-          <button
+          <Button
+            variant="secondary"
             onClick={() => setPreview((p) => !p)}
-            className={clsx(
-              "flex h-9 items-center gap-1.5 rounded-lg border border-hairline px-3 text-sm font-medium transition-colors",
-              preview ? "bg-surface-2 text-ink" : "text-ink-2 hover:bg-surface-2"
-            )}
+            className={cn(preview && "bg-surface-2 text-ink")}
           >
             <Eye className="size-4" /> {preview ? "Editar" : "Pré-visualizar"}
-          </button>
-          <button
-            onClick={salvar}
-            disabled={salvando}
-            className="flex h-9 items-center gap-1.5 rounded-lg bg-ink px-3 text-sm font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
-          >
+          </Button>
+          <Button variant="primary" onClick={salvar} disabled={salvando}>
             <Save className="size-4" /> {salvando ? "Salvando…" : "Salvar"}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -483,13 +461,9 @@ function Editor({ id, onVoltar }: { id: number; onVoltar: () => void }) {
             </p>
             <div className="flex flex-wrap gap-2">
               {TIPOS_CAMPO.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => adicionar(t)}
-                  className="flex items-center gap-1.5 rounded-lg border border-hairline px-2.5 py-1.5 text-xs font-medium text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
-                >
+                <Button key={t} variant="secondary" size="sm" onClick={() => adicionar(t)}>
                   <Plus className="size-3.5" /> {TIPO_CAMPO_ROTULO[t]}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -623,13 +597,9 @@ function CampoEditor({
           </div>
         </div>
 
-        <button
-          onClick={onRemover}
-          className="grid size-8 shrink-0 place-items-center rounded-lg text-muted transition-colors hover:bg-critical/12 hover:text-critical"
-          aria-label="Remover pergunta"
-        >
+        <IconButton tone="danger" size="sm" onClick={onRemover} aria-label="Remover pergunta">
           <Trash2 className="size-4" />
-        </button>
+        </IconButton>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { Button } from "@/components/ui";
 import { listarCargos } from "../dados";
 import { CargosTabela } from "./tabela";
 
@@ -12,13 +13,12 @@ export default async function CargosPage() {
         <div>
           <h1 className="text-xl font-semibold tracking-tight">Cargos</h1>
         </div>
-        <Link
-          href="/admin/cargos/novo"
-          className="flex h-9 items-center gap-1.5 rounded-lg bg-accent px-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-        >
-          <Plus className="size-4" />
-          Novo cargo
-        </Link>
+        <Button asChild variant="primary">
+          <Link href="/admin/cargos/novo">
+            <Plus className="size-4" />
+            Novo cargo
+          </Link>
+        </Button>
       </div>
 
       <div className="mt-6">

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { LogoMarca } from "@/components/logo-marca";
 import { getSessaoOpcional } from "@/lib/sessao";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Card } from "@/components/ui";
 import { LoginForm } from "./login-form";
 
 export default async function LoginPage() {
@@ -16,11 +17,11 @@ export default async function LoginPage() {
       </header>
 
       <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-6 pb-24">
-        <div className="card anim-scale-in px-7 py-8">
+        <Card animate="scale" padding="none" className="px-7 py-8">
           <h1 className="text-xl font-semibold tracking-tight">Entrar</h1>
           <p className="mt-1 text-sm text-muted">Acesse a plataforma da Navecon</p>
           <LoginForm />
-        </div>
+        </Card>
       </main>
     </div>
   );

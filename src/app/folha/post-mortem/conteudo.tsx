@@ -4,10 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ClipboardList, Loader2, Plus } from "lucide-react";
+import { ClipboardList, Plus } from "lucide-react";
 import { mutar } from "@/hooks/mutar";
 import { dataBR } from "@/lib/format";
 import { CriticidadeBadge, StatusPmBadge } from "@/components/postmortem-badge";
+import { Button, Card } from "@/components/ui";
 import type { ResumoPM } from "@/lib/folha-postmortem-tipos";
 
 async function buscarLista(url: string): Promise<ResumoPM[]> {
@@ -43,19 +44,15 @@ export default function Conteudo() {
   }
 
   return (
-    <section className="card anim-fade-up p-5">
+    <Card as="section">
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold">Meus relatórios</h2>
         </div>
-        <button
-          onClick={novo}
-          disabled={criando}
-          className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-60"
-        >
-          {criando ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+        <Button variant="primary" size="sm" className="text-xs" onClick={novo} loading={criando}>
+          {!criando && <Plus className="size-4" />}
           Novo relatório
-        </button>
+        </Button>
       </header>
 
       {q.isLoading ? (
@@ -111,6 +108,6 @@ export default function Conteudo() {
           </table>
         </div>
       )}
-    </section>
+    </Card>
   );
 }

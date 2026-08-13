@@ -8,6 +8,7 @@ import { ContaDropdown } from "@/components/conta-dropdown";
 import { DropzoneArquivo } from "@/components/dropzone-arquivo";
 import { BotaoExecutar } from "@/components/filters/botao-executar";
 import { Modal } from "@/components/ui/modal";
+import { Button } from "@/components/ui";
 import { useEstadoSecao } from "@/hooks/use-estado-secao";
 import { useFiltros } from "@/hooks/use-filters";
 import { resumir, type Ajustes, type Previa } from "@/lib/extrato-previa";
@@ -166,7 +167,7 @@ export function ImportarControles() {
             "flex h-9 items-center gap-1.5 rounded-lg border px-3 text-xs transition-colors",
             senha
               ? "border-good/40 bg-good/8 text-good"
-              : "border-warning/40 bg-warning/8 text-warn hover:bg-warning/12"
+              : "border-warning/40 bg-warning/8 text-warning hover:bg-warning/12"
           )}
         >
           <Lock className="size-3.5" />
@@ -177,15 +178,16 @@ export function ImportarControles() {
       {/* Executar (e Reaplicar) fixos no fim da direita. */}
       <div className="ml-auto flex items-center gap-2">
         {previa && (
-          <button
+          <Button
+            variant="secondary"
             onClick={reaplicar}
             disabled={atualizando}
             title="Reaplica as regras cadastradas nas transações já lidas"
-            className="flex h-9 items-center gap-1.5 rounded-lg border border-hairline px-3 text-xs text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-50"
+            className="text-xs"
           >
             <RefreshCw className={clsx("size-3.5", atualizando && "animate-spin")} />
             Reaplicar regras
-          </button>
+          </Button>
         )}
         <BotaoExecutar
           onClick={executar}
@@ -221,19 +223,12 @@ export function ImportarControles() {
             className="h-9 w-full rounded-lg border border-hairline bg-surface px-2.5 text-sm text-ink outline-none placeholder:text-muted"
           />
           <div className="flex justify-end gap-2">
-            <button
-              onClick={() => setMostrarSenha(false)}
-              className="h-9 rounded-lg border border-hairline px-3 text-sm text-ink-2 transition-colors hover:bg-surface-2"
-            >
+            <Button variant="secondary" onClick={() => setMostrarSenha(false)}>
               Cancelar
-            </button>
-            <button
-              onClick={() => setMostrarSenha(false)}
-              disabled={!senha}
-              className="h-9 rounded-lg bg-accent px-3 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-            >
+            </Button>
+            <Button variant="primary" onClick={() => setMostrarSenha(false)} disabled={!senha}>
               Confirmar
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>

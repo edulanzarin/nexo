@@ -5,6 +5,7 @@ import { Check, Pencil, RotateCcw, Trash2, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Modal } from "@/components/ui/modal";
+import { Button } from "@/components/ui";
 import { useFicha, useRhSetores } from "@/hooks/use-api";
 import { mutar } from "@/hooks/mutar";
 import { ehContratoPj, pjIdDoContrato } from "@/lib/rh";
@@ -89,12 +90,14 @@ export function FichaModal({
             <div className="space-y-6">
               {podeEditar && (
                 <div className="flex justify-end">
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     onClick={() => setEditAlvo(contrato)}
-                    className="flex h-8 items-center gap-1.5 rounded-lg border border-hairline px-3 text-xs font-medium text-ink-2 transition-colors hover:bg-surface-2"
+                    className="text-xs"
                   >
                     <Pencil className="size-3.5" /> Editar
-                  </button>
+                  </Button>
                 </div>
               )}
 
@@ -329,34 +332,26 @@ function FichaEdicao({
 
       <footer className="flex items-center justify-between gap-2 border-t border-hairline px-6 py-3">
         {ehPj ? (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={excluirPj}
-            className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-muted transition-colors hover:bg-critical/12 hover:text-critical"
+            className="text-xs hover:bg-critical/12 hover:text-critical"
           >
             <Trash2 className="size-3.5" /> Excluir PJ
-          </button>
+          </Button>
         ) : (
-          <button
-            onClick={reverter}
-            className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-muted transition-colors hover:bg-surface-2 hover:text-ink"
-          >
+          <Button variant="ghost" size="sm" onClick={reverter} className="text-xs">
             <RotateCcw className="size-3.5" /> Reverter ao Questor
-          </button>
+          </Button>
         )}
         <div className="flex items-center gap-2">
-          <button
-            onClick={onPronto}
-            className="flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-medium text-muted transition-colors hover:bg-surface-2 hover:text-ink"
-          >
+          <Button variant="ghost" size="sm" onClick={onPronto} className="text-xs">
             <X className="size-3.5" /> Cancelar
-          </button>
-          <button
-            onClick={salvar}
-            disabled={salvando}
-            className="flex h-8 items-center gap-1.5 rounded-lg bg-ink px-3 text-xs font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
-          >
+          </Button>
+          <Button variant="primary" size="sm" onClick={salvar} disabled={salvando} className="text-xs">
             <Check className="size-3.5" /> Salvar
-          </button>
+          </Button>
         </div>
       </footer>
     </>

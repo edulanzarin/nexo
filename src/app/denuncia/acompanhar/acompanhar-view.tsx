@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Loader2, Send } from "lucide-react";
+import { Button, Card } from "@/components/ui";
 import { mutar } from "@/hooks/mutar";
 import { dataHoraBR } from "@/lib/format";
 import { StatusDenunciaBadge } from "@/components/denuncia-status";
@@ -45,7 +46,7 @@ export function AcompanharView() {
   if (dados) return <Detalhe dados={dados} protocolo={protocolo} senha={senha} onAtualizar={recarregar} />;
 
   return (
-    <div className="card overflow-hidden">
+    <Card overflow padding="none" animate="none">
       <header className="border-b border-hairline px-6 py-5">
         <h1 className="text-lg font-semibold text-ink">Acompanhar denúncia</h1>
         <p className="mt-1 text-sm text-muted">
@@ -74,14 +75,9 @@ export function AcompanharView() {
 
         {erro && <p className="text-sm text-critical">{erro}</p>}
 
-        <button
-          onClick={consultar}
-          disabled={carregando}
-          className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-ink text-sm font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
-        >
-          {carregando && <Loader2 className="size-4 animate-spin" />}
+        <Button variant="primary" size="lg" onClick={consultar} loading={carregando} className="w-full">
           {carregando ? "Consultando…" : "Ver denúncia"}
-        </button>
+        </Button>
 
         <p className="text-center text-xs text-muted">
           Quer registrar uma nova?{" "}
@@ -90,7 +86,7 @@ export function AcompanharView() {
           </Link>
         </p>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -126,7 +122,7 @@ function Detalhe({
   };
 
   return (
-    <div className="card overflow-hidden">
+    <Card overflow padding="none" animate="none">
       <header className="border-b border-hairline px-6 py-5">
         <div className="flex items-center justify-between gap-2">
           <h1 className="font-mono text-sm font-semibold text-ink">{dados.protocolo}</h1>
@@ -166,18 +162,14 @@ function Detalhe({
               placeholder="Adicionar informação ou responder ao RH…"
             />
             {erro && <p className="text-sm text-critical">{erro}</p>}
-            <button
-              onClick={enviar}
-              disabled={enviando}
-              className="flex h-9 items-center justify-center gap-2 rounded-lg bg-ink px-4 text-sm font-medium text-surface transition-opacity hover:opacity-90 disabled:opacity-50"
-            >
+            <Button variant="primary" onClick={enviar} disabled={enviando}>
               {enviando ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
               Enviar
-            </button>
+            </Button>
           </section>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, RotateCcw, Save, Trash2, X } from "lucide-react";
 import clsx from "clsx";
 import { toast } from "sonner";
+import { Button } from "@/components/ui";
 import type { LinhaPlano, PlanoCfop } from "@/lib/types";
 
 /** Linha em edição — conta como texto para o campo aceitar digitação livre. */
@@ -247,22 +248,18 @@ export function PlanoEditor({ empresa, plano, rotuloEstab, onFechar, onSalvo }: 
             <span className="text-[11px] text-muted">Seguindo o plano do Questor</span>
           )}
           <div className="flex items-center gap-2">
-            <button
-              onClick={onFechar}
-              className="rounded-lg px-3 py-1.5 text-xs text-muted hover:bg-surface-2 hover:text-ink"
-            >
+            <Button variant="ghost" size="sm" onClick={onFechar} className="text-xs">
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
               onClick={salvar}
               disabled={salvando}
-              className={clsx(
-                "flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white",
-                salvando && "opacity-60"
-              )}
+              className={clsx("text-xs", salvando && "opacity-60")}
             >
               <Save className="size-3.5" /> Salvar override
-            </button>
+            </Button>
           </div>
         </footer>
       </div>

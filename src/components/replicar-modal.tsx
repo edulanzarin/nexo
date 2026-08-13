@@ -6,6 +6,7 @@ import { AlertTriangle, Copy, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { ContaDropdown } from "@/components/conta-dropdown";
 import { Dropdown, ItemLista } from "@/components/ui/dropdown";
+import { Button } from "@/components/ui";
 import { useEmpresas } from "@/hooks/use-api";
 import { num } from "@/lib/format";
 import type { ContaBanco } from "@/lib/types";
@@ -36,7 +37,7 @@ function Faltantes({ origem, empresa }: { origem: ContaBanco; empresa: number })
   });
   if (!data?.faltantes.length) return null;
   return (
-    <p className="mt-1 flex items-start gap-1.5 text-[11px] text-warn">
+    <p className="mt-1 flex items-start gap-1.5 text-[11px] text-warning">
       <AlertTriangle className="mt-px size-3 shrink-0" />
       <span>
         Não existem no plano desta empresa: {data.faltantes.join(", ")}. As regras são copiadas
@@ -171,33 +172,34 @@ export function ReplicarModal({ origem, onFechar, onReplicado }: Props) {
             </div>
           ))}
 
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() =>
               setDestinos((a) => [
                 ...a,
                 { empresa: origem.empresa, empresaNome: "Escolher empresa", conta: null },
               ])
             }
-            className="flex items-center gap-1.5 self-start rounded-lg px-2.5 py-1.5 text-xs text-muted hover:bg-surface-2 hover:text-ink"
+            className="self-start text-xs"
           >
             <Plus className="size-3.5" /> Adicionar destino
-          </button>
+          </Button>
         </div>
 
         <footer className="flex items-center justify-end gap-2 border-t border-hairline pt-4">
-          <button
-            onClick={onFechar}
-            className="rounded-lg px-3 py-1.5 text-xs text-muted hover:bg-surface-2 hover:text-ink"
-          >
+          <Button variant="ghost" size="sm" onClick={onFechar} className="text-xs">
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
             onClick={replicar}
             disabled={salvando || !validos.length}
-            className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
+            className="text-xs"
           >
             <Copy className="size-3.5" /> Replicar para {validos.length || 0}
-          </button>
+          </Button>
         </footer>
       </div>
     </div>

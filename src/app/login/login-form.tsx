@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { Button } from "@/components/ui";
 import { entrar, type LoginState } from "./actions";
 
 const INICIAL: LoginState = {};
@@ -41,13 +42,9 @@ export function LoginForm() {
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="btn-accent mt-2 h-10 px-3 text-sm"
-      >
+      <Button variant="primary" size="lg" type="submit" disabled={pending} className="mt-2">
         {pending ? "Entrando…" : "Entrar"}
-      </button>
+      </Button>
     </form>
   );
 }

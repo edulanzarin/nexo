@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ClipboardList, Search } from "lucide-react";
 import { dataBR } from "@/lib/format";
 import { CriticidadeBadge, StatusPmBadge } from "@/components/postmortem-badge";
+import { Card } from "@/components/ui";
 import {
   CRITICIDADES,
   CRITICIDADE_ROTULO,
@@ -52,7 +53,7 @@ export default function Conteudo() {
   }, [q.data, crit, status, busca]);
 
   return (
-    <section className="card anim-fade-up p-5">
+    <Card as="section">
       <header className="mb-4 flex flex-col gap-3">
         <div>
           <h2 className="text-sm font-semibold">Todos os relatórios</h2>
@@ -149,6 +150,6 @@ export default function Conteudo() {
           </table>
         </div>
       )}
-    </section>
+    </Card>
   );
 }

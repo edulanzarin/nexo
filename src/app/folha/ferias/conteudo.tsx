@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { AlertTriangle, Building2, CalendarClock, CalendarX2, Info, Plane, Users } from "lucide-react";
-import clsx from "clsx";
 import { Kpi } from "@/components/kpi-conf";
+import { Badge, Card, EmptyState } from "@/components/ui";
+import type { BadgeTone } from "@/components/ui";
 import { useFiltros } from "@/hooks/use-filters";
 import { useControleFerias } from "@/hooks/use-api";
 import { dataBR, num } from "@/lib/format";
@@ -15,11 +16,11 @@ const ROTULO: Record<FeriasSituacao, string> = {
   adquirida: "Direito adquirido",
   em_dia: "Em dia",
 };
-const COR: Record<FeriasSituacao, string> = {
-  vencida: "bg-critical/12 text-critical",
-  a_vencer: "bg-warning/15 text-warning",
-  adquirida: "bg-ent/12 text-ent",
-  em_dia: "bg-good/12 text-good",
+const TOM: Record<FeriasSituacao, BadgeTone> = {
+  vencida: "critical",
+  a_vencer: "warning",
+  adquirida: "ent",
+  em_dia: "good",
 };
 
 /** Prazo até (ou desde) o limite de concessão, com cor pela urgência. */
@@ -48,29 +49,21 @@ export default function ControleFeriasPage() {
 
   if (!temEmpresa) {
     return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
-          <Building2 className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
-        <p className="max-w-md text-xs text-muted">
-          O controle de férias é apurado de uma empresa por vez, na data de referência do período.
-        </p>
-      </section>
+      <EmptyState
+        icon={<Building2 className="size-6" />}
+        titulo="Selecione uma empresa"
+        descricao="O controle de férias é apurado de uma empresa por vez, na data de referência do período."
+      />
     );
   }
 
   if (res.isError) {
     return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-critical/12 text-critical">
-          <AlertTriangle className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Não foi possível apurar as férias</p>
-        <p className="max-w-md text-xs text-muted">
-          {res.error instanceof Error ? res.error.message : "Tente novamente em instantes."}
-        </p>
-      </section>
+      <EmptyState
+        icon={<AlertTriangle className="size-6" />}
+        titulo="Não foi possível apurar as férias"
+        descricao={res.error instanceof Error ? res.error.message : "Tente novamente em instantes."}
+      />
     );
   }
 
@@ -139,7 +132,7 @@ export default function ControleFeriasPage() {
         </p>
       </div>
 
-      <section className="card overflow-hidden">
+      <Card as="section" overflow padding="none">
         <div className="flex items-center justify-between gap-3 border-b border-hairline px-4 py-3">
           <p className="text-xs text-muted">
             Um período aquisitivo (12 meses) dá direito a 30 dias; a empresa tem mais 12 meses para
@@ -182,9 +175,9 @@ export default function ControleFeriasPage() {
                       <div className="text-[11px] text-muted">admitido {dataBR(f.admissao)}</div>
                     </td>
                     <td className="px-2 py-2">
-                      <span className={clsx("inline-block rounded px-1.5 py-0.5 text-[10px] font-medium", COR[f.situacao])}>
+                      <Badge tone={TOM[f.situacao]} size="xs">
                         {ROTULO[f.situacao]}
-                      </span>
+                      </Badge>
                       {f.periodosAbertos > 1 && (
                         <div className="mt-1 text-[10px] text-muted">
                           {f.periodosAbertos} períodos em aberto
@@ -215,7 +208,7 @@ export default function ControleFeriasPage() {
             </table>
           </div>
         )}
-      </section>
+      </Card>
     </div>
   );
 }
