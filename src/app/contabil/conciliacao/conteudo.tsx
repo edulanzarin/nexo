@@ -1,22 +1,28 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   AlertTriangle,
   Building2,
+  BookmarkPlus,
+  Check,
   CheckCircle2,
+  Download,
   FileUp,
   Landmark,
   ShieldCheck,
   X,
 } from "lucide-react";
 import clsx from "clsx";
+import { toast } from "sonner";
 import { ContaDropdown } from "@/components/conta-dropdown";
+import { HistoricoDropdown } from "@/components/historico-dropdown";
 import { Kpi } from "@/components/kpi-conf";
 import { useEstadoSecao } from "@/hooks/use-estado-secao";
 import { useFiltros } from "@/hooks/use-filters";
 import { brl, dataBR, num } from "@/lib/format";
 import { resumir, type Ajustes, type Previa } from "@/lib/extrato-previa";
+import type { Sentido } from "@/lib/regras-extrato";
 
 type Filtro = "todos" | "prontos" | "pendentes";
 
@@ -36,6 +42,19 @@ export default function ImportarPage() {
   const [previa, setPrevia] = useEstadoSecao<Previa | null>("extrato", null);
   const [ajustes, setAjustes] = useEstadoSecao<Ajustes>("ajustes", {});
   const [filtro, setFiltro] = useEstadoSecao<Filtro>("filtro", "todos");
+  // Parâmetros da exportação (sobrevivem à navegação na seção).
+  const [estab, setEstab] = useEstadoSecao<string>("estab", "1");
+  const [historico, setHistorico] = useEstadoSecao<number | null>("historicoConc", null);
+  const [gerando, setGerando] = useState(false);
+  // Índices cujo ajuste manual já virou regra — para trocar o botão por "salva".
+  const [salvas, setSalvas] = useState<Set<number>>(new Set());
+  // Novo extrato zera as regras salvas nesta prévia (os índices são de outro):
+  // reset em render comparando a chave, não em efeito (evita render em cascata).
+  const [arquivoSalvas, setArquivoSalvas] = useState<string | null>(null);
+  if (previa && arquivoSalvas !== previa.arquivo) {
+    setArquivoSalvas(previa.arquivo);
+    setSalvas(new Set());
+  }
 
   function ajustar(indice: number, contaEscolhida: number | null) {
     const novos = { ...ajustes };
@@ -54,6 +73,85 @@ export default function ImportarPage() {
         return filtro === "todos" ? true : filtro === "prontos" ? resolvido : !resolvido;
       });
   }, [previa, ajustes, filtro]);
+
+  // Lançamentos prontos para o arquivo: sem pendência, ou com a conta escolhida
+  // à mão, e com os dois lados da partida resolvidos.
+  const prontos = useMemo(() => {
+    if (!previa) return [];
+    return previa.lancamentos
+      .map((l, i) => ({ l, i }))
+      .filter(({ l, i }) => !l.pendencia || ajustes[i] != null)
+      .map(({ l, i }) => {
+        const ajuste = ajustes[i] ?? null;
+        const contaDebito = l.contaDebito ?? (l.sentido === "pagamento" ? ajuste : null);
+        const contaCredito = l.contaCredito ?? (l.sentido === "recebimento" ? ajuste : null);
+        return { data: l.data, contaDebito, contaCredito, complemento: l.historico, valor: l.valor };
+      })
+      .filter(
+        (l): l is { data: string; contaDebito: number; contaCredito: number; complemento: string; valor: number } =>
+          l.contaDebito != null && l.contaCredito != null
+      );
+  }, [previa, ajustes]);
+
+  /** Salva o ajuste manual como regra da conta, para casar sozinho na próxima. */
+  async function salvarComoRegra(indice: number, descricao: string, sentido: Sentido, conta: number) {
+    if (!previa) return;
+    // Sufixo de data ("… 30/06") é volátil — fora do termo, a regra casa sempre.
+    const termo = descricao.replace(/\s+\d{2}\/\d{2}(\/\d{4})?\s*$/, "").trim() || descricao;
+    try {
+      const res = await fetch("/api/contabil/extrato-regras", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          empresa,
+          conta: previa.contaBanco.conta,
+          termo,
+          tipo: "parcial",
+          contaPagamento: sentido === "pagamento" ? conta : null,
+          contaRecebimento: sentido === "recebimento" ? conta : null,
+          historico: null,
+          ativo: true,
+        }),
+      });
+      const corpo = await res.json();
+      if (!res.ok) throw new Error(corpo?.error ?? "Falha ao salvar a regra");
+      setSalvas((s) => new Set(s).add(indice));
+      toast.success(`Regra salva: "${termo}" — use Reaplicar regras para valer nesta prévia`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao salvar a regra");
+    }
+  }
+
+  async function gerar() {
+    if (!previa || !prontos.length || historico == null) return;
+    setGerando(true);
+    try {
+      const res = await fetch("/api/contabil/conciliacao-gerar", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          empresa,
+          estab: Number(estab),
+          codigoHistorico: historico,
+          lancamentos: prontos,
+        }),
+      });
+      const corpo = await res.json();
+      if (!res.ok) throw new Error(corpo?.error ?? "Falha ao gerar o arquivo");
+      const blob = new Blob([corpo.arquivo], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `conciliacao_${empresa}_${previa.contaBanco.conta}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(`${corpo.linhas} lançamentos exportados`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao gerar o arquivo");
+    } finally {
+      setGerando(false);
+    }
+  }
 
   if (!temEmpresa) {
     return (
@@ -78,6 +176,8 @@ export default function ImportarPage() {
       </section>
     );
   }
+
+  const pendentes = previa.lancamentos.length - prontos.length;
 
   return (
     <>
@@ -210,15 +310,32 @@ export default function ImportarPage() {
                         </span>
                       )}
                       {ajuste != null && (
-                        <span className="mt-0.5 inline-flex items-center gap-1 rounded bg-ent/12 px-1.5 py-0.5 text-[10px] font-medium text-ent">
-                          Conta escolhida à mão
-                          <button
-                            onClick={() => ajustar(i, null)}
-                            title="Desfazer"
-                            className="hover:text-ink"
-                          >
-                            <X className="size-3" />
-                          </button>
+                        <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                          <span className="inline-flex items-center gap-1 rounded bg-ent/12 px-1.5 py-0.5 text-[10px] font-medium text-ent">
+                            Conta escolhida à mão
+                            <button
+                              onClick={() => ajustar(i, null)}
+                              title="Desfazer"
+                              className="hover:text-ink"
+                            >
+                              <X className="size-3" />
+                            </button>
+                          </span>
+                          {salvas.has(i) ? (
+                            <span className="inline-flex items-center gap-1 rounded bg-good/12 px-1.5 py-0.5 text-[10px] font-medium text-good">
+                              <Check className="size-3" />
+                              Regra salva
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => salvarComoRegra(i, l.descricao, l.sentido, ajuste)}
+                              title="Cadastra esta descrição como regra para casar sozinha na próxima importação"
+                              className="inline-flex items-center gap-1 rounded border border-hairline px-1.5 py-0.5 text-[10px] font-medium text-ink-2 transition-colors hover:border-ent/40 hover:text-ent"
+                            >
+                              <BookmarkPlus className="size-3" />
+                              Salvar como regra
+                            </button>
+                          )}
                         </span>
                       )}
                     </td>
@@ -263,6 +380,46 @@ export default function ImportarPage() {
               })}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      {/* Exportação: gera o arquivo de importação do Questor (mesmo layout .nli
+          da Implantação). Só os prontos entram; a pendência fica de fora. */}
+      <section className="card flex flex-wrap items-end justify-between gap-4 p-5">
+        <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
+          <label className="grid gap-1.5">
+            <span className="text-xs font-medium text-ink-2">Filial</span>
+            <input
+              value={estab}
+              onChange={(e) => setEstab(e.target.value.replace(/\D/g, "").slice(0, 2))}
+              className="h-9 w-14 rounded-lg border border-hairline bg-surface px-2 text-center text-sm text-ink outline-none focus:border-ent/50"
+            />
+          </label>
+          <label className="grid gap-1.5">
+            <span className="text-xs font-medium text-ink-2">Histórico do lançamento</span>
+            <HistoricoDropdown valor={historico} onMudar={(h) => setHistorico(h?.codigo ?? null)} />
+          </label>
+        </div>
+        <div className="flex flex-col items-end gap-1.5">
+          <button
+            onClick={gerar}
+            disabled={gerando || !prontos.length || historico == null || !estab}
+            title={
+              !prontos.length
+                ? "Nenhum lançamento pronto para exportar"
+                : historico == null
+                  ? "Escolha o histórico do lançamento"
+                  : undefined
+            }
+            className="flex h-10 items-center gap-2 rounded-lg bg-ent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            <Download className="size-4" />
+            Gerar arquivo do Questor
+          </button>
+          <p className="text-[11px] text-muted">
+            {num(prontos.length)} {prontos.length === 1 ? "lançamento pronto" : "lançamentos prontos"}
+            {pendentes > 0 && ` · ${num(pendentes)} ${pendentes === 1 ? "pendente fica" : "pendentes ficam"} de fora`}
+          </p>
         </div>
       </section>
     </>
