@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { ContaDropdown } from "@/components/conta-dropdown";
 import { HistoricoDropdown } from "@/components/historico-dropdown";
 import { Kpi } from "@/components/kpi-conf";
+import { Badge, Button, Card, EmptyState } from "@/components/ui";
 import { useEstadoSecao } from "@/hooks/use-estado-secao";
 import { useFiltros } from "@/hooks/use-filters";
 import { brl, dataBR, num } from "@/lib/format";
@@ -154,27 +155,13 @@ export default function ImportarPage() {
   }
 
   if (!temEmpresa) {
-    return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
-          <Building2 className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
-      </section>
-    );
+    return <EmptyState icon={<Building2 className="size-6" />} titulo="Selecione uma empresa" />;
   }
 
   const r = previa?.resumo;
 
   if (!previa || !r) {
-    return (
-      <section className="card grid place-items-center gap-3 px-6 py-14 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-surface-2 text-muted">
-          <FileUp className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Nenhum extrato processado</p>
-      </section>
-    );
+    return <EmptyState icon={<FileUp className="size-6" />} titulo="Nenhum extrato processado" />;
   }
 
   const pendentes = previa.lancamentos.length - prontos.length;
@@ -241,7 +228,7 @@ export default function ImportarPage() {
         </p>
       )}
 
-      <section className="card anim-fade-up p-5">
+      <Card as="section">
         <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold">Lançamentos gerados</h2>
@@ -303,15 +290,15 @@ export default function ImportarPage() {
                         {l.descricao}
                       </span>
                       {pendente && (
-                        <span className="mt-0.5 inline-block rounded bg-warn/12 px-1.5 py-0.5 text-[10px] font-medium text-warn">
+                        <Badge tone="warning" size="xs" className="mt-0.5">
                           {l.pendencia === "sem_regra"
                             ? "Sem regra cadastrada"
                             : `Regra não define conta para ${l.sentido}`}
-                        </span>
+                        </Badge>
                       )}
                       {ajuste != null && (
                         <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                          <span className="inline-flex items-center gap-1 rounded bg-ent/12 px-1.5 py-0.5 text-[10px] font-medium text-ent">
+                          <Badge tone="ent" size="xs">
                             Conta escolhida à mão
                             <button
                               onClick={() => ajustar(i, null)}
@@ -320,12 +307,12 @@ export default function ImportarPage() {
                             >
                               <X className="size-3" />
                             </button>
-                          </span>
+                          </Badge>
                           {salvas.has(i) ? (
-                            <span className="inline-flex items-center gap-1 rounded bg-good/12 px-1.5 py-0.5 text-[10px] font-medium text-good">
+                            <Badge tone="good" size="xs">
                               <Check className="size-3" />
                               Regra salva
-                            </span>
+                            </Badge>
                           ) : (
                             <button
                               onClick={() => salvarComoRegra(i, l.descricao, l.sentido, ajuste)}
@@ -381,11 +368,11 @@ export default function ImportarPage() {
             </tbody>
           </table>
         </div>
-      </section>
+      </Card>
 
       {/* Exportação: gera o arquivo de importação do Questor (mesmo layout .nli
           da Implantação). Só os prontos entram; a pendência fica de fora. */}
-      <section className="card flex flex-wrap items-end justify-between gap-4 p-5">
+      <Card as="section" animate="none" className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
           <label className="grid gap-1.5">
             <span className="text-xs font-medium text-ink-2">Filial</span>
@@ -401,7 +388,9 @@ export default function ImportarPage() {
           </label>
         </div>
         <div className="flex flex-col items-end gap-1.5">
-          <button
+          <Button
+            variant="primary"
+            size="lg"
             onClick={gerar}
             disabled={gerando || !prontos.length || historico == null || !estab}
             title={
@@ -411,17 +400,16 @@ export default function ImportarPage() {
                   ? "Escolha o histórico do lançamento"
                   : undefined
             }
-            className="flex h-10 items-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             <Download className="size-4" />
             Gerar arquivo do Questor
-          </button>
+          </Button>
           <p className="text-[11px] text-muted">
             {num(prontos.length)} {prontos.length === 1 ? "lançamento pronto" : "lançamentos prontos"}
             {pendentes > 0 && ` · ${num(pendentes)} ${pendentes === 1 ? "pendente fica" : "pendentes ficam"} de fora`}
           </p>
         </div>
-      </section>
+      </Card>
     </>
   );
 }

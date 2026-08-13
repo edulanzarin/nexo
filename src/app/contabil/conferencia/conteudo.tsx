@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import clsx from "clsx";
+import { Button, Card, EmptyState } from "@/components/ui";
 import { SeletorTipo } from "@/components/charts/top-bar-chart";
 import { Kpi } from "@/components/kpi-conf";
 import { FacetaDropdown } from "@/components/filters/faceta-dropdown";
@@ -149,14 +150,7 @@ export default function ConferenciaPage() {
   const temFiltroExtra = !!buscaAplicada || especies.length > 0 || cfops.length > 0;
 
   if (!temEmpresa) {
-    return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
-          <Building2 className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
-      </section>
-    );
+    return <EmptyState icon={<Building2 className="size-6" />} titulo="Selecione uma empresa" />;
   }
 
   const exigem = (r?.contabilizadas ?? 0) + (r?.pendentes ?? 0);
@@ -234,7 +228,7 @@ export default function ConferenciaPage() {
         )}
       </div>
 
-      <section className="card anim-fade-up p-5">
+      <Card as="section">
         <header className="mb-4 flex flex-col gap-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -343,16 +337,18 @@ export default function ConferenciaPage() {
               largura="w-96"
             />
             {temFiltroExtra && (
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs"
                 onClick={() => {
                   setBusca("");
                   setEspecies([]);
                   setCfops([]);
                 }}
-                className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-muted hover:bg-surface-2 hover:text-ink"
               >
                 <X className="size-3.5" /> Limpar filtros
-              </button>
+              </Button>
             )}
           </div>
         </header>
@@ -398,26 +394,30 @@ export default function ConferenciaPage() {
                   Página {dados.pagina} de {num(totalPaginas)}
                 </p>
                 <div className="flex items-center gap-1">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs"
                     onClick={() => setPagina((p) => Math.max(1, p - 1))}
                     disabled={dados.pagina <= 1}
-                    className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs text-muted hover:bg-surface-2 hover:text-ink disabled:opacity-40 disabled:hover:bg-transparent"
                   >
                     <ChevronLeft className="size-3.5" /> Anterior
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs"
                     onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
                     disabled={dados.pagina >= totalPaginas}
-                    className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs text-muted hover:bg-surface-2 hover:text-ink disabled:opacity-40 disabled:hover:bg-transparent"
                   >
                     Próxima <ChevronRight className="size-3.5" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
           </div>
         )}
-      </section>
+      </Card>
 
       <NotaDetalheModal
         nota={notaAberta}

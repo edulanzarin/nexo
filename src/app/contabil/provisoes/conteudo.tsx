@@ -2,6 +2,8 @@
 
 import { AlertTriangle, Building2, CheckCircle2, MinusCircle } from "lucide-react";
 import clsx from "clsx";
+import { Card, EmptyState } from "@/components/ui";
+import { cn } from "@/lib/cn";
 import { useFiltros } from "@/hooks/use-filters";
 import { useProvisoes } from "@/hooks/use-api";
 import { brl } from "@/lib/format";
@@ -32,36 +34,23 @@ export default function ProvisoesPage() {
   const dados = res.data;
 
   if (!temEmpresa) {
-    return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
-          <Building2 className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
-      </section>
-    );
+    return <EmptyState icon={<Building2 className="size-6" />} titulo="Selecione uma empresa" />;
   }
 
   if (res.isError) {
     return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-critical/12 text-critical">
-          <AlertTriangle className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Não foi possível conferir as provisões</p>
-        <p className="max-w-md text-xs text-muted">
-          {res.error instanceof Error ? res.error.message : "Tente novamente em instantes."}
-        </p>
-      </section>
+      <EmptyState
+        icon={<AlertTriangle className="size-6" />}
+        titulo="Não foi possível conferir as provisões"
+        descricao={
+          res.error instanceof Error ? res.error.message : "Tente novamente em instantes."
+        }
+      />
     );
   }
 
   if (!dados) {
-    return (
-      <section className="card grid place-items-center px-6 py-16 text-center">
-        <p className="text-sm text-muted">Confrontando folha e contábil…</p>
-      </section>
-    );
+    return <EmptyState titulo="Confrontando folha e contábil…" />;
   }
 
   const meta = META[dados.status];
@@ -70,7 +59,7 @@ export default function ProvisoesPage() {
   return (
     <div className="space-y-4">
       {/* Confronto calculado × lançado. */}
-      <section className={clsx("card border-l-4 p-5", meta.borda)}>
+      <Card as="section" animate="none" className={cn("border-l-4", meta.borda)}>
         <div className="flex items-start gap-3">
           <meta.Icone className={clsx("mt-0.5 size-6 shrink-0", meta.cor)} />
           <p className="text-sm font-medium text-ink">{meta.frase}</p>
@@ -80,11 +69,11 @@ export default function ProvisoesPage() {
           <Numero rotulo="Lançado no contábil" valor={dados.lancado} />
           <Numero rotulo="Divergência" valor={dados.divergencia} forte={diverge} />
         </div>
-      </section>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Transparência do "calculado". */}
-        <section className="card overflow-hidden">
+        <Card as="section" overflow padding="none" animate="none">
           <div className="border-b border-hairline px-4 py-3">
             <p className="text-sm font-medium text-ink">Folhas de provisão</p>
             <p className="text-xs text-muted">O que a folha calculou (tipo 70/71) no período.</p>
@@ -111,10 +100,10 @@ export default function ProvisoesPage() {
             </table>
             </div>
           )}
-        </section>
+        </Card>
 
         {/* Transparência do "lançado". */}
-        <section className="card overflow-hidden">
+        <Card as="section" overflow padding="none" animate="none">
           <div className="border-b border-hairline px-4 py-3">
             <p className="text-sm font-medium text-ink">Contas de provisão</p>
             <p className="text-xs text-muted">Movimento credor da folha (origem FP) no contábil.</p>
@@ -138,7 +127,7 @@ export default function ProvisoesPage() {
             </table>
             </div>
           )}
-        </section>
+        </Card>
       </div>
     </div>
   );

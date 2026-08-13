@@ -8,6 +8,7 @@ import { RegraExtratoLinha } from "@/components/regra-extrato-linha";
 import { useEstadoSecao } from "@/hooks/use-estado-secao";
 import { useFiltros } from "@/hooks/use-filters";
 import { num } from "@/lib/format";
+import { Card, EmptyState } from "@/components/ui";
 import type { ContaBanco } from "@/lib/types";
 
 async function carregarTodas(empresa: number) {
@@ -67,14 +68,7 @@ export default function RegrasPage() {
   }, [atual, busca]);
 
   if (!temEmpresa) {
-    return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
-          <Building2 className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
-      </section>
-    );
+    return <EmptyState icon={<Building2 className="size-6" />} titulo="Selecione uma empresa" />;
   }
 
   return (
@@ -101,16 +95,11 @@ export default function RegrasPage() {
       )}
 
       {conta == null ? (
-        <section className="card grid place-items-center gap-3 px-6 py-14 text-center">
-          <span className="grid size-12 place-items-center rounded-2xl bg-surface-2 text-muted">
-            <Landmark className="size-6" />
-          </span>
-          <p className="text-sm font-medium text-ink">Escolha uma conta de banco</p>
-        </section>
+        <EmptyState icon={<Landmark className="size-6" />} titulo="Escolha uma conta de banco" />
       ) : isLoading || !atual ? (
         <div className="skeleton h-64 w-full" />
       ) : (
-        <section className="card anim-fade-up p-5">
+        <Card as="section">
           <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="grid size-9 place-items-center rounded-lg bg-ent/12 text-ent">
@@ -180,7 +169,7 @@ export default function RegrasPage() {
               </tbody>
             </table>
           </div>
-        </section>
+        </Card>
       )}
     </>
   );

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Building2, AlertTriangle, Layers, Printer } from "lucide-react";
 import clsx from "clsx";
+import { Button, Card, EmptyState } from "@/components/ui";
 import { useFiltros } from "@/hooks/use-filters";
 import { useBalanceteContabil } from "@/hooks/use-api";
 import { brl, dataBR, num } from "@/lib/format";
@@ -39,27 +40,18 @@ export default function BalanceteContabilPage() {
   );
 
   if (!temEmpresa) {
-    return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
-          <Building2 className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
-      </section>
-    );
+    return <EmptyState icon={<Building2 className="size-6" />} titulo="Selecione uma empresa" />;
   }
 
   if (bal.isError) {
     return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-critical/12 text-critical">
-          <AlertTriangle className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Não foi possível montar o balancete</p>
-        <p className="max-w-md text-xs text-muted">
-          {bal.error instanceof Error ? bal.error.message : "Tente novamente em instantes."}
-        </p>
-      </section>
+      <EmptyState
+        icon={<AlertTriangle className="size-6" />}
+        titulo="Não foi possível montar o balancete"
+        descricao={
+          bal.error instanceof Error ? bal.error.message : "Tente novamente em instantes."
+        }
+      />
     );
   }
 
@@ -76,7 +68,7 @@ export default function BalanceteContabilPage() {
           }`,
         }}
       />
-      <section id="bal-print" className="card anim-fade-up p-5">
+      <Card as="section" id="bal-print">
         <Cabecalho dados={dados} nivel={nivel} nivelMax={nivelMax} onNivel={setNivel} />
 
         {dados && dados.atipicas.length > 0 && <BannerAtipicas atipicas={dados.atipicas} />}
@@ -112,7 +104,7 @@ export default function BalanceteContabilPage() {
             </div>
           </div>
         )}
-      </section>
+      </Card>
     </>
   );
 }
@@ -199,13 +191,15 @@ function Cabecalho({
             </button>
           ))}
         </div>
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
+          className="text-xs"
           onClick={() => window.print()}
           disabled={!dados}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-hairline bg-surface-2 px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:bg-surface disabled:opacity-50"
         >
           <Printer className="size-3.5" /> Exportar PDF
-        </button>
+        </Button>
       </div>
     </header>
   );

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { AlertTriangle, Building2, CheckCircle2, Filter, Layers } from "lucide-react";
 import clsx from "clsx";
+import { Card, EmptyState, Segmented } from "@/components/ui";
 import { useFiltros } from "@/hooks/use-filters";
 import { useBalanceteFiscal } from "@/hooks/use-api";
 import {
@@ -71,44 +72,26 @@ export default function BalanceteFiscalPage() {
   }, [dados, nivel, soDif]);
 
   if (!temEmpresa) {
-    return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
-          <Building2 className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
-      </section>
-    );
+    return <EmptyState icon={<Building2 className="size-6" />} titulo="Selecione uma empresa" />;
   }
 
   return (
-    <section className="card anim-fade-up p-5">
+    <Card as="section">
       <header className="mb-4 flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold">Balancete fiscal × contábil</h2>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex rounded-lg border border-hairline bg-surface-2 p-0.5 text-xs">
-              <button
-                onClick={() => setSoDif(false)}
-                className={clsx(
-                  "rounded-md px-2.5 py-1 transition-colors",
-                  !soDif ? "bg-surface font-medium text-ink shadow-sm" : "text-muted hover:text-ink"
-                )}
-              >
-                Todas
-              </button>
-              <button
-                onClick={() => setSoDif(true)}
-                className={clsx(
-                  "inline-flex items-center gap-1 rounded-md px-2.5 py-1 transition-colors",
-                  soDif ? "bg-surface font-medium text-ink shadow-sm" : "text-muted hover:text-ink"
-                )}
-              >
-                <Filter className="size-3" /> Só diferenças
-              </button>
-            </div>
+            <Segmented<"todas" | "dif">
+              aria-label="Filtrar contas"
+              options={[
+                { value: "todas", label: "Todas" },
+                { value: "dif", label: "Só diferenças", icon: <Filter className="size-3" /> },
+              ]}
+              value={soDif ? "dif" : "todas"}
+              onChange={(v) => setSoDif(v === "dif")}
+            />
             {!soDif && (
               <>
                 <span className="flex items-center gap-1.5 text-xs text-muted">
@@ -229,7 +212,7 @@ export default function BalanceteFiscalPage() {
 
       <BalanceteLancamentosModal qs={qs} alvo={alvo} onFechar={() => setAlvo(null)} />
       <CulpadosModal qs={qs} alvo={culpados} onFechar={() => setCulpados(null)} />
-    </section>
+    </Card>
   );
 }
 

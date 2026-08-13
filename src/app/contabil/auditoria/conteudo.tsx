@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import { Kpi } from "@/components/kpi-conf";
+import { Card, EmptyState } from "@/components/ui";
 import { useFiltros } from "@/hooks/use-filters";
 import { useAuditoria } from "@/hooks/use-api";
 import { brl, dataBR } from "@/lib/format";
@@ -127,7 +128,7 @@ function GrupoCard({ grupo }: { grupo: GrupoAchado }) {
   const Icone = ICONE_TIPO[grupo.tipo];
   const alta = grupo.severidade === "alta";
   return (
-    <section className="card overflow-hidden">
+    <Card as="section" overflow padding="none" animate="none">
       <button
         type="button"
         onClick={() => setAberto((v) => !v)}
@@ -173,7 +174,7 @@ function GrupoCard({ grupo }: { grupo: GrupoAchado }) {
           )}
         </div>
       )}
-    </section>
+    </Card>
   );
 }
 
@@ -185,29 +186,21 @@ export default function AuditoriaPage() {
 
   if (!temEmpresa) {
     return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
-          <Building2 className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
-        <p className="max-w-md text-xs text-muted">
-          A auditoria varre os lançamentos de uma empresa por vez, no período escolhido.
-        </p>
-      </section>
+      <EmptyState
+        icon={<Building2 className="size-6" />}
+        titulo="Selecione uma empresa"
+        descricao="A auditoria varre os lançamentos de uma empresa por vez, no período escolhido."
+      />
     );
   }
 
   if (res.isError) {
     return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-critical/12 text-critical">
-          <AlertTriangle className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Não foi possível rodar a auditoria</p>
-        <p className="max-w-md text-xs text-muted">
-          {res.error instanceof Error ? res.error.message : "Tente novamente em instantes."}
-        </p>
-      </section>
+      <EmptyState
+        icon={<AlertTriangle className="size-6" />}
+        titulo="Não foi possível rodar a auditoria"
+        descricao={res.error instanceof Error ? res.error.message : "Tente novamente em instantes."}
+      />
     );
   }
 
@@ -249,16 +242,11 @@ export default function AuditoriaPage() {
       </div>
 
       {limpo ? (
-        <section className="card grid place-items-center gap-3 px-6 py-14 text-center">
-          <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
-            <ShieldCheck className="size-6" />
-          </span>
-          <p className="text-sm font-medium text-ink">Nenhuma anomalia encontrada</p>
-          <p className="max-w-md text-xs text-muted">
-            Os {dados.totalLancamentos.toLocaleString("pt-BR")} lançamentos do período passaram nas
-            seis checagens.
-          </p>
-        </section>
+        <EmptyState
+          icon={<ShieldCheck className="size-6" />}
+          titulo="Nenhuma anomalia encontrada"
+          descricao={`Os ${dados.totalLancamentos.toLocaleString("pt-BR")} lançamentos do período passaram nas seis checagens.`}
+        />
       ) : (
         <div className="space-y-3">
           {dados.grupos.map((g) => (

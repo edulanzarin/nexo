@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Copy } from "lucide-react";
 import { ContaDropdown } from "@/components/conta-dropdown";
 import { ReplicarModal } from "@/components/replicar-modal";
+import { Button } from "@/components/ui";
 import { useEstadoSecao } from "@/hooks/use-estado-secao";
 import { useFiltros } from "@/hooks/use-filters";
 import type { ContaBanco } from "@/lib/types";
@@ -50,12 +51,9 @@ export function RegrasControles() {
       />
 
       {atual && atual.regras.length > 0 && (
-        <button
-          onClick={() => setReplicando(atual)}
-          className="flex h-9 items-center gap-1.5 rounded-lg border border-hairline px-3 text-xs text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
-        >
+        <Button variant="secondary" onClick={() => setReplicando(atual)} className="text-xs">
           <Copy className="size-3.5" /> Replicar para outras contas
-        </button>
+        </Button>
       )}
 
       {replicando && (

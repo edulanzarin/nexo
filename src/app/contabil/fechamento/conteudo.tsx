@@ -13,6 +13,8 @@ import clsx from "clsx";
 import { useFiltros } from "@/hooks/use-filters";
 import { useFechamento } from "@/hooks/use-api";
 import { brl } from "@/lib/format";
+import { cn } from "@/lib/cn";
+import { Card, EmptyState } from "@/components/ui";
 import type { ChecagemFechamento, StatusFechamento } from "@/lib/types";
 
 /** Aparência de cada status do semáforo: ícone, cor e rótulo. */
@@ -38,7 +40,7 @@ function ChecagemCard({ c, qs }: { c: ChecagemFechamento; qs: string }) {
   const meta = META[c.status];
   const href = c.link ? `${c.link}?${qs}&ap=1` : undefined;
   return (
-    <div className="card p-4">
+    <Card padding="sm" animate="none">
       <div className="flex items-start gap-3">
         <meta.Icone className={clsx("mt-0.5 size-5 shrink-0", meta.cor)} />
         <div className="min-w-0 flex-1">
@@ -86,7 +88,7 @@ function ChecagemCard({ c, qs }: { c: ChecagemFechamento; qs: string }) {
           )}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -98,29 +100,21 @@ export default function FechamentoPage() {
 
   if (!temEmpresa) {
     return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
-          <Building2 className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
-        <p className="max-w-md text-xs text-muted">
-          O fechamento roda as conferências do mês para uma empresa de cada vez.
-        </p>
-      </section>
+      <EmptyState
+        icon={<Building2 className="size-6" />}
+        titulo="Selecione uma empresa"
+        descricao="O fechamento roda as conferências do mês para uma empresa de cada vez."
+      />
     );
   }
 
   if (fech.isError) {
     return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-critical/12 text-critical">
-          <AlertTriangle className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Não foi possível montar o fechamento</p>
-        <p className="max-w-md text-xs text-muted">
-          {fech.error instanceof Error ? fech.error.message : "Tente novamente em instantes."}
-        </p>
-      </section>
+      <EmptyState
+        icon={<AlertTriangle className="size-6" />}
+        titulo="Não foi possível montar o fechamento"
+        descricao={fech.error instanceof Error ? fech.error.message : "Tente novamente em instantes."}
+      />
     );
   }
 
@@ -137,12 +131,16 @@ export default function FechamentoPage() {
   return (
     <div className="space-y-4">
       {/* Veredito geral: o semáforo do mês. */}
-      <section className={clsx("card flex items-start gap-4 p-5", "border-l-4", {
-        "border-l-good": dados.status === "ok",
-        "border-l-warning": dados.status === "atencao",
-        "border-l-critical": dados.status === "erro",
-        "border-l-hairline": dados.status === "na",
-      })}>
+      <Card
+        as="section"
+        animate="none"
+        className={cn("flex items-start gap-4 border-l-4", {
+          "border-l-good": dados.status === "ok",
+          "border-l-warning": dados.status === "atencao",
+          "border-l-critical": dados.status === "erro",
+          "border-l-hairline": dados.status === "na",
+        })}
+      >
         <meta.Icone className={clsx("mt-0.5 size-8 shrink-0", meta.cor)} />
         <div className="min-w-0">
           <p className="text-base font-semibold text-ink">{VEREDITO[dados.status]}</p>
@@ -150,7 +148,7 @@ export default function FechamentoPage() {
             {dados.empresa.nome || `Empresa ${dados.empresa.codigo}`}
           </p>
         </div>
-      </section>
+      </Card>
 
       {/* Uma checagem por card. */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

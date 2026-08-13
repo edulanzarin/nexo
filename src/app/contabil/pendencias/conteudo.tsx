@@ -15,6 +15,7 @@ import {
 import clsx from "clsx";
 import { toast } from "sonner";
 import { Kpi } from "@/components/kpi-conf";
+import { Card, EmptyState } from "@/components/ui";
 import { NotaDetalheModal } from "@/components/nota-detalhe-modal";
 import { useFiltros } from "@/hooks/use-filters";
 import { usePendencias, useTriarPendencia } from "@/hooks/use-api";
@@ -216,27 +217,16 @@ export default function PendenciasPage() {
   }
 
   if (!temEmpresa) {
-    return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
-          <Building2 className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
-      </section>
-    );
+    return <EmptyState icon={<Building2 className="size-6" />} titulo="Selecione uma empresa" />;
   }
 
   if (res.isError) {
     return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-critical/12 text-critical">
-          <AlertTriangle className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Não foi possível montar a fila</p>
-        <p className="max-w-md text-xs text-muted">
-          {res.error instanceof Error ? res.error.message : "Tente novamente em instantes."}
-        </p>
-      </section>
+      <EmptyState
+        icon={<AlertTriangle className="size-6" />}
+        titulo="Não foi possível montar a fila"
+        descricao={res.error instanceof Error ? res.error.message : "Tente novamente em instantes."}
+      />
     );
   }
 
@@ -279,17 +269,13 @@ export default function PendenciasPage() {
       </div>
 
       {semNada ? (
-        <section className="card grid place-items-center gap-3 px-6 py-14 text-center">
-          <span className="grid size-12 place-items-center rounded-2xl bg-good/12 text-good">
-            <ShieldCheck className="size-6" />
-          </span>
-          <p className="text-sm font-medium text-ink">Nada pendente no período</p>
-          <p className="max-w-md text-xs text-muted">
-            Conferência e Auditoria não acharam nenhuma exceção nesta empresa e período.
-          </p>
-        </section>
+        <EmptyState
+          icon={<ShieldCheck className="size-6" />}
+          titulo="Nada pendente no período"
+          descricao="Conferência e Auditoria não acharam nenhuma exceção nesta empresa e período."
+        />
       ) : (
-        <section className="card overflow-hidden">
+        <Card as="section" overflow padding="none" animate="none">
           <div className="flex flex-wrap items-center gap-1 border-b border-hairline px-3 py-2">
             {(
               [
@@ -341,7 +327,7 @@ export default function PendenciasPage() {
               {filtrados.length.toLocaleString("pt-BR")}
             </p>
           )}
-        </section>
+        </Card>
       )}
 
       {notaAberta?.p.nota && (

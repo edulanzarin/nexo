@@ -9,6 +9,7 @@ import { HistoricoDropdown } from "@/components/historico-dropdown";
 import { useFiltros } from "@/hooks/use-filters";
 import { useEstadoSecao } from "@/hooks/use-estado-secao";
 import { brl } from "@/lib/format";
+import { Button, Card, EmptyState } from "@/components/ui";
 import type { LinhaCasada, StatusCasamento } from "@/lib/implantacao-tipos";
 
 const BADGE: Record<StatusCasamento, { rotulo: string; cor: string; icone: typeof CheckCircle2 }> = {
@@ -161,14 +162,7 @@ export default function Conteudo() {
   }
 
   if (!temEmpresa) {
-    return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
-          <Building2 className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
-      </section>
-    );
+    return <EmptyState icon={<Building2 className="size-6" />} titulo="Selecione uma empresa" />;
   }
 
   const podeGerar =
@@ -178,7 +172,7 @@ export default function Conteudo() {
     <div className="grid gap-4">
       {/* Parâmetros do lote: preenchidos ANTES de ler o balancete, então gerar
           já sai com tudo pronto. */}
-      <section className="card grid gap-3 p-4">
+      <Card as="section" padding="sm" animate="none" className="grid gap-3">
         <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
           <Campo rotulo="Filial">
             <input
@@ -217,15 +211,10 @@ export default function Conteudo() {
             </Campo>
           )}
         </div>
-      </section>
+      </Card>
 
       {!casadas ? (
-        <section className="card grid place-items-center gap-3 px-6 py-14 text-center">
-          <span className="grid size-12 place-items-center rounded-2xl bg-surface-2 text-muted">
-            <FileUp className="size-6" />
-          </span>
-          <p className="text-sm font-medium text-ink">Nenhum balancete lido</p>
-        </section>
+        <EmptyState icon={<FileUp className="size-6" />} titulo="Nenhum balancete lido" />
       ) : (
         <>
           {/* Resumo do de-para — cada card filtra a tabela pela situação. */}
@@ -262,7 +251,7 @@ export default function Conteudo() {
 
           {/* Prévia do arquivo de importação: uma linha por lançamento, com as
               colunas do arquivo (débito, crédito, histórico, complemento, valor). */}
-          <section className="card overflow-hidden">
+          <Card as="section" overflow padding="none" animate="none">
             <div className="max-h-[calc(100vh-19rem)] overflow-auto">
               <table className="w-full min-w-[48rem] border-collapse text-left text-xs">
                 <thead>
@@ -349,10 +338,10 @@ export default function Conteudo() {
                 </tbody>
               </table>
             </div>
-          </section>
+          </Card>
 
           {/* Fechamento e geração */}
-          <section className="card flex flex-wrap items-center justify-between gap-3 p-4">
+          <Card as="section" animate="none" padding="sm" className="flex flex-wrap items-center justify-between gap-3">
             {resumo.semConta > 0 ? (
               <p className="text-xs text-critical">
                 Resolva as {resumo.semConta} contas sem correspondência antes de gerar — senão o
@@ -365,15 +354,11 @@ export default function Conteudo() {
                   : `Balancete NÃO fecha: débitos ${brl(resumo.deb)} × créditos ${brl(resumo.cred)} (diferença ${brl(Math.abs(resumo.deb - resumo.cred))}). A leitura do PDF pode ter vindo incompleta — confira as contas.`}
               </p>
             )}
-            <button
-              onClick={gerar}
-              disabled={ocupado || !podeGerar}
-              className="flex h-10 items-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-            >
+            <Button variant="primary" size="lg" onClick={gerar} disabled={ocupado || !podeGerar}>
               <Download className="size-4" />
               Gerar arquivo do Questor
-            </button>
-          </section>
+            </Button>
+          </Card>
         </>
       )}
     </div>

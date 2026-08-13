@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { AlertTriangle, Building2, Layers, PencilLine, Wallet } from "lucide-react";
 import clsx from "clsx";
+import { Badge, Card, EmptyState } from "@/components/ui";
 import { Kpi } from "@/components/kpi-conf";
 import { useFiltros } from "@/hooks/use-filters";
 import { useContasControle } from "@/hooks/use-api";
@@ -60,38 +61,28 @@ export default function ContasControlePage() {
 
   if (!temEmpresa) {
     return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
-          <Building2 className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
-        <p className="max-w-md text-xs text-muted">
-          A conciliação abre o movimento das contas de controle de uma empresa por vez.
-        </p>
-      </section>
+      <EmptyState
+        icon={<Building2 className="size-6" />}
+        titulo="Selecione uma empresa"
+        descricao="A conciliação abre o movimento das contas de controle de uma empresa por vez."
+      />
     );
   }
 
   if (res.isError) {
     return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-critical/12 text-critical">
-          <AlertTriangle className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Não foi possível montar a conciliação</p>
-        <p className="max-w-md text-xs text-muted">
-          {res.error instanceof Error ? res.error.message : "Tente novamente em instantes."}
-        </p>
-      </section>
+      <EmptyState
+        icon={<AlertTriangle className="size-6" />}
+        titulo="Não foi possível montar a conciliação"
+        descricao={
+          res.error instanceof Error ? res.error.message : "Tente novamente em instantes."
+        }
+      />
     );
   }
 
   if (!dados) {
-    return (
-      <section className="card grid place-items-center px-6 py-16 text-center">
-        <p className="text-sm text-muted">Abrindo o movimento por origem…</p>
-      </section>
-    );
+    return <EmptyState titulo="Abrindo o movimento por origem…" />;
   }
 
   return (
@@ -122,11 +113,9 @@ export default function ContasControlePage() {
       </div>
 
       {dados.contas.length === 0 ? (
-        <section className="card grid place-items-center px-6 py-14 text-center">
-          <p className="text-sm text-muted">Sem movimento em contas patrimoniais no período.</p>
-        </section>
+        <EmptyState titulo="Sem movimento em contas patrimoniais no período." />
       ) : (
-        <section className="card overflow-hidden">
+        <Card as="section" overflow padding="none" animate="none">
           <div className="flex items-center justify-between gap-3 border-b border-hairline px-4 py-3">
             <p className="text-xs text-muted">
               Movimento do mês na direção natural da conta (+ aumenta o saldo). Manual acende o alerta.
@@ -163,9 +152,9 @@ export default function ContasControlePage() {
                         <span className="tabular-nums text-ink">{c.conta}</span>
                         <span className="truncate text-muted">{c.descricao}</span>
                         {c.temManual && (
-                          <span className="shrink-0 rounded bg-warning/12 px-1.5 py-0.5 text-[10px] font-medium text-warning">
+                          <Badge tone="warning" size="xs" className="shrink-0">
                             manual
-                          </span>
+                          </Badge>
                         )}
                       </div>
                       <span className="text-[10px] text-muted/70">{c.classif}</span>
@@ -183,7 +172,7 @@ export default function ContasControlePage() {
               </tbody>
             </table>
           </div>
-        </section>
+        </Card>
       )}
     </div>
   );

@@ -12,6 +12,7 @@ import type {
   LinhaDRE,
 } from "@/lib/types";
 import clsx from "clsx";
+import { Button, Card, EmptyState } from "@/components/ui";
 import {
   AlertTriangle,
   Building2,
@@ -62,14 +63,7 @@ export default function AnaliseBalancetePage() {
   const dados = q.data;
 
   if (!temEmpresa) {
-    return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
-          <Building2 className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
-      </section>
-    );
+    return <EmptyState icon={<Building2 className="size-6" />} titulo="Selecione uma empresa" />;
   }
 
   if (q.isLoading || (q.isFetching && !dados)) {
@@ -85,19 +79,13 @@ export default function AnaliseBalancetePage() {
 
   if (q.isError || !dados) {
     return (
-      <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-critical/12 text-critical">
-          <AlertTriangle className="size-6" />
-        </span>
-        <p className="text-sm font-medium text-ink">
-          Não foi possível gerar a análise
-        </p>
-        <p className="max-w-md text-xs text-muted">
-          {q.error instanceof Error
-            ? q.error.message
-            : "Tente novamente em instantes."}
-        </p>
-      </section>
+      <EmptyState
+        icon={<AlertTriangle className="size-6" />}
+        titulo="Não foi possível gerar a análise"
+        descricao={
+          q.error instanceof Error ? q.error.message : "Tente novamente em instantes."
+        }
+      />
     );
   }
 
@@ -132,7 +120,7 @@ function Laudo({
         }}
       />
 
-      <section id="laudo-print" className="card anim-fade-up p-6">
+      <Card as="section" id="laudo-print" padding="lg">
         {/* Cabeçalho */}
         <header className="mb-5 flex flex-wrap items-start justify-between gap-4 border-b border-hairline pb-5">
           <div className="min-w-0">
@@ -161,12 +149,14 @@ function Laudo({
             >
               {saude.rotulo}
             </span>
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
+              className="no-print text-xs"
               onClick={() => window.print()}
-              className="no-print inline-flex items-center gap-1.5 rounded-lg border border-hairline bg-surface-2 px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:bg-surface"
             >
               <FileDown className="size-3.5" /> Exportar PDF
-            </button>
+            </Button>
           </div>
         </header>
 
@@ -229,10 +219,12 @@ function Laudo({
               </p>
             </div>
             {!laudo.data && (
-              <button
+              <Button
+                variant="primary"
+                size="sm"
+                className="no-print text-xs"
                 onClick={() => setPedirLaudo(true)}
                 disabled={laudo.isFetching}
-                className="no-print inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
               >
                 {laudo.isFetching ? (
                   <>
@@ -243,7 +235,7 @@ function Laudo({
                     <Sparkles className="size-3.5" /> Gerar laudo escrito
                   </>
                 )}
-              </button>
+              </Button>
             )}
           </div>
 
@@ -270,7 +262,7 @@ function Laudo({
           Regras e indicadores calculados diretamente dos saldos do contábil
           (sem IA).
         </footer>
-      </section>
+      </Card>
     </>
   );
 }
