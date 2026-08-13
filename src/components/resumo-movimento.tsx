@@ -4,6 +4,7 @@ import { Undo2, Ban } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { CancelamentosResumo, DevolucoesResumo } from "@/lib/types";
 import { brl, num } from "@/lib/format";
+import { Card } from "@/components/ui";
 
 function pct(parte: number, base: number): string {
   if (base <= 0) return "0%";
@@ -15,7 +16,7 @@ interface Sec {
   rotulo: string;
 }
 
-function Card({
+function ResumoCard({
   icone: Icone,
   titulo,
   primaria,
@@ -29,7 +30,7 @@ function Card({
   sec: Sec[];
 }) {
   return (
-    <div className="card anim-fade-up p-5">
+    <Card>
       <div className="mb-1.5 flex items-center gap-2 text-xs text-muted">
         <Icone className="size-3.5" />
         {titulo}
@@ -44,20 +45,20 @@ function Card({
           </div>
         ))}
       </div>
-    </div>
+    </Card>
   );
 }
 
 function CardSkeleton() {
   return (
-    <div className="card p-5">
+    <Card animate="none">
       <div className="skeleton mb-2 h-3 w-24" />
       <div className="skeleton h-7 w-32" />
       <div className="mt-4 grid grid-cols-2 gap-3 border-t border-hairline pt-3">
         <div className="skeleton h-8" />
         <div className="skeleton h-8" />
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -87,7 +88,7 @@ export function ResumoMovimento({
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <Card
+      <ResumoCard
         icone={Undo2}
         titulo="Devoluções"
         primaria={brl(valorDevol)}
@@ -97,7 +98,7 @@ export function ResumoMovimento({
           { valor: pct(valorDevol, fatTotal), rotulo: "do movimento" },
         ]}
       />
-      <Card
+      <ResumoCard
         icone={Ban}
         titulo="Cancelamentos"
         primaria={num(totalCancel)}
