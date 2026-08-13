@@ -1,20 +1,16 @@
 import type { LinhaCasada, ParamsGeracao } from "./implantacao-tipos";
+import { complementoQuestor, dataQuestor, montarArquivoNli, valorQuestor } from "./nli";
 
 /**
  * Gera o arquivo de importação de lançamentos contábeis do Questor a partir do
  * balancete casado. NÃO escreve no banco — devolve o texto que o contador importa
- * no Questor (layout "Layout Importação Lançamento Contábeis").
+ * no Questor (layout "Layout Importação Lançamento Contábeis"; formato em [[nli]]).
  *
  * Cada conta com saldo de abertura vira UMA linha, lançada contra a conta
  * transitória de implantação ("Saldos a Implantar"):
  *  - saldo DEVEDOR  → débito na conta, crédito na transitória;
  *  - saldo CREDOR   → débito na transitória, crédito na conta.
  * Como o balancete fecha (Σ devedores = Σ credores), a transitória zera no fim.
- *
- * Formato da linha (uma partida por linha, delimitado por ';'):
- *   C;empresa;estab;DD/MM/AAAA;contaDeb;contaCred;histórico;complemento;valor
- * decimal com vírgula; TIPOLANCAMENTO='LN' e ORIGEMDADO='3' são fixados pelo
- * próprio layout do Questor, não vão no arquivo.
  */
 
 /** Tolerância em reais para dizer que a transitória zerou. */
@@ -33,25 +29,6 @@ export interface ResultadoGeracao {
   transitoriaZera: boolean;
   /** Linhas puladas por não terem conta de destino (precisam de de-para). */
   semConta: LinhaCasada[];
-}
-
-/** Data ISO "YYYY-MM-DD" → "DD/MM/AAAA". */
-function dataQuestor(iso: string): string {
-  const [y, m, d] = iso.slice(0, 10).split("-");
-  return `${d}/${m}/${y}`;
-}
-
-/** Valor absoluto com 2 casas e vírgula decimal, sem separador de milhar. */
-function valorQuestor(v: number): string {
-  return Math.abs(v).toFixed(2).replace(".", ",");
-}
-
-/** Complemento livre: entre aspas só quando contém o separador ou aspas. */
-function complementoQuestor(texto: string): string {
-  if (texto.includes(";") || texto.includes('"')) {
-    return `"${texto.replace(/"/g, '""')}"`;
-  }
-  return texto;
 }
 
 export function gerarArquivoImplantacao(
@@ -94,8 +71,7 @@ export function gerarArquivoImplantacao(
   }
 
   return {
-    // CRLF: o layout do Questor é gerado no Windows (o .nli usa CRLF).
-    arquivo: linhas.join("\r\n") + (linhas.length ? "\r\n" : ""),
+    arquivo: montarArquivoNli(linhas),
     linhas: linhas.length,
     totalDebito,
     totalCredito,
