@@ -3,10 +3,10 @@
  * Infra permanece "nexo": docker, banco, pacote npm, chaves de localStorage.
  */
 
-export const MARCA = "Navetech";
+export const MARCA = "Nexo";
 
 /** Bump quando trocar `public/images/logo.png` — força o navegador a buscar de novo. */
-const LOGO_VERSAO = "3";
+const LOGO_VERSAO = "4";
 export const LOGO_SRC = `/images/logo.png?v=${LOGO_VERSAO}`;
 
 export function tituloPagina(parte?: string): string {
