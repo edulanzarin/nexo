@@ -11,6 +11,7 @@ import { filtrosLembrados, lembrarFiltrosSecao } from "@/lib/estado-filtros-seca
 import { sair } from "@/app/login/actions";
 import { ThemeToggle } from "./theme-toggle";
 import { Avatar } from "./avatar";
+import { Button } from "./ui";
 
 /**
  * Sidebar escopada a um módulo: mostra só as seções dele. A escolha do módulo
@@ -56,7 +57,7 @@ export function ModuloSidebar({
   if (!modulo) return null;
 
   return (
-    <aside className="glass sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r px-3 py-5">
+    <aside className="glass-chrome sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r px-3 py-5">
       <Link
         href="/"
         className="flex items-center gap-1.5 px-2 text-xs text-muted transition-colors hover:text-ink"
@@ -78,9 +79,9 @@ export function ModuloSidebar({
               key={s.id}
               href={linkDaSecao(s)}
               className={clsx(
-                "rounded-lg px-3 py-2 text-sm transition-colors",
+                "rounded-lg px-3 py-2 text-sm transition-all duration-150 [transition-timing-function:var(--ease-spring)]",
                 ativa
-                  ? "bg-accent/12 font-medium text-accent"
+                  ? "bg-accent/12 font-medium text-accent ring-1 ring-inset ring-accent/15"
                   : "text-ink-2 hover:bg-surface-2 hover:text-ink"
               )}
             >
@@ -105,13 +106,10 @@ export function ModuloSidebar({
           </Link>
         )}
         <form action={sair}>
-          <button
-            type="submit"
-            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
-          >
+          <Button type="submit" variant="ghost" className="w-full justify-start">
             <LogOut className="size-4 shrink-0" />
             Sair
-          </button>
+          </Button>
         </form>
       </div>
     </aside>

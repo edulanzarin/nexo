@@ -5,6 +5,7 @@ import { assertAdmin } from "@/lib/sessao";
 import { sair } from "@/app/login/actions";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AdminNav } from "@/components/admin/admin-nav";
+import { Button } from "@/components/ui";
 import { MARCA } from "@/lib/marca";
 
 /**
@@ -19,7 +20,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex min-h-screen">
-      <aside className="glass sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r px-3 py-5">
+      <aside className="glass-chrome sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r px-3 py-5">
         <Link href="/" className="flex items-center gap-1.5 px-2 text-xs text-muted transition-colors hover:text-ink">
           <ChevronLeft className="size-3.5" />
           Voltar ao Hub
@@ -42,10 +43,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             Meu perfil
           </Link>
           <form action={sair}>
-            <button type="submit" className={`${link} w-full`}>
+            <Button type="submit" variant="ghost" className="w-full justify-start">
               <LogOut className="size-4 shrink-0" />
               Sair
-            </button>
+            </Button>
           </form>
         </div>
       </aside>

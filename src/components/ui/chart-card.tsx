@@ -1,6 +1,7 @@
 "use client";
 
 import clsx from "clsx";
+import { Card } from "./card";
 
 interface ChartCardProps {
   titulo: string;
@@ -22,7 +23,7 @@ export function ChartCard({
   children,
 }: ChartCardProps) {
   return (
-    <section className="card anim-fade-up flex flex-col p-5">
+    <Card as="section" className="flex flex-col">
       <header className="mb-4 flex items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold">{titulo}</h2>
@@ -35,7 +36,7 @@ export function ChartCard({
       ) : (
         <div className={clsx(recarregando && "refetching")}>{children}</div>
       )}
-    </section>
+    </Card>
   );
 }
 
@@ -58,9 +59,7 @@ export function LegendaSeries({
 
 export function TooltipContainer({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-hairline bg-surface px-3 py-2 shadow-lg shadow-black/20">
-      {children}
-    </div>
+    <div className="glass-panel rounded-lg px-3 py-2">{children}</div>
   );
 }
 

@@ -119,7 +119,7 @@ export function Dropdown({
             ref={painelRef}
             style={{ top: pos.top, left: pos.left }}
             className={clsx(
-              "anim-scale-in fixed z-[100] overflow-hidden rounded-xl border border-hairline bg-surface shadow-xl shadow-black/20",
+              "glass-panel anim-scale-in fixed z-[100] overflow-hidden rounded-xl",
               largura
             )}
           >

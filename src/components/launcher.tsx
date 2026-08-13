@@ -6,6 +6,7 @@ import { LogoMarca } from "./logo-marca";
 import { ThemeToggle } from "./theme-toggle";
 import { Avatar } from "./avatar";
 import { ModuloCard } from "./modulo-card";
+import { IconButton } from "./ui";
 
 /**
  * Primeira tela depois do login: escolher o módulo. A grade mostra SEMPRE todos
@@ -38,13 +39,9 @@ export function Launcher({
         <div className="flex items-center gap-1.5">
           <ThemeToggle label={false} />
           <form action={sair}>
-            <button
-              type="submit"
-              title="Sair"
-              className="flex size-9 items-center justify-center rounded-lg border border-hairline text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
-            >
+            <IconButton type="submit" tone="bordered" title="Sair" aria-label="Sair">
               <LogOut className="size-4" />
-            </button>
+            </IconButton>
           </form>
         </div>
       </header>

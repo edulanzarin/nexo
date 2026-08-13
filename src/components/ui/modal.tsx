@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import clsx from "clsx";
+import { IconButton } from "./button";
 
 /**
  * Casca comum dos modais: portal no `body`, fecha no ESC e no clique do
@@ -74,13 +75,9 @@ export function Modal({
                 <p className="mt-0.5 truncate text-xs text-muted">{subtitulo}</p>
               )}
             </div>
-            <button
-              onClick={onFechar}
-              className="grid size-8 shrink-0 place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-ink"
-              aria-label="Fechar"
-            >
+            <IconButton onClick={onFechar} size="sm" aria-label="Fechar">
               <X className="size-4" />
-            </button>
+            </IconButton>
           </header>
         )}
         {children}

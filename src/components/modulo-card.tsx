@@ -46,7 +46,7 @@ export function ModuloCard({
   );
 
   const base =
-    "card anim-scale-in group flex flex-col items-center gap-3 px-3 py-6 text-center transition-all";
+    "card anim-scale-in group flex flex-col items-center gap-3 px-3 py-6 text-center transition-all duration-200 [transition-timing-function:var(--ease-spring)]";
 
   if (liberado) {
     return (
