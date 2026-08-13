@@ -66,7 +66,7 @@ export function StatTile({
     return (
       <div className={cn("flex flex-col gap-1.5 rounded-lg border border-hairline p-3", className)}>
         <div className="flex items-center gap-1.5">
-          {icon ? icon : <span className={cn("size-2 rounded-sm", iconTint)} />}
+          {icon}
           <p className="text-[11px] font-medium text-ink-2">{rotulo}</p>
         </div>
         {numero}

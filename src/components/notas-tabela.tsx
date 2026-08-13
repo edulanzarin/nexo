@@ -5,6 +5,7 @@ import { ChevronRight, Download, Filter, Loader2, Search, Table2 } from "lucide-
 import clsx from "clsx";
 import { toast } from "sonner";
 import { SeletorTipo } from "@/components/charts/top-bar-chart";
+import { Button, Card, Segmented } from "@/components/ui";
 import { ContraparteModal, type PessoaSel } from "@/components/filters/contraparte-modal";
 import { NotaExploradorModal } from "@/components/nota-explorador-modal";
 import { useNotasLista } from "@/hooks/use-api";
@@ -122,7 +123,7 @@ export function NotasTabela({ qs, enabled, mostraEmpresa, modulo = "fiscal" }: {
   };
 
   return (
-    <section className="card anim-fade-up overflow-hidden">
+    <Card as="section" padding="none" overflow>
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-hairline p-5">
         <div className="flex items-center gap-2.5">
           <span className="grid size-8 place-items-center rounded-lg bg-surface-2 text-ink-2">
@@ -160,32 +161,24 @@ export function NotasTabela({ qs, enabled, mostraEmpresa, modulo = "fiscal" }: {
             <Filter className="size-3.5" />
             <span className="max-w-40 truncate">{pessoa ? pessoa.nome : "Contraparte"}</span>
           </button>
-          <div className="flex rounded-lg border border-hairline bg-surface-2 p-0.5 text-xs">
-            {SITUACOES.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => setSituacao(s.id)}
-                className={clsx(
-                  "rounded-md px-2.5 py-1 transition-colors",
-                  situacao === s.id
-                    ? "bg-surface font-medium text-ink shadow-sm"
-                    : "text-muted hover:text-ink"
-                )}
-              >
-                {s.rotulo}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            value={situacao}
+            onChange={setSituacao}
+            aria-label="Situação das notas"
+            options={SITUACOES.map((s) => ({ value: s.id, label: s.rotulo }))}
+          />
           <SeletorTipo tipo={tipo} onTipo={setTipo} />
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={exportar}
             disabled={exportando || total === 0}
             title="Exportar as notas filtradas em CSV"
-            className="flex h-[34px] items-center gap-2 rounded-lg border border-hairline bg-surface-2 px-3 text-xs text-ink-2 transition-colors hover:text-ink disabled:opacity-40"
+            className="h-[34px] text-xs"
           >
             {exportando ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}
             {exportando ? "Gerando…" : "Exportar CSV"}
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -275,7 +268,7 @@ export function NotasTabela({ qs, enabled, mostraEmpresa, modulo = "fiscal" }: {
         mostraEmpresa={mostraEmpresa}
         onFechar={() => setNotaAberta(null)}
       />
-    </section>
+    </Card>
   );
 }
 

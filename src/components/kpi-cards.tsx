@@ -1,88 +1,16 @@
 "use client";
 
-import {
-  ArrowDownRight,
-  ArrowUpRight,
-  Ban,
-  Building2,
-  Minus,
-  TrendingDown,
-  TrendingUp,
-} from "lucide-react";
+import { Ban, Building2, TrendingDown, TrendingUp } from "lucide-react";
 import clsx from "clsx";
 import type { LadoResumo, Metrica, Overview } from "@/lib/types";
 import { brl, brlCompact, num, numCompact, deltaPct } from "@/lib/format";
+import { StatTile, Delta } from "@/components/ui";
 
 interface KpiCardsProps {
   overview: Overview | undefined;
   carregando: boolean;
   recarregando: boolean;
   metrica: Metrica;
-}
-
-function Delta({ pct, bomQuandoSobe = true }: { pct: number | null; bomQuandoSobe?: boolean }) {
-  if (pct === null)
-    return (
-      <span className="flex items-center gap-1 text-xs text-muted">
-        <Minus className="size-3.5" /> sem base anterior
-      </span>
-    );
-  const subiu = pct >= 0;
-  const bom = subiu === bomQuandoSobe;
-  const Icone = subiu ? ArrowUpRight : ArrowDownRight;
-  return (
-    <span
-      className={clsx(
-        "flex items-center gap-1 text-xs font-medium",
-        bom ? "text-good" : "text-critical"
-      )}
-    >
-      <Icone className="size-3.5" />
-      {Math.abs(pct).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%
-      <span className="font-normal text-muted">vs período anterior</span>
-    </span>
-  );
-}
-
-function Tile({
-  rotulo,
-  icone,
-  corIcone,
-  valor,
-  valorCheio,
-  secundario,
-  delta,
-}: {
-  rotulo: string;
-  icone: React.ReactNode;
-  corIcone: string;
-  valor: string;
-  valorCheio?: string;
-  secundario: string;
-  delta: React.ReactNode;
-}) {
-  return (
-    <div className="card anim-fade-up flex flex-col gap-3 p-5 transition-all duration-200 hover:-translate-y-1">
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-medium text-ink-2">{rotulo}</p>
-        <span
-          className={clsx(
-            "grid size-9 place-items-center rounded-xl ring-1 ring-inset ring-hairline",
-            corIcone
-          )}
-        >
-          {icone}
-        </span>
-      </div>
-      <p className="tnum text-[2rem] font-semibold leading-none tracking-tight" title={valorCheio}>
-        {valor}
-      </p>
-      <div className="mt-auto flex flex-col gap-1.5">
-        <p className="text-xs text-muted">{secundario}</p>
-        {delta}
-      </div>
-    </div>
-  );
 }
 
 function TileSkeleton() {
@@ -139,38 +67,40 @@ export function KpiCards({ overview, carregando, recarregando, metrica }: KpiCar
         recarregando && "refetching"
       )}
     >
-      <Tile
+      <StatTile
+        hoverLift
         rotulo="Notas de entrada"
-        icone={<TrendingDown className="size-4 text-ent" />}
-        corIcone="bg-ent/12"
+        icon={<TrendingDown className="size-4 text-ent" />}
+        iconTint="bg-ent/12"
         valor={ent.valor}
         valorCheio={ent.valorCheio}
         secundario={ent.secundario}
         delta={<Delta pct={ent.pct} />}
       />
-      <Tile
+      <StatTile
+        hoverLift
         rotulo="Notas de saída"
-        icone={<TrendingUp className="size-4 text-sai" />}
-        corIcone="bg-sai/12"
+        icon={<TrendingUp className="size-4 text-sai" />}
+        iconTint="bg-sai/12"
         valor={sai.valor}
         valorCheio={sai.valorCheio}
         secundario={sai.secundario}
         delta={<Delta pct={sai.pct} />}
       />
-      <Tile
+      <StatTile
+        hoverLift
         rotulo="Empresas com movimento"
-        icone={<Building2 className="size-4 text-ink-2" />}
-        corIcone="bg-surface-2"
+        icon={<Building2 className="size-4 text-ink-2" />}
+        iconTint="bg-surface-2"
         valor={num(overview.empresasAtivas)}
         secundario="lançaram ao menos uma nota no período"
-        delta={
-          <Delta pct={deltaPct(overview.empresasAtivas, overview.empresasAtivasAnterior)} />
-        }
+        delta={<Delta pct={deltaPct(overview.empresasAtivas, overview.empresasAtivasAnterior)} />}
       />
-      <Tile
+      <StatTile
+        hoverLift
         rotulo="Notas canceladas"
-        icone={<Ban className="size-4 text-critical" />}
-        corIcone="bg-critical/12"
+        icon={<Ban className="size-4 text-critical" />}
+        iconTint="bg-critical/12"
         valor={num(canceladas)}
         secundario={
           totalNotas + canceladas > 0

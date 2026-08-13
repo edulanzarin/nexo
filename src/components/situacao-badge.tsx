@@ -1,5 +1,5 @@
-import clsx from "clsx";
 import type { SituacaoNota } from "@/lib/types";
+import { Badge, type BadgeTone } from "@/components/ui";
 
 export const SIT_ROTULO: Record<SituacaoNota, string> = {
   ok: "Correta",
@@ -11,27 +11,22 @@ export const SIT_ROTULO: Record<SituacaoNota, string> = {
   cancelada: "Cancelada",
 };
 
-const SIT_COR: Record<SituacaoNota, string> = {
-  ok: "bg-good/12 text-good",
-  divergente: "bg-critical/12 text-critical",
-  duplicada: "bg-sai/12 text-sai",
-  consolidada: "bg-ent/12 text-ent",
-  pendente: "bg-warn/12 text-warn",
-  nao_exige: "bg-surface-2 text-muted",
-  cancelada: "bg-surface-2 text-muted",
+const SIT_TONE: Record<SituacaoNota, BadgeTone> = {
+  ok: "good",
+  divergente: "critical",
+  duplicada: "sai",
+  consolidada: "ent",
+  pendente: "warning",
+  nao_exige: "neutral",
+  cancelada: "neutral",
 };
 
 /** Etiqueta da situação de uma nota na Conferência. Uma fonte só para a linha
  *  da tabela e o modal de detalhe. */
 export function SituacaoBadge({ situacao }: { situacao: SituacaoNota }) {
   return (
-    <span
-      className={clsx(
-        "inline-block rounded px-1.5 py-0.5 text-[10px] font-medium",
-        SIT_COR[situacao]
-      )}
-    >
+    <Badge tone={SIT_TONE[situacao]} size="xs">
       {SIT_ROTULO[situacao]}
-    </span>
+    </Badge>
   );
 }

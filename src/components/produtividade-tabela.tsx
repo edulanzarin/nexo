@@ -5,6 +5,7 @@ import { ArrowDown } from "lucide-react";
 import clsx from "clsx";
 import type { ColaboradorProd } from "@/lib/types";
 import { brl, brlCompact, num } from "@/lib/format";
+import { Badge, Card } from "@/components/ui";
 
 type Coluna = "notas" | "notasEnt" | "notasSai" | "empresas" | "valor" | "canceladas";
 
@@ -39,7 +40,7 @@ export function ProdutividadeTabela({ dados, carregando, recarregando, totalNota
   );
 
   return (
-    <section className="card anim-fade-up p-5">
+    <Card as="section">
       <header className="mb-4 flex items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold">Ranking de colaboradores</h2>
@@ -97,14 +98,14 @@ export function ProdutividadeTabela({ dados, carregando, recarregando, totalNota
                           {c.nome}
                         </span>
                         {c.auto && (
-                          <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted">
+                          <Badge tone="neutral" size="xs" uppercase>
                             automático
-                          </span>
+                          </Badge>
                         )}
                         {c.inativo && !c.auto && (
-                          <span className="rounded bg-critical/12 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-critical">
+                          <Badge tone="critical" size="xs" uppercase>
                             inativo
-                          </span>
+                          </Badge>
                         )}
                       </div>
                       <div className="mt-1 h-1 w-full max-w-[260px] overflow-hidden rounded-full bg-surface-2">
@@ -141,6 +142,6 @@ export function ProdutividadeTabela({ dados, carregando, recarregando, totalNota
           </table>
         </div>
       )}
-    </section>
+    </Card>
   );
 }

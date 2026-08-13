@@ -2,7 +2,8 @@
 
 import { Loader2, Play } from "lucide-react";
 import { useIsFetching } from "@tanstack/react-query";
-import clsx from "clsx";
+import { cn } from "@/lib/cn";
+import { Button } from "@/components/ui";
 
 /**
  * Botão que aplica os filtros e dispara a consulta — o único gatilho de
@@ -37,27 +38,25 @@ export function BotaoExecutar({
   const travado = disabled || executando;
 
   return (
-    <button
+    <Button
+      variant="primary"
       onClick={onClick}
       disabled={travado}
       title={title}
-      className={clsx(
-        "flex h-9 items-center gap-1.5 px-3.5 text-sm transition-all",
-        disabled
-          ? "cursor-not-allowed rounded-lg bg-surface-2 font-medium text-muted"
-          : executando
-            ? "btn-accent cursor-wait opacity-80"
-            : // Sempre ativo: dá pra re-rodar sem mudar filtro. Um anel destaca
-              // quando há mudança pendente (dirty).
-              clsx("btn-accent", dirty && "ring-2 ring-accent/40 ring-offset-2 ring-offset-page")
+      className={cn(
+        "px-3.5",
+        // Sempre ativo: dá pra re-rodar sem mudar filtro. Um anel destaca a
+        // mudança pendente (dirty). Execução em andamento vira spinner e trava.
+        dirty && !travado && "ring-2 ring-accent/40 ring-offset-2 ring-offset-page",
+        executando && "cursor-wait disabled:opacity-80",
+        // Desabilitado permanente: sai do gradiente para a superfície neutra.
+        disabled &&
+          !executando &&
+          "cursor-not-allowed bg-none bg-surface-2 text-muted shadow-none disabled:opacity-100"
       )}
     >
-      {executando ? (
-        <Loader2 className="size-4 animate-spin" />
-      ) : (
-        <Play className="size-4" />
-      )}
+      {executando ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
       {executando ? "Executando…" : rotulo}
-    </button>
+    </Button>
   );
 }

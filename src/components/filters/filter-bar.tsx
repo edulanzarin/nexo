@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import clsx from "clsx";
+import { Button, Segmented } from "@/components/ui";
 import { Dropdown, ItemLista } from "@/components/ui/dropdown";
 import { FilialDropdown } from "@/components/filters/filial-dropdown";
 import { PeriodoDropdown } from "@/components/filters/periodo-dropdown";
@@ -144,12 +145,13 @@ export function FilterBar({ mostrarMetrica = true }: { mostrarMetrica?: boolean 
                 className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted"
               />
               {rascunho.empresas.length > 0 && (
-                <button
+                <Button
+                  variant="link"
                   onClick={() => editar({ empresas: [], estabs: [] })}
-                  className="shrink-0 text-xs text-accent hover:underline"
+                  className="shrink-0 text-xs"
                 >
                   Limpar
-                </button>
+                </Button>
               )}
             </div>
             <div className="max-h-72 overflow-y-auto py-1">
@@ -230,16 +232,17 @@ export function FilterBar({ mostrarMetrica = true }: { mostrarMetrica?: boolean 
                 className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted"
               />
               {gruposAtivos.length > 0 && (
-                <button
+                <Button
+                  variant="link"
                   onClick={() => {
                     const set = new Set(rascunho.empresas);
                     gruposAtivos.forEach((g) => g.empresas.forEach((c) => set.delete(c)));
                     editar({ empresas: [...set], estabs: [] });
                   }}
-                  className="shrink-0 text-xs text-accent hover:underline"
+                  className="shrink-0 text-xs"
                 >
                   Limpar
-                </button>
+                </Button>
               )}
             </div>
             <div className="max-h-64 overflow-y-auto py-1">
@@ -268,13 +271,14 @@ export function FilterBar({ mostrarMetrica = true }: { mostrarMetrica?: boolean 
               })}
             </div>
             <div className="border-t border-hairline p-2">
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setModalGrupos(true)}
-                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
+                className="w-full justify-start px-2.5 text-ink-2"
               >
                 <Settings2 className="size-4" />
                 Gerenciar grupos…
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -322,44 +326,24 @@ export function FilterBar({ mostrarMetrica = true }: { mostrarMetrica?: boolean 
       </Dropdown>
 
       {temFiltro && (
-        <button
-          onClick={() => editar({ empresas: [], especies: [] })}
-          className="flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-ink"
-        >
+        <Button variant="ghost" onClick={() => editar({ empresas: [], especies: [] })}>
           <X className="size-4" />
           Limpar filtros
-        </button>
+        </Button>
       )}
 
       <div className="ml-auto flex items-center gap-2">
         {/* Métrica global — só nas seções onde muda algo (Painel, Análises) */}
         {mostrarMetrica && (
-          <div className="flex rounded-lg border border-hairline bg-surface-2 p-0.5 text-xs">
-            <button
-              onClick={() => editar({ metrica: "valor" })}
-              className={clsx(
-                "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 transition-colors",
-                rascunho.metrica === "valor"
-                  ? "bg-surface font-medium text-ink shadow-sm"
-                  : "text-muted hover:text-ink"
-              )}
-            >
-              <CircleDollarSign className="size-3.5" />
-              Valor
-            </button>
-            <button
-              onClick={() => editar({ metrica: "qtd" })}
-              className={clsx(
-                "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 transition-colors",
-                rascunho.metrica === "qtd"
-                  ? "bg-surface font-medium text-ink shadow-sm"
-                  : "text-muted hover:text-ink"
-              )}
-            >
-              <Hash className="size-3.5" />
-              Quantidade
-            </button>
-          </div>
+          <Segmented
+            value={rascunho.metrica}
+            onChange={(metrica) => editar({ metrica })}
+            aria-label="Métrica: valor ou quantidade"
+            options={[
+              { value: "valor", label: "Valor", icon: <CircleDollarSign className="size-3.5" /> },
+              { value: "qtd", label: "Quantidade", icon: <Hash className="size-3.5" /> },
+            ]}
+          />
         )}
 
         <BotaoExecutar onClick={executar} dirty={dirty} />

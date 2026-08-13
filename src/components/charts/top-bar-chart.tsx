@@ -10,10 +10,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import clsx from "clsx";
 import type { Metrica, TopItem } from "@/lib/types";
 import { brl, brlCompact, num, numCompact } from "@/lib/format";
 import { ChartCard, TooltipContainer, TooltipLinha } from "@/components/ui/chart-card";
+import { Segmented } from "@/components/ui";
 
 interface Props {
   titulo: string;
@@ -41,20 +41,15 @@ export function SeletorTipo({
   onTipo: (t: "ent" | "sai") => void;
 }) {
   return (
-    <div className="flex rounded-lg border border-hairline bg-surface-2 p-0.5 text-xs">
-      {(["ent", "sai"] as const).map((t) => (
-        <button
-          key={t}
-          onClick={() => onTipo(t)}
-          className={clsx(
-            "rounded-md px-2.5 py-1 transition-colors",
-            tipo === t ? "bg-surface font-medium text-ink shadow-sm" : "text-muted hover:text-ink"
-          )}
-        >
-          {t === "ent" ? "Entradas" : "Saídas"}
-        </button>
-      ))}
-    </div>
+    <Segmented
+      value={tipo}
+      onChange={onTipo}
+      aria-label="Entradas ou saídas"
+      options={[
+        { value: "ent", label: "Entradas" },
+        { value: "sai", label: "Saídas" },
+      ]}
+    />
   );
 }
 

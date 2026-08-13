@@ -5,6 +5,7 @@ import clsx from "clsx";
 import type { Impostos } from "@/lib/types";
 import { brl, brlCompact } from "@/lib/format";
 import { SeletorTipo } from "@/components/charts/top-bar-chart";
+import { Card, StatTile } from "@/components/ui";
 
 interface Props {
   dados: Impostos | undefined;
@@ -51,18 +52,14 @@ function Tile({
 }) {
   const pct = base > 0 ? (valor / base) * 100 : 0;
   return (
-    <div className="rounded-lg border border-hairline p-3">
-      <div className="mb-1 flex items-center gap-1.5">
-        {cor && <span className="size-2 rounded-sm" style={{ background: cor }} />}
-        <span className="text-xs text-ink-2">{rotulo}</span>
-      </div>
-      <p className="text-xl font-semibold tracking-tight" title={brl(valor)}>
-        {brlCompact(valor)}
-      </p>
-      <p className="mt-0.5 text-[11px] text-muted">
-        {pct.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% do faturado
-      </p>
-    </div>
+    <StatTile
+      size="mini"
+      rotulo={rotulo}
+      icon={cor ? <span className="size-2 rounded-sm" style={{ background: cor }} /> : undefined}
+      valor={brlCompact(valor)}
+      valorCheio={brl(valor)}
+      secundario={`${pct.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% do faturado`}
+    />
   );
 }
 
@@ -81,7 +78,7 @@ export function ImpostosCard({ dados, carregando, recarregando, tipo, onTipo }: 
   const temOutros = dados && (dados.difal > 0 || dados.fcp > 0 || dados.funrural > 0);
 
   return (
-    <section className="card anim-fade-up p-5">
+    <Card as="section">
       <header className="mb-4 flex items-start justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <span className="grid size-8 place-items-center rounded-lg bg-surface-2 text-ink-2">
@@ -151,6 +148,6 @@ export function ImpostosCard({ dados, carregando, recarregando, tipo, onTipo }: 
           )}
         </div>
       )}
-    </section>
+    </Card>
   );
 }
