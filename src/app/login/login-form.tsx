@@ -18,7 +18,7 @@ export function LoginForm() {
           autoComplete="username"
           autoFocus
           required
-          className="h-10 rounded-lg border border-hairline bg-surface px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-ent/50"
+          className="h-10 rounded-lg border border-hairline bg-surface px-3 text-sm text-ink outline-none transition-colors placeholder:text-muted focus:border-accent"
           placeholder="voce@navecon.com.br"
         />
       </label>
@@ -30,7 +30,7 @@ export function LoginForm() {
           type="password"
           autoComplete="current-password"
           required
-          className="h-10 rounded-lg border border-hairline bg-surface px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-ent/50"
+          className="h-10 rounded-lg border border-hairline bg-surface px-3 text-sm text-ink outline-none transition-colors placeholder:text-muted focus:border-accent"
           placeholder="••••••••"
         />
       </label>
@@ -44,7 +44,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={pending}
-        className="mt-2 h-10 rounded-lg bg-ent px-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="btn-accent mt-2 h-10 px-3 text-sm"
       >
         {pending ? "Entrando…" : "Entrar"}
       </button>

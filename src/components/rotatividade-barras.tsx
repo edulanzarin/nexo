@@ -48,7 +48,7 @@ export function RotatividadeBarras({
     <section className="card anim-fade-up flex flex-col p-5">
       <header className="mb-4">
         <h2 className="text-sm font-semibold">{titulo}</h2>
-        <p className="mt-0.5 text-xs text-muted">{subtitulo}</p>
+        {subtitulo && <p className="mt-0.5 text-xs text-muted">{subtitulo}</p>}
       </header>
 
       {carregando || !dados ? (

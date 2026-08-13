@@ -47,15 +47,11 @@ export default function Conteudo() {
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold">Meus relatórios</h2>
-          <p className="mt-0.5 text-xs text-muted">
-            Análise de incidente do DP — preencha sempre que houver erro, retrabalho ou não
-            conformidade.
-          </p>
         </div>
         <button
           onClick={novo}
           disabled={criando}
-          className="flex items-center gap-1.5 rounded-lg bg-ent px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-ent/90 disabled:opacity-60"
+          className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-60"
         >
           {criando ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
           Novo relatório

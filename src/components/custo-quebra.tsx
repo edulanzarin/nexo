@@ -33,7 +33,7 @@ export function CustoQuebra({
       <header className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold">{titulo}</h2>
-          <p className="mt-0.5 text-xs text-muted">{subtitulo}</p>
+          {subtitulo && <p className="mt-0.5 text-xs text-muted">{subtitulo}</p>}
         </div>
         <label className="flex items-center gap-2 rounded-lg border border-hairline bg-surface-2 px-3 py-1.5">
           <Search className="size-3.5 text-muted" />

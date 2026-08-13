@@ -132,8 +132,8 @@ export function NotasTabela({ qs, enabled, mostraEmpresa, modulo = "fiscal" }: {
             <h2 className="text-sm font-semibold">Notas fiscais</h2>
             <p className="mt-0.5 text-xs text-muted">
               {total > 0
-                ? `${num(total)} ${total === 1 ? "nota" : "notas"} no período · clique pra ver o detalhe`
-                : "Dados brutos · clique numa nota pra ver o detalhe"}
+                ? `${num(total)} ${total === 1 ? "nota" : "notas"} no período`
+                : "Dados brutos"}
             </p>
           </div>
         </div>
@@ -153,7 +153,7 @@ export function NotasTabela({ qs, enabled, mostraEmpresa, modulo = "fiscal" }: {
             className={clsx(
               "flex h-[34px] items-center gap-2 rounded-lg border px-3 text-xs transition-colors",
               pessoa
-                ? "border-ent/40 bg-ent/10 text-ink"
+                ? "border-accent/40 bg-accent/10 text-ink"
                 : "border-hairline bg-surface-2 text-ink-2 hover:text-ink"
             )}
           >

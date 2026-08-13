@@ -53,7 +53,7 @@ export function ModuloCard({
       <Link
         href={href}
         title={descricao}
-        className={clsx(base, "hover:-translate-y-0.5 hover:border-ent/40 hover:bg-surface-2")}
+        className={clsx(base, "hover:-translate-y-1 hover:border-accent/40 hover:bg-surface-2")}
       >
         {conteudo}
       </Link>

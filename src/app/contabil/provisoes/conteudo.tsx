@@ -34,13 +34,10 @@ export default function ProvisoesPage() {
   if (!temEmpresa) {
     return (
       <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-ent/12 text-ent">
+        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
           <Building2 className="size-6" />
         </span>
         <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
-        <p className="max-w-md text-xs text-muted">
-          A conferência de provisões roda para uma empresa de cada vez.
-        </p>
       </section>
     );
   }
@@ -143,13 +140,6 @@ export default function ProvisoesPage() {
           )}
         </section>
       </div>
-
-      <p className="px-1 text-[11px] leading-relaxed text-muted/80">
-        Método: <b>calculado</b> soma os proventos das folhas de provisão (tipo 70/71) que fecham no
-        mês; <b>lançado</b> é o movimento credor de origem folha (FP) nas contas cujo nome contém
-        “provisão”. Confira o mapeamento das contas de provisão da empresa antes de agir sobre a
-        divergência.
-      </p>
     </div>
   );
 }

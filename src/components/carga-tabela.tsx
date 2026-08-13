@@ -17,9 +17,6 @@ export function CargaTabela({ dados, carregando, recarregando }: Props) {
     <section className="card anim-fade-up p-5">
       <header className="mb-4">
         <h2 className="text-sm font-semibold">Carga tributária por empresa</h2>
-        <p className="mt-0.5 text-xs text-muted">
-          (ICMS + IPI + ST + ISS) ÷ faturamento das saídas · maiores geradores de tributo
-        </p>
       </header>
 
       {carregando || !dados ? (

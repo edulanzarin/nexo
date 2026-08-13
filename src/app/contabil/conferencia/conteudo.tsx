@@ -151,7 +151,7 @@ export default function ConferenciaPage() {
   if (!temEmpresa) {
     return (
       <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-ent/12 text-ent">
+        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
           <Building2 className="size-6" />
         </span>
         <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
@@ -241,9 +241,8 @@ export default function ConferenciaPage() {
               <h2 className="text-sm font-semibold">Notas do período</h2>
               <p className="mt-0.5 text-xs text-muted">
                 {dados
-                  ? `${num(dados.total)} ${dados.total === 1 ? "nota" : "notas"} no filtro · clique para ver itens e detalhes`
+                  ? `${num(dados.total)} ${dados.total === 1 ? "nota" : "notas"} no filtro`
                   : "…"}
-                {dados?.truncado && " · período grande, analisadas as 8.000 de maior valor"}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -264,7 +263,7 @@ export default function ConferenciaPage() {
                         }}
                       >
                         <span className="grid size-4 place-items-center">
-                          {o.id === ordem && <Check className="size-4 stroke-[3] text-ent" />}
+                          {o.id === ordem && <Check className="size-4 stroke-[3] text-accent" />}
                         </span>
                         {o.rotulo}
                       </ItemLista>
@@ -313,7 +312,7 @@ export default function ConferenciaPage() {
                   className={clsx(
                     "rounded-lg px-2.5 py-1.5 text-xs transition-colors",
                     situacao === s.id
-                      ? "bg-ent/12 font-medium text-ent"
+                      ? "bg-accent/12 font-medium text-accent"
                       : "text-muted hover:bg-surface-2 hover:text-ink"
                   )}
                 >

@@ -78,7 +78,7 @@ function ChecagemCard({ c, qs }: { c: ChecagemFechamento; qs: string }) {
           {href && (
             <Link
               href={href}
-              className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-ent hover:underline"
+              className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
             >
               Abrir {c.titulo.toLowerCase()}
               <ArrowRight className="size-3.5" />
@@ -99,7 +99,7 @@ export default function FechamentoPage() {
   if (!temEmpresa) {
     return (
       <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-ent/12 text-ent">
+        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
           <Building2 className="size-6" />
         </span>
         <p className="text-sm font-medium text-ink">Selecione uma empresa</p>

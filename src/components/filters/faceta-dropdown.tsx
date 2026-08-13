@@ -83,7 +83,7 @@ export function FacetaDropdown({
               >
                 <span className="grid size-4 shrink-0 place-items-center">
                   {selecionados.includes(o.valor) && (
-                    <Check className="size-4 stroke-[3] text-ent" />
+                    <Check className="size-4 stroke-[3] text-accent" />
                   )}
                 </span>
                 <span className="flex-1 truncate" title={o.rotulo ?? o.valor}>

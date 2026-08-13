@@ -97,7 +97,7 @@ export function ContaDropdown({
                   }}
                 >
                   <span className="grid size-4 shrink-0 place-items-center">
-                    {c.conta === valor && <Check className="size-4 stroke-[3] text-ent" />}
+                    {c.conta === valor && <Check className="size-4 stroke-[3] text-accent" />}
                   </span>
                   <span className="tnum w-16 shrink-0 text-xs text-muted">{c.conta}</span>
                   <span className="flex-1 truncate" title={c.descricao}>

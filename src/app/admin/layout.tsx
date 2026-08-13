@@ -19,7 +19,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex min-h-screen">
-      <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-hairline bg-surface px-3 py-5">
+      <aside className="glass sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r px-3 py-5">
         <Link href="/" className="flex items-center gap-1.5 px-2 text-xs text-muted transition-colors hover:text-ink">
           <ChevronLeft className="size-3.5" />
           Voltar ao Hub

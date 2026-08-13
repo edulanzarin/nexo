@@ -77,7 +77,7 @@ export function RotatividadeQuebra({
       <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold">{titulo}</h2>
-          <p className="mt-0.5 text-xs text-muted">{subtitulo}</p>
+          {subtitulo && <p className="mt-0.5 text-xs text-muted">{subtitulo}</p>}
         </div>
         {visiveis && (
           <span className="text-xs text-muted">
@@ -94,7 +94,7 @@ export function RotatividadeQuebra({
           className={clsx(
             "rounded-lg border px-3 py-1.5 text-xs transition-colors",
             soMovimento
-              ? "border-ent/30 bg-ent/12 font-medium text-ent"
+              ? "border-ent/30 bg-accent/12 font-medium text-accent"
               : "border-hairline bg-surface-2 text-muted hover:text-ink"
           )}
         >

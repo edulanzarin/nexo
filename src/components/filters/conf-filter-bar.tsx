@@ -111,7 +111,7 @@ export function ConfFilterBar({
                   }}
                 >
                   <span className="grid size-4 shrink-0 place-items-center">
-                    {empresaSel == null && <Check className="size-4 stroke-[3] text-ent" />}
+                    {empresaSel == null && <Check className="size-4 stroke-[3] text-accent" />}
                   </span>
                   <span className="flex-1 truncate text-muted">Todas as empresas</span>
                 </ItemLista>
@@ -127,7 +127,7 @@ export function ConfFilterBar({
                   }}
                 >
                   <span className="grid size-4 shrink-0 place-items-center">
-                    {e.codigo === empresaSel && <Check className="size-4 stroke-[3] text-ent" />}
+                    {e.codigo === empresaSel && <Check className="size-4 stroke-[3] text-accent" />}
                   </span>
                   <span className="flex-1 truncate">{e.nome}</span>
                   <span className="tnum text-xs text-muted">{e.codigo}</span>

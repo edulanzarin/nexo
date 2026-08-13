@@ -57,8 +57,7 @@ export default function Conteudo() {
         <div>
           <h2 className="text-sm font-semibold">Todos os relatórios</h2>
           <p className="mt-0.5 text-xs text-muted">
-            {q.data ? `${q.data.length} relatório(s) no total` : "…"} · extração e indicadores por IA
-            entram na próxima etapa.
+            {q.data ? `${q.data.length} relatório(s) no total` : "…"}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

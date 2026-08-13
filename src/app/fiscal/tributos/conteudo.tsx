@@ -128,7 +128,7 @@ export default function TributosPage() {
         <TopBarChart
           titulo="DIFAL + FCP por UF de destino"
           subtituloEnt=""
-          subtituloSai="ICMS interestadual a recolher por estado (saídas)"
+          subtituloSai=""
           dados={difal.data}
           carregando={difal.isLoading}
           recarregando={difal.isFetching && !difal.isLoading}
@@ -141,7 +141,7 @@ export default function TributosPage() {
         <TopBarChart
           titulo="Regime tributário (CST PIS/COFINS)"
           subtituloEnt=""
-          subtituloSai="Itens por situação tributária · valor de PIS no tooltip"
+          subtituloSai=""
           dados={cst.data}
           carregando={cst.isLoading}
           recarregando={cst.isFetching && !cst.isLoading}

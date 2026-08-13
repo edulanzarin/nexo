@@ -74,7 +74,7 @@ export function ComboCriavel({
 
   return (
     <div className="relative">
-      <div className="flex h-10 items-center gap-1 rounded-lg border border-hairline bg-surface px-3 focus-within:border-ent/50">
+      <div className="flex h-10 items-center gap-1 rounded-lg border border-hairline bg-surface px-3 focus-within:border-accent/50">
         <input
           value={texto}
           onChange={(e) => aoDigitar(e.target.value)}
@@ -86,7 +86,7 @@ export function ComboCriavel({
           className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted"
         />
         {novo && (
-          <span className="shrink-0 rounded bg-ent/12 px-1.5 py-0.5 text-[10px] font-medium text-ent">novo</span>
+          <span className="shrink-0 rounded bg-accent/12 px-1.5 py-0.5 text-[10px] font-medium text-accent">novo</span>
         )}
         {texto ? (
           <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={limparTudo} className="shrink-0 text-muted hover:text-ink">
@@ -111,7 +111,7 @@ export function ComboCriavel({
               className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm transition-colors hover:bg-surface-2"
             >
               <span className="grid size-4 shrink-0 place-items-center">
-                {selId === o.id && <Check className="size-4 stroke-[3] text-ent" />}
+                {selId === o.id && <Check className="size-4 stroke-[3] text-accent" />}
               </span>
               <span className="flex-1 truncate">{o.nome}</span>
             </button>
@@ -121,7 +121,7 @@ export function ComboCriavel({
               type="button"
               onMouseDown={(e) => e.preventDefault()}
               onClick={criar}
-              className="flex w-full items-center gap-2 border-t border-hairline px-3 py-1.5 text-left text-sm text-ent transition-colors hover:bg-surface-2"
+              className="flex w-full items-center gap-2 border-t border-hairline px-3 py-1.5 text-left text-sm text-accent transition-colors hover:bg-surface-2"
             >
               <Plus className="size-4 shrink-0" />
               Criar &quot;{texto.trim()}&quot;

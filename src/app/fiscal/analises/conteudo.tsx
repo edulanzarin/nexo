@@ -75,8 +75,8 @@ export default function AnalisesPage() {
         {mostraTopEmpresas && (
           <TopBarChart
             titulo="Top 10 empresas"
-            subtituloEnt="Maiores volumes de entrada"
-            subtituloSai="Maiores volumes de saída"
+            subtituloEnt=""
+            subtituloSai=""
             dados={topEmpresas.data}
             carregando={topEmpresas.isLoading}
             recarregando={topEmpresas.isFetching && !topEmpresas.isLoading}
@@ -87,8 +87,8 @@ export default function AnalisesPage() {
         )}
         <TopBarChart
           titulo={tipoPessoas === "ent" ? "Top 10 fornecedores" : "Top 10 clientes"}
-          subtituloEnt="Contrapartes das notas de entrada (inclui devoluções)"
-          subtituloSai="Contrapartes das notas de saída"
+          subtituloEnt=""
+          subtituloSai=""
           dados={topPessoas.data}
           carregando={topPessoas.isLoading}
           recarregando={topPessoas.isFetching && !topPessoas.isLoading}
@@ -100,8 +100,8 @@ export default function AnalisesPage() {
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <TopBarChart
           titulo="Top 10 produtos"
-          subtituloEnt="Itens mais recebidos nas entradas"
-          subtituloSai="Itens mais vendidos nas saídas"
+          subtituloEnt=""
+          subtituloSai=""
           dados={produtosItems}
           carregando={produtos.isLoading}
           recarregando={produtos.isFetching && !produtos.isLoading}
@@ -113,8 +113,8 @@ export default function AnalisesPage() {
         />
         <TopBarChart
           titulo="Top CFOPs"
-          subtituloEnt="Naturezas de operação nas entradas"
-          subtituloSai="Naturezas de operação nas saídas"
+          subtituloEnt=""
+          subtituloSai=""
           dados={cfopItems}
           carregando={cfops.isLoading}
           recarregando={cfops.isFetching && !cfops.isLoading}
@@ -135,8 +135,8 @@ export default function AnalisesPage() {
         />
         <TopBarChart
           titulo="Top municípios"
-          subtituloEnt="Cidades das contrapartes (entradas)"
-          subtituloSai="Cidades das contrapartes (saídas)"
+          subtituloEnt=""
+          subtituloSai=""
           dados={municipios.data}
           carregando={municipios.isLoading}
           recarregando={municipios.isFetching && !municipios.isLoading}
@@ -148,8 +148,8 @@ export default function AnalisesPage() {
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <TopBarChart
           titulo="Modalidade de frete"
-          subtituloEnt="Quem responde pelo frete (entradas)"
-          subtituloSai="Quem responde pelo frete (saídas)"
+          subtituloEnt=""
+          subtituloSai=""
           dados={frete.data}
           carregando={frete.isLoading}
           recarregando={frete.isFetching && !frete.isLoading}
@@ -160,8 +160,8 @@ export default function AnalisesPage() {
         />
         <TopBarChart
           titulo="Notas por faixa de valor"
-          subtituloEnt="Distribuição das entradas por valor"
-          subtituloSai="Distribuição das saídas por valor"
+          subtituloEnt=""
+          subtituloSai=""
           dados={faixas.data}
           carregando={faixas.isLoading}
           recarregando={faixas.isFetching && !faixas.isLoading}
@@ -174,8 +174,8 @@ export default function AnalisesPage() {
       <div className="grid grid-cols-1 gap-4">
         <TopBarChart
           titulo="Origem do dado"
-          subtituloEnt="Como a nota de entrada entrou no Questor"
-          subtituloSai="Como a nota de saída entrou no Questor"
+          subtituloEnt=""
+          subtituloSai=""
           dados={origem.data}
           carregando={origem.isLoading}
           recarregando={origem.isFetching && !origem.isLoading}

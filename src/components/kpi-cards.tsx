@@ -62,18 +62,25 @@ function Tile({
   delta: React.ReactNode;
 }) {
   return (
-    <div className="card anim-fade-up flex flex-col gap-2 p-5 transition-transform duration-200 hover:-translate-y-0.5">
+    <div className="card anim-fade-up flex flex-col gap-3 p-5 transition-all duration-200 hover:-translate-y-1">
       <div className="flex items-center justify-between">
-        <p className="text-xs text-ink-2">{rotulo}</p>
-        <span className={clsx("grid size-8 place-items-center rounded-lg", corIcone)}>
+        <p className="text-xs font-medium text-ink-2">{rotulo}</p>
+        <span
+          className={clsx(
+            "grid size-9 place-items-center rounded-xl ring-1 ring-inset ring-hairline",
+            corIcone
+          )}
+        >
           {icone}
         </span>
       </div>
-      <p className="text-3xl font-semibold tracking-tight" title={valorCheio}>
+      <p className="tnum text-[2rem] font-semibold leading-none tracking-tight" title={valorCheio}>
         {valor}
       </p>
-      <p className="text-xs text-muted">{secundario}</p>
-      {delta}
+      <div className="mt-auto flex flex-col gap-1.5">
+        <p className="text-xs text-muted">{secundario}</p>
+        {delta}
+      </div>
     </div>
   );
 }

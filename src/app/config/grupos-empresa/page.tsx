@@ -13,13 +13,10 @@ export default async function Page() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-sm font-semibold">Grupos de empresa</h2>
-          <p className="mt-0.5 text-xs text-muted">
-            Agrupe empresas por grupo de negócio (ex.: U FIT). Usado em formulários e relatórios.
-          </p>
         </div>
         <Link
           href="/config/grupos-empresa/novo"
-          className="flex h-9 items-center gap-1.5 rounded-lg bg-ent px-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          className="flex h-9 items-center gap-1.5 rounded-lg bg-accent px-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         >
           <Plus className="size-4" />
           Novo grupo

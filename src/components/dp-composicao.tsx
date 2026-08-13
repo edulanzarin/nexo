@@ -39,7 +39,6 @@ export function DpComposicaoDonut({ totais, cores, carregando, recarregando }: D
   return (
     <ChartCard
       titulo="Composição do trabalho"
-      subtitulo="Peso de cada tipo no total do período"
       carregando={carregando || !totais}
       recarregando={recarregando}
       alturaSkeleton="h-72"
@@ -131,7 +130,6 @@ export function DpColaboradorStack({
   return (
     <ChartCard
       titulo="Top colaboradores por trabalho"
-      subtitulo="Cada barra empilha os quatro tipos · clique para isolar"
       carregando={carregando || !top}
       recarregando={recarregando}
       alturaSkeleton="h-80"

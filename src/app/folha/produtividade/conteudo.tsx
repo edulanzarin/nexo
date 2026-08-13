@@ -318,8 +318,7 @@ export default function ProdutividadeDpPage() {
           />
 
           <p className="text-center text-xs text-muted">
-            Selecione um colaborador (aqui ou no filtro do topo) e abra qualquer aba para ver o
-            trabalho dele em gráficos.
+            Selecione um colaborador.
           </p>
         </>
       ) : (

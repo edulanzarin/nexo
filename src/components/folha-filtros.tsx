@@ -67,7 +67,7 @@ function MultiSelect({
             {filtradas.slice(0, 200).map((o) => (
               <ItemLista key={o.valor} selecionado={sel.has(o.valor)} onClick={() => onToggle(o.valor)}>
                 <span className="grid size-4 shrink-0 place-items-center">
-                  {sel.has(o.valor) && <Check className="size-4 stroke-[3] text-ent" />}
+                  {sel.has(o.valor) && <Check className="size-4 stroke-[3] text-accent" />}
                 </span>
                 <span className="flex-1 truncate">{o.rotulo}</span>
                 <span className="tnum text-xs text-muted">{num(o.contratos)}</span>

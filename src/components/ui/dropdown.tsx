@@ -98,7 +98,7 @@ export function Dropdown({
           "flex h-9 items-center gap-2 rounded-lg border px-3 text-sm transition-colors",
           larguraBotao,
           ativo
-            ? "border-ent/40 bg-ent/10 text-ink"
+            ? "border-accent/40 bg-accent/10 text-ink"
             : "border-hairline bg-surface text-ink-2 hover:bg-surface-2 hover:text-ink"
         )}
       >

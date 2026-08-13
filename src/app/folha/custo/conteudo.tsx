@@ -64,7 +64,7 @@ export default function CustoFolhaPage() {
   if (!temEmpresa) {
     return (
       <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-ent/12 text-ent">
+        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
           <Building2 className="size-6" />
         </span>
         <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
@@ -145,9 +145,6 @@ export default function CustoFolhaPage() {
         {/* Composição por tipo de folha */}
         <section className="card anim-fade-up p-5">
           <h2 className="text-sm font-semibold">Composição por tipo de folha</h2>
-          <p className="mt-0.5 mb-4 text-xs text-muted">
-            De onde vem o custo — mensal, 13º, férias, rescisão… (sem adiantamento/provisão)
-          </p>
           <ul className="space-y-3">
             {dados.porTipo.map((t) => (
               <li key={t.tipo}>
@@ -171,7 +168,6 @@ export default function CustoFolhaPage() {
         {/* Evolução mensal */}
         <section className="card anim-fade-up p-5">
           <h2 className="text-sm font-semibold">Evolução mensal</h2>
-          <p className="mt-0.5 mb-4 text-xs text-muted">Custo de remuneração por competência</p>
           {dados.serie.length === 0 ? (
             <p className="py-10 text-center text-xs text-muted">Sem competências no período</p>
           ) : (
@@ -196,9 +192,6 @@ export default function CustoFolhaPage() {
       {/* Rubricas (memória do custo) */}
       <section className="card anim-fade-up p-5">
         <h2 className="text-sm font-semibold">Principais rubricas</h2>
-        <p className="mt-0.5 mb-4 text-xs text-muted">
-          As verbas que mais pesam — o detalhe por trás dos totais
-        </p>
         <div className="grid gap-6 sm:grid-cols-2">
           <RubricaLista titulo="Proventos" itens={proventos} />
           <RubricaLista titulo="Descontos" itens={descontos} />
@@ -209,20 +202,20 @@ export default function CustoFolhaPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <CustoQuebra
           titulo="Custo por setor"
-          subtitulo="Proventos por área (organograma)"
+          subtitulo=""
           rotuloColuna="Setor"
           dados={dados.porSetor}
         />
         <CustoQuebra
           titulo="Custo por cargo"
-          subtitulo="Proventos por cargo"
+          subtitulo=""
           rotuloColuna="Cargo"
           dados={dados.porCargo}
         />
       </div>
       <CustoQuebra
         titulo="Custo por estabelecimento"
-        subtitulo="Proventos por filial"
+        subtitulo=""
         rotuloColuna="Estabelecimento"
         dados={dados.porEstabelecimento}
       />

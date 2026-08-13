@@ -95,7 +95,7 @@ export default function Conteudo() {
         </div>
       ) : dash.total === 0 ? (
         <p className="card px-6 py-16 text-center text-sm text-muted">
-          Ainda sem respostas nesta rodada. Divulgue o link acima para começar a receber.
+          Ainda sem respostas nesta rodada.
         </p>
       ) : (
         <Respostas dash={dash} />

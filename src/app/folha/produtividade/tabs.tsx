@@ -51,7 +51,7 @@ export function ProdutividadeMenus() {
             className={clsx(
               "-mb-px border-b-2 px-3 py-2 text-sm transition-colors",
               ativa
-                ? "border-ent font-medium text-ent"
+                ? "border-accent font-medium text-accent"
                 : "border-transparent text-muted hover:border-hairline hover:text-ink"
             )}
           >

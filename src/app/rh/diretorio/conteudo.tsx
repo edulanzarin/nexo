@@ -149,7 +149,7 @@ export default function Conteudo() {
                     }}
                   >
                     <span className="grid size-4 place-items-center">
-                      {classif === null && <Check className="size-4 stroke-[3] text-ent" />}
+                      {classif === null && <Check className="size-4 stroke-[3] text-accent" />}
                     </span>
                     <span className="flex-1">Todos os setores</span>
                     {data && (
@@ -169,7 +169,7 @@ export default function Conteudo() {
                       >
                         <span className="grid size-4 place-items-center">
                           {classif === s.classiforgan && (
-                            <Check className="size-4 stroke-[3] text-ent" />
+                            <Check className="size-4 stroke-[3] text-accent" />
                           )}
                         </span>
                         <span className="flex-1 truncate">{s.nome}</span>

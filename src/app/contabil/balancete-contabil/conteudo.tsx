@@ -41,7 +41,7 @@ export default function BalanceteContabilPage() {
   if (!temEmpresa) {
     return (
       <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-ent/12 text-ent">
+        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
           <Building2 className="size-6" />
         </span>
         <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
@@ -135,10 +135,6 @@ function BannerAtipicas({ atipicas }: { atipicas: AnomaliaConta[] }) {
           sinal atípico
         </p>
       </div>
-      <p className="mt-1 text-xs text-muted">
-        Conta devedora com saldo credor (ou o contrário) costuma indicar lançamento invertido ou
-        pagamento a maior. Vale conferir antes de fechar.
-      </p>
       <ul className="mt-3 flex flex-col gap-1">
         {visiveis.map((a) => (
           <li key={`${a.classif}-${a.conta}`} className="flex items-baseline gap-2 text-xs">

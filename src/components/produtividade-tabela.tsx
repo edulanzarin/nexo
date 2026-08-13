@@ -43,9 +43,6 @@ export function ProdutividadeTabela({ dados, carregando, recarregando, totalNota
       <header className="mb-4 flex items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold">Ranking de colaboradores</h2>
-          <p className="mt-0.5 text-xs text-muted">
-            Notas lançadas por usuário no período · clique num cabeçalho para ordenar
-          </p>
         </div>
       </header>
 

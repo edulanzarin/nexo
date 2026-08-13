@@ -156,7 +156,7 @@ export default function ImportarPage() {
   if (!temEmpresa) {
     return (
       <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-ent/12 text-ent">
+        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
           <Building2 className="size-6" />
         </span>
         <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
@@ -259,7 +259,7 @@ export default function ImportarPage() {
                 className={clsx(
                   "rounded-lg px-2.5 py-1.5 text-xs transition-colors",
                   filtro === f
-                    ? "bg-ent/12 font-medium text-ent"
+                    ? "bg-accent/12 font-medium text-accent"
                     : "text-muted hover:bg-surface-2 hover:text-ink"
                 )}
               >
@@ -330,7 +330,7 @@ export default function ImportarPage() {
                             <button
                               onClick={() => salvarComoRegra(i, l.descricao, l.sentido, ajuste)}
                               title="Cadastra esta descrição como regra para casar sozinha na próxima importação"
-                              className="inline-flex items-center gap-1 rounded border border-hairline px-1.5 py-0.5 text-[10px] font-medium text-ink-2 transition-colors hover:border-ent/40 hover:text-ent"
+                              className="inline-flex items-center gap-1 rounded border border-hairline px-1.5 py-0.5 text-[10px] font-medium text-ink-2 transition-colors hover:border-accent/40 hover:text-accent"
                             >
                               <BookmarkPlus className="size-3" />
                               Salvar como regra
@@ -392,7 +392,7 @@ export default function ImportarPage() {
             <input
               value={estab}
               onChange={(e) => setEstab(e.target.value.replace(/\D/g, "").slice(0, 2))}
-              className="h-9 w-14 rounded-lg border border-hairline bg-surface px-2 text-center text-sm text-ink outline-none focus:border-ent/50"
+              className="h-9 w-14 rounded-lg border border-hairline bg-surface px-2 text-center text-sm text-ink outline-none focus:border-accent/50"
             />
           </label>
           <label className="grid gap-1.5">
@@ -411,7 +411,7 @@ export default function ImportarPage() {
                   ? "Escolha o histórico do lançamento"
                   : undefined
             }
-            className="flex h-10 items-center gap-2 rounded-lg bg-ent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="flex h-10 items-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             <Download className="size-4" />
             Gerar arquivo do Questor

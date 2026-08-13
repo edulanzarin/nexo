@@ -31,7 +31,7 @@ export function AdminNav() {
             className={clsx(
               "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
               ativa
-                ? "bg-ent/12 font-medium text-ent"
+                ? "bg-accent/12 font-medium text-accent"
                 : "text-ink-2 hover:bg-surface-2 hover:text-ink"
             )}
           >

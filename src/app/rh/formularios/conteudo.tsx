@@ -246,7 +246,7 @@ function Lista({ onEditar }: { onEditar: (id: number) => void }) {
       ) : (data ?? []).length === 0 ? (
         <div className="card grid place-items-center gap-2 py-16 text-center text-muted">
           <FileText className="size-8 opacity-40" />
-          <p>Nenhum formulário ainda. Crie o primeiro acima.</p>
+          <p>Nenhum formulário ainda.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -280,7 +280,7 @@ function Lista({ onEditar }: { onEditar: (id: number) => void }) {
                 {f.status === "ativo" && (
                   <button
                     onClick={() => setEnviarForm({ id: f.id, nome: f.nome })}
-                    className="flex items-center gap-1 rounded-lg border border-hairline px-2.5 py-1.5 text-xs font-medium text-ent transition-colors hover:bg-ent/10"
+                    className="flex items-center gap-1 rounded-lg border border-hairline px-2.5 py-1.5 text-xs font-medium text-ent transition-colors hover:bg-accent/10"
                   >
                     <Send className="size-3.5" /> Enviar
                   </button>

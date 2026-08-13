@@ -63,7 +63,6 @@ function ConfigExperienciaModal({ onFechar }: { onFechar: () => void }) {
       aberto
       onFechar={onFechar}
       titulo="Configuração da experiência"
-      subtitulo="Formulário por marco e antecedência do aviso aos gestores do setor"
       largura="max-w-xl"
     >
       <div className="space-y-3 px-6 py-5">
@@ -112,8 +111,7 @@ function ConfigExperienciaModal({ onFechar }: { onFechar: () => void }) {
 
         {!isLoading && forms.length === 0 && (
           <p className="text-xs text-warning">
-            Nenhum formulário ativo. Crie um em Formulários e marque como “Ativo” para poder ligá-lo à
-            experiência.
+            Nenhum formulário ativo.
           </p>
         )}
       </div>

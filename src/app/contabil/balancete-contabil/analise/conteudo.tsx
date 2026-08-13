@@ -64,7 +64,7 @@ export default function AnaliseBalancetePage() {
   if (!temEmpresa) {
     return (
       <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-ent/12 text-ent">
+        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
           <Building2 className="size-6" />
         </span>
         <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
@@ -232,7 +232,7 @@ function Laudo({
               <button
                 onClick={() => setPedirLaudo(true)}
                 disabled={laudo.isFetching}
-                className="no-print inline-flex items-center gap-1.5 rounded-lg bg-ent px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                className="no-print inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
               >
                 {laudo.isFetching ? (
                   <>
@@ -317,8 +317,7 @@ function Regras({ analise }: { analise: AnaliseDeterministica }) {
       {semProblema && (
         <div className="flex items-center gap-2 rounded-lg border border-good/25 bg-good/5 px-3 py-2 text-sm text-ink">
           <CheckCircle2 className="size-4 shrink-0 text-good" />
-          Nenhuma inconsistência de regra: o balancete fecha e os saldos
-          respeitam a natureza das contas.
+          Nenhuma inconsistência de regra.
         </div>
       )}
 

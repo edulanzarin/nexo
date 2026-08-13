@@ -78,7 +78,6 @@ export function GruposModal({ aberto, onFechar, onAplicar }: Props) {
       aberto={aberto}
       onFechar={onFechar}
       titulo="Grupos de empresas"
-      subtitulo="Grupos ficam salvos neste navegador"
       largura="max-w-xl"
       ariaLabel="Grupos de empresas"
     >
@@ -87,7 +86,7 @@ export function GruposModal({ aberto, onFechar, onAplicar }: Props) {
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
             {grupos.length === 0 && (
               <p className="py-8 text-center text-sm text-muted">
-                Nenhum grupo ainda — crie o primeiro para filtrar várias empresas de uma vez
+                Nenhum grupo ainda
               </p>
             )}
             <ul className="space-y-2">
@@ -105,7 +104,7 @@ export function GruposModal({ aberto, onFechar, onAplicar }: Props) {
                       onAplicar(g);
                       onFechar();
                     }}
-                    className="rounded-lg bg-ent/12 px-2.5 py-1.5 text-xs font-medium text-ent transition-colors hover:bg-ent/20"
+                    className="rounded-lg bg-ent/12 px-2.5 py-1.5 text-xs font-medium text-ent transition-colors hover:bg-accent/20"
                   >
                     Aplicar
                   </button>
@@ -130,7 +129,7 @@ export function GruposModal({ aberto, onFechar, onAplicar }: Props) {
           <footer className="border-t border-hairline px-6 py-4">
             <button
               onClick={() => iniciarEdicao(null)}
-              className="flex items-center gap-2 rounded-lg bg-ent px-3.5 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+              className="flex items-center gap-2 rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
             >
               <Plus className="size-4" />
               Novo grupo
@@ -145,7 +144,7 @@ export function GruposModal({ aberto, onFechar, onAplicar }: Props) {
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               placeholder="Nome do grupo (ex.: Têxteis, Clientes da Larissa…)"
-              className="h-10 w-full rounded-lg border border-hairline bg-surface-2 px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-ent/50"
+              className="h-10 w-full rounded-lg border border-hairline bg-surface-2 px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-accent/50"
             />
             <div className="flex h-9 items-center gap-2 rounded-lg border border-hairline px-3">
               <Search className="size-4 text-muted" />
@@ -172,7 +171,7 @@ export function GruposModal({ aberto, onFechar, onAplicar }: Props) {
                   <span
                     className={clsx(
                       "grid size-4 shrink-0 place-items-center rounded border",
-                      marcada ? "border-ent bg-ent text-white" : "border-baseline"
+                      marcada ? "border-accent bg-accent text-white" : "border-baseline"
                     )}
                   >
                     {marcada && <Check className="size-3 stroke-[3]" />}
@@ -192,7 +191,7 @@ export function GruposModal({ aberto, onFechar, onAplicar }: Props) {
             </button>
             <button
               onClick={salvarGrupo}
-              className="rounded-lg bg-ent px-3.5 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+              className="rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
             >
               {editando.id ? "Salvar alterações" : "Criar grupo"}
             </button>

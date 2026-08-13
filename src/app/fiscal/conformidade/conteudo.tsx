@@ -99,7 +99,6 @@ export default function ConformidadePage() {
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <ChartCard
           titulo="Situação das notas"
-          subtitulo="Distribuição por cdsituacao (rótulos best-effort)"
           carregando={resumo.isLoading || !r}
           recarregando={resumo.isFetching && !resumo.isLoading}
           alturaSkeleton="h-64"

@@ -7,7 +7,7 @@ import type { UsuarioDetalhe, CargoOpcao } from "../dados";
 import { AvatarCampo } from "./avatar-campo";
 
 const input =
-  "h-10 rounded-lg border border-hairline bg-surface px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-ent/50";
+  "h-10 rounded-lg border border-hairline bg-surface px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-accent/50";
 const check = "size-4 accent-[var(--ent)]";
 
 /**
@@ -71,14 +71,10 @@ export function UsuarioForm({
 
       <section>
         <h2 className="text-sm font-semibold">Cargos</h2>
-        <p className="mt-0.5 text-xs text-muted">
-          Toda a permissão vem dos cargos. Atribua um ou mais — o acesso é a <strong>união</strong>{" "}
-          de todos. Precisa de algo diferente? Crie um cargo específico.
-        </p>
         {cargos.length === 0 ? (
           <p className="card mt-3 px-4 py-3 text-sm text-muted">
             Nenhum cargo criado.{" "}
-            <Link href="/admin/cargos/novo" className="text-ent hover:underline">
+            <Link href="/admin/cargos/novo" className="text-accent hover:underline">
               Crie um cargo
             </Link>{" "}
             antes de cadastrar o usuário.
@@ -121,7 +117,7 @@ export function UsuarioForm({
         )}
         <button
           type="submit"
-          className="h-10 rounded-lg bg-ent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          className="h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         >
           {usuario ? "Salvar" : "Criar usuário"}
         </button>

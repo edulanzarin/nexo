@@ -9,7 +9,7 @@ import type { Faceta } from "@/lib/types";
 import type { UsuarioLista } from "../dados";
 
 const inputBusca =
-  "h-9 w-full rounded-lg border border-hairline bg-surface pl-9 pr-3 text-sm text-ink outline-none placeholder:text-muted focus:border-ent/50";
+  "h-9 w-full rounded-lg border border-hairline bg-surface pl-9 pr-3 text-sm text-ink outline-none placeholder:text-muted focus:border-accent/50";
 
 type Status = "todos" | "ativos" | "inativos";
 
@@ -57,7 +57,7 @@ export function UsuariosTabela({ usuarios }: { usuarios: UsuarioLista[] }) {
       type="button"
       onClick={() => setStatus(v)}
       className={`h-9 rounded-lg px-3 text-sm transition-colors ${
-        status === v ? "bg-ent/12 font-medium text-ent" : "text-ink-2 hover:bg-surface-2"
+        status === v ? "bg-accent/12 font-medium text-accent" : "text-ink-2 hover:bg-surface-2"
       }`}
     >
       {rotulo}

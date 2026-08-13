@@ -7,7 +7,7 @@ import { AvatarCampo } from "@/app/admin/usuarios/avatar-campo";
 import { atualizarPerfil, encerrarSessoes, type PerfilState } from "./actions";
 
 const input =
-  "h-10 rounded-lg border border-hairline bg-surface px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-ent/50";
+  "h-10 rounded-lg border border-hairline bg-surface px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-accent/50";
 const INICIAL: PerfilState = {};
 
 /**
@@ -101,7 +101,7 @@ export function PerfilForm({
         <button
           type="submit"
           disabled={pending}
-          className="h-10 rounded-lg bg-ent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
         >
           {pending ? "Salvando…" : "Salvar"}
         </button>
@@ -116,9 +116,7 @@ export function PerfilForm({
             <p className="mt-0.5 text-xs text-muted">
               {sessoesAtivas <= 1
                 ? "Só este dispositivo está conectado."
-                : `${sessoesAtivas} dispositivos conectados nesta conta (contando este).`}{" "}
-              Encerrar as outras desconecta qualquer sessão aberta em outro lugar —
-              use se perdeu um aparelho ou desconfia de acesso indevido.
+                : `${sessoesAtivas} dispositivos conectados.`}
             </p>
           </div>
         </div>

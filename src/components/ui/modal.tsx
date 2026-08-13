@@ -49,7 +49,7 @@ export function Modal({
 
   return createPortal(
     <div
-      className="anim-fade-in fixed inset-0 z-50 grid place-items-center bg-black/50 p-4 backdrop-blur-sm"
+      className="anim-fade-in fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-md"
       onClick={onFechar}
     >
       <div

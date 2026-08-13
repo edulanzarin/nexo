@@ -55,7 +55,7 @@ function Toggle({
       className={clsx(
         "rounded-lg border px-3 py-1.5 text-xs transition-colors",
         ativo
-          ? "border-ent/30 bg-ent/12 font-medium text-ent"
+          ? "border-ent/30 bg-accent/12 font-medium text-accent"
           : "border-hairline bg-surface-2 text-muted hover:text-ink"
       )}
     >

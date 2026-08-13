@@ -68,7 +68,7 @@ export function EmpresaPicker({
               <span
                 className={clsx(
                   "grid size-4 shrink-0 place-items-center rounded border",
-                  marcada ? "border-ent bg-ent text-white" : "border-baseline"
+                  marcada ? "border-accent bg-accent text-white" : "border-baseline"
                 )}
               >
                 {marcada && <Check className="size-3 stroke-[3]" />}

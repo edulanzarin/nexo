@@ -3,7 +3,7 @@ import { salvarGrupo, excluirGrupo } from "../actions";
 import type { GrupoDetalhe, EmpresaOpcao } from "../dados";
 
 const input =
-  "h-10 rounded-lg border border-hairline bg-surface px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-ent/50";
+  "h-10 rounded-lg border border-hairline bg-surface px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-accent/50";
 
 /** Cria ou edita um grupo de empresas (nome + seleção pesquisável). Server Action. */
 export function GrupoForm({
@@ -24,7 +24,6 @@ export function GrupoForm({
 
       <div className="max-w-2xl">
         <h2 className="text-sm font-semibold">Empresas do grupo</h2>
-        <p className="mt-0.5 text-xs text-muted">Busque e marque as empresas desta carteira.</p>
         <div className="mt-3">
           <EmpresaPicker name="empresas" empresas={empresas} inicial={grupo?.empresas ?? []} />
         </div>
@@ -44,7 +43,7 @@ export function GrupoForm({
         )}
         <button
           type="submit"
-          className="h-10 rounded-lg bg-ent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          className="h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         >
           {grupo ? "Salvar" : "Criar grupo"}
         </button>

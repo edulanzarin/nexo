@@ -42,14 +42,14 @@ export function BotaoExecutar({
       disabled={travado}
       title={title}
       className={clsx(
-        "flex h-9 items-center gap-1.5 rounded-lg px-3.5 text-sm font-medium transition-colors",
+        "flex h-9 items-center gap-1.5 px-3.5 text-sm transition-all",
         disabled
-          ? "cursor-not-allowed bg-surface-2 text-muted"
+          ? "cursor-not-allowed rounded-lg bg-surface-2 font-medium text-muted"
           : executando
-            ? "cursor-wait bg-ent/70 text-white"
+            ? "btn-accent cursor-wait opacity-80"
             : // Sempre ativo: dá pra re-rodar sem mudar filtro. Um anel destaca
               // quando há mudança pendente (dirty).
-              clsx("bg-ent text-white hover:opacity-90", dirty && "ring-2 ring-ent/30")
+              clsx("btn-accent", dirty && "ring-2 ring-accent/40 ring-offset-2 ring-offset-page")
       )}
     >
       {executando ? (

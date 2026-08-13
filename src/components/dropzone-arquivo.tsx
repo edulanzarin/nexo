@@ -84,8 +84,8 @@ export function DropzoneArquivo({
         "flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-dashed px-3 text-sm transition-colors",
         bloqueado && "cursor-not-allowed opacity-60",
         sobre
-          ? "border-ent bg-ent/10 text-ink"
-          : "border-hairline bg-surface text-ink-2 hover:border-ent/40 hover:bg-surface-2 hover:text-ink"
+          ? "border-accent bg-accent/10 text-ink"
+          : "border-hairline bg-surface text-ink-2 hover:border-accent/40 hover:bg-surface-2 hover:text-ink"
       )}
     >
       {carregando ? (

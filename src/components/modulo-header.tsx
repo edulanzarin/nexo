@@ -16,12 +16,12 @@ export function ModuloHeader({
   direita?: React.ReactNode;
 }) {
   return (
-    <header className="mb-4 flex items-center justify-between gap-4">
-      <h1 className="text-xl font-semibold tracking-tight">{titulo}</h1>
+    <header className="mb-5 flex items-center justify-between gap-4">
+      <h1 className="text-2xl font-semibold tracking-tight">{titulo}</h1>
       <div className="flex items-center gap-4">
         {carregando && (
-          <span className="anim-fade-in flex items-center gap-2 text-xs text-muted">
-            <Loader2 className="size-4 animate-spin" />
+          <span className="anim-fade-in flex items-center gap-1.5 rounded-full border border-hairline bg-surface-2 px-2.5 py-1 text-xs text-muted">
+            <Loader2 className="size-3.5 animate-spin text-accent" />
             Atualizando…
           </span>
         )}

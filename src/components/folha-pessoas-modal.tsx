@@ -47,7 +47,6 @@ export function PessoasModal({
         onFechar={onFechar}
         largura="max-w-4xl"
         titulo={drill?.rotulo ?? "Pessoas"}
-        subtitulo="Movimentações do grupo no período · clique numa linha para a ficha"
       >
         <div className="px-4 py-3">
           {isLoading || !data ? (

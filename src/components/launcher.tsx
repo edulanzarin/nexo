@@ -61,7 +61,7 @@ export function Launcher({
             <p className="text-sm font-semibold">{usuario}</p>
           </div>
         </Link>
-        <h1 className="mt-6 text-2xl font-semibold tracking-tight">Escolha um módulo</h1>
+        <h1 className="mt-7 text-3xl font-semibold tracking-tight">Escolha um módulo</h1>
 
         {/* Módulos de negócio primeiro (na ordem de MODULOS); Administração vem
             SEMPRE por último e fixa aqui. Módulo novo entra em MODULOS e cai

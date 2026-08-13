@@ -93,7 +93,7 @@ export function HistoricoDropdown({
                   }}
                 >
                   <span className="grid size-4 shrink-0 place-items-center">
-                    {h.codigo === valor && <Check className="size-4 stroke-[3] text-ent" />}
+                    {h.codigo === valor && <Check className="size-4 stroke-[3] text-accent" />}
                   </span>
                   <span className="tnum w-12 shrink-0 text-xs text-muted">{h.codigo}</span>
                   <span className="flex-1 truncate" title={h.descricao}>

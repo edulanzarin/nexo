@@ -29,7 +29,6 @@ export default async function PerfilPage() {
     <main className="mx-auto max-w-2xl px-8 py-8">
       <Voltar />
       <h1 className="mt-3 text-xl font-semibold tracking-tight">Meu perfil</h1>
-      <p className="mt-0.5 text-sm text-muted">Sua foto, sua senha e suas sessões.</p>
 
       <div className="mt-7">
         <PerfilForm

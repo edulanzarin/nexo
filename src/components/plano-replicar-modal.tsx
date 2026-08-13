@@ -88,7 +88,7 @@ export function ReplicarModal({
       largura="max-w-4xl"
       ariaLabel="Replicar overrides"
       titulo={<h3 className="text-lg font-semibold">Replicar overrides</h3>}
-      subtitulo={`De ${origemNome} para a empresa escolhida · gravados como regra geral do destino`}
+      subtitulo={`De ${origemNome} para a empresa escolhida`}
       busca={busca}
       onBusca={setBusca}
       buscaPlaceholder="CFOP ou descrição…"
@@ -103,7 +103,7 @@ export function ReplicarModal({
           <button
             onClick={replicar}
             disabled={destino == null || !escolhidos.length || enviando}
-            className="flex items-center gap-1.5 rounded-lg bg-ent px-3 py-1.5 text-xs font-medium text-white transition-opacity disabled:opacity-40"
+            className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white transition-opacity disabled:opacity-40"
           >
             {enviando ? <Loader2 className="size-3.5 animate-spin" /> : <Copy className="size-3.5" />}
             {enviando ? "Replicando…" : "Replicar"}
@@ -138,7 +138,7 @@ export function ReplicarModal({
                   : new Set()
               )
             }
-            className="text-xs text-ent hover:underline"
+            className="text-xs text-accent hover:underline"
           >
             {escolhidos.length === replicaveis.length ? "Desmarcar todos" : "Marcar todos"}
           </button>
@@ -147,7 +147,7 @@ export function ReplicarModal({
 
       {destino == null ? (
         <p className="grid h-40 place-items-center text-sm text-muted">
-          Escolha a empresa de destino para ver o que pode ser replicado.
+          Escolha a empresa de destino.
         </p>
       ) : preview.isLoading ? (
         <div className="p-6">

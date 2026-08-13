@@ -6,7 +6,7 @@ import { Search } from "lucide-react";
 import type { SetorResumo } from "../dados";
 
 const inputBusca =
-  "h-9 w-full rounded-lg border border-hairline bg-surface pl-9 pr-3 text-sm text-ink outline-none placeholder:text-muted focus:border-ent/50";
+  "h-9 w-full rounded-lg border border-hairline bg-surface pl-9 pr-3 text-sm text-ink outline-none placeholder:text-muted focus:border-accent/50";
 
 export function SetoresTabela({ setores }: { setores: SetorResumo[] }) {
   const router = useRouter();

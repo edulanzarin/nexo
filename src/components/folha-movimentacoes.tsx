@@ -84,11 +84,6 @@ export function FolhaMovimentacoes({ qs, modulo = "folha" }: Props) {
           <h2 className="text-sm font-semibold">
             {escopo === "efetivo" ? "Efetivo atual" : "Movimentações no período"}
           </h2>
-          <p className="mt-0.5 text-xs text-muted">
-            {escopo === "efetivo"
-              ? "Todos os colaboradores ativos no fim do período · clique numa linha para a ficha"
-              : "Quem foi admitido ou desligado · clique numa linha para a ficha"}
-          </p>
         </div>
         <button
           onClick={exportar}
@@ -125,7 +120,7 @@ export function FolhaMovimentacoes({ qs, modulo = "folha" }: Props) {
               className={clsx(
                 "rounded-lg border px-3 py-1.5 text-xs transition-colors",
                 filtro === c.id
-                  ? "border-ent/30 bg-ent/12 font-medium text-ent"
+                  ? "border-ent/30 bg-accent/12 font-medium text-accent"
                   : "border-hairline bg-surface-2 text-muted hover:text-ink"
               )}
             >

@@ -51,7 +51,7 @@ export function FilialDropdown({
         <div className="max-h-72 overflow-y-auto py-1">
           <ItemLista selecionado={estabs.length === 0} onClick={() => onChange([])}>
             <span className="grid size-4 place-items-center">
-              {estabs.length === 0 && <Check className="size-4 stroke-[3] text-ent" />}
+              {estabs.length === 0 && <Check className="size-4 stroke-[3] text-accent" />}
             </span>
             <span className="flex-1">Todas as filiais</span>
           </ItemLista>
@@ -62,7 +62,7 @@ export function FilialDropdown({
               onClick={() => toggle(f.codigoestab)}
             >
               <span className="grid size-4 place-items-center">
-                {estabs.includes(f.codigoestab) && <Check className="size-4 stroke-[3] text-ent" />}
+                {estabs.includes(f.codigoestab) && <Check className="size-4 stroke-[3] text-accent" />}
               </span>
               <span className="flex-1 truncate">{f.nome}</span>
               <span className="tnum text-xs text-muted">{f.codigoestab}</span>

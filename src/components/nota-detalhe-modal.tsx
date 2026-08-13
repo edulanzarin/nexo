@@ -106,7 +106,7 @@ export function NotaDetalheModal({
         )}
 
         {cons && (
-          <div className="border-b border-hairline bg-ent/8 px-6 py-4">
+          <div className="border-b border-hairline bg-accent/8 px-6 py-4">
             <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-ent">
               Contabilizada em bloco
             </p>

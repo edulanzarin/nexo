@@ -146,7 +146,7 @@ export function FilterBar({ mostrarMetrica = true }: { mostrarMetrica?: boolean 
               {rascunho.empresas.length > 0 && (
                 <button
                   onClick={() => editar({ empresas: [], estabs: [] })}
-                  className="shrink-0 text-xs text-ent hover:underline"
+                  className="shrink-0 text-xs text-accent hover:underline"
                 >
                   Limpar
                 </button>
@@ -170,7 +170,7 @@ export function FilterBar({ mostrarMetrica = true }: { mostrarMetrica?: boolean 
                     <span
                       className={clsx(
                         "grid size-4 shrink-0 place-items-center rounded border",
-                        marcada ? "border-ent bg-ent text-white" : "border-baseline"
+                        marcada ? "border-accent bg-accent text-white" : "border-baseline"
                       )}
                     >
                       {marcada && <Check className="size-3 stroke-[3]" />}
@@ -236,7 +236,7 @@ export function FilterBar({ mostrarMetrica = true }: { mostrarMetrica?: boolean 
                     gruposAtivos.forEach((g) => g.empresas.forEach((c) => set.delete(c)));
                     editar({ empresas: [...set], estabs: [] });
                   }}
-                  className="shrink-0 text-xs text-ent hover:underline"
+                  className="shrink-0 text-xs text-accent hover:underline"
                 >
                   Limpar
                 </button>
@@ -256,7 +256,7 @@ export function FilterBar({ mostrarMetrica = true }: { mostrarMetrica?: boolean 
                     <span
                       className={clsx(
                         "grid size-4 shrink-0 place-items-center rounded border",
-                        marcado ? "border-ent bg-ent text-white" : "border-baseline"
+                        marcado ? "border-accent bg-accent text-white" : "border-baseline"
                       )}
                     >
                       {marcado && <Check className="size-3 stroke-[3]" />}
@@ -308,7 +308,7 @@ export function FilterBar({ mostrarMetrica = true }: { mostrarMetrica?: boolean 
                   <span
                     className={clsx(
                       "grid size-4 shrink-0 place-items-center rounded border",
-                      marcada ? "border-ent bg-ent text-white" : "border-baseline"
+                      marcada ? "border-accent bg-accent text-white" : "border-baseline"
                     )}
                   >
                     {marcada && <Check className="size-3 stroke-[3]" />}

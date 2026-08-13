@@ -205,7 +205,7 @@ export default function RotatividadePage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <RotatividadeBarras
           titulo="Motivo do desligamento"
-          subtitulo="Causa da rescisão · clique para ver quem saiu"
+          subtitulo=""
           dados={motivos}
           cor="var(--critical)"
           vazio="Nenhum desligamento no período"
@@ -216,7 +216,7 @@ export default function RotatividadePage() {
         />
         <RotatividadeBarras
           titulo="Tempo de casa dos desligados"
-          subtitulo="Quanto tempo ficou quem saiu · clique para ver quem"
+          subtitulo=""
           dados={tenure}
           cor="var(--esp-5)"
           vazio="Nenhum desligamento no período"
@@ -230,7 +230,7 @@ export default function RotatividadePage() {
       {/* Quebras por dimensão */}
       <RotatividadeQuebra
         titulo="Turnover por organograma"
-        subtitulo="Cada setor com seu efetivo e movimentação · clique numa linha para ver as pessoas"
+        subtitulo=""
         rotuloColuna="Organograma"
         dados={d?.organogramas}
         total={c}
@@ -241,7 +241,7 @@ export default function RotatividadePage() {
       />
       <RotatividadeQuebra
         titulo="Turnover por cargo"
-        subtitulo="Cada cargo com seu efetivo e movimentação · clique numa linha para ver as pessoas"
+        subtitulo=""
         rotuloColuna="Cargo"
         dados={d?.cargos}
         total={c}
@@ -252,7 +252,7 @@ export default function RotatividadePage() {
       />
       <RotatividadeQuebra
         titulo="Turnover por horário"
-        subtitulo="Rotatividade por escala/horário de trabalho · clique numa linha para ver as pessoas"
+        subtitulo=""
         rotuloColuna="Horário"
         dados={d?.horarios}
         total={c}
@@ -267,7 +267,7 @@ export default function RotatividadePage() {
         <div className="md:col-span-2">
           <RotatividadeQuebra
             titulo="Turnover por faixa etária"
-            subtitulo="Onde a rotatividade se concentra por idade · clique para ver as pessoas"
+            subtitulo=""
             rotuloColuna="Faixa etária"
             dados={d?.faixaEtaria}
             total={c}
@@ -280,7 +280,7 @@ export default function RotatividadePage() {
         </div>
         <RotatividadeQuebra
           titulo="Turnover por estabelecimento"
-          subtitulo="Por filial · clique para ver as pessoas"
+          subtitulo=""
           rotuloColuna="Estabelecimento"
           dados={d?.estabelecimentos}
           total={c}
@@ -292,7 +292,7 @@ export default function RotatividadePage() {
         />
         <RotatividadeQuebra
           titulo="Turnover por sexo"
-          subtitulo="Rotatividade por sexo · clique para ver as pessoas"
+          subtitulo=""
           rotuloColuna="Sexo"
           dados={d?.sexo}
           total={c}
@@ -304,7 +304,7 @@ export default function RotatividadePage() {
         />
         <RotatividadeQuebra
           titulo="Turnover por escolaridade"
-          subtitulo="Rotatividade por grau de instrução · clique para ver as pessoas"
+          subtitulo=""
           rotuloColuna="Escolaridade"
           dados={d?.escolaridade}
           total={c}
@@ -316,7 +316,7 @@ export default function RotatividadePage() {
         />
         <RotatividadeQuebra
           titulo="Turnover por estado civil"
-          subtitulo="Rotatividade por estado civil · clique para ver as pessoas"
+          subtitulo=""
           rotuloColuna="Estado civil"
           dados={d?.estadoCivil}
           total={c}
@@ -327,13 +327,6 @@ export default function RotatividadePage() {
           compacto
         />
       </div>
-
-      <p className="text-[11px] text-muted">
-        Turnover = (admissões + desligamentos) ÷ 2, sobre os colaboradores ativos
-        (efetivo no fim do período). Setor, cargo e estabelecimento pela lotação
-        atual; voluntário = iniciativa do empregado. Filtros no topo recortam todo
-        o painel; clique em qualquer quebra para ver as pessoas.
-      </p>
 
       <PessoasModal qsBase={qsCompleto} drill={drill} onFechar={() => setDrill(null)} />
     </>

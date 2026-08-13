@@ -207,7 +207,7 @@ export function ImportarControles() {
         aberto={mostrarSenha}
         onFechar={() => setMostrarSenha(false)}
         titulo="PDF protegido"
-        subtitulo="Este extrato tem senha. Informe para a leitura."
+        subtitulo="Extrato protegido por senha."
         largura="max-w-sm"
       >
         <div className="space-y-3 p-5">
@@ -230,7 +230,7 @@ export function ImportarControles() {
             <button
               onClick={() => setMostrarSenha(false)}
               disabled={!senha}
-              className="h-9 rounded-lg bg-ent px-3 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="h-9 rounded-lg bg-accent px-3 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               Confirmar
             </button>

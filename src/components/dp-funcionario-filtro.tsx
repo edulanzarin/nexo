@@ -64,7 +64,7 @@ export function DpFuncionarioFiltro({ dados, valor, onMudar }: Props) {
                 }}
               >
                 <span className="grid size-4 shrink-0 place-items-center">
-                  {valor == null && <Check className="size-4 stroke-[3] text-ent" />}
+                  {valor == null && <Check className="size-4 stroke-[3] text-accent" />}
                 </span>
                 <span className="flex-1">Todos os funcionários</span>
               </ItemLista>
@@ -82,7 +82,7 @@ export function DpFuncionarioFiltro({ dados, valor, onMudar }: Props) {
                   }}
                 >
                   <span className="grid size-4 shrink-0 place-items-center">
-                    {c.codigo === valor && <Check className="size-4 stroke-[3] text-ent" />}
+                    {c.codigo === valor && <Check className="size-4 stroke-[3] text-accent" />}
                   </span>
                   <span className="flex-1 truncate" title={c.nome}>
                     {c.nome}

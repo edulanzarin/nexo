@@ -398,11 +398,6 @@ export default function Conteudo() {
 
   return (
     <>
-      <p className="max-w-3xl text-sm text-muted">
-        Cadastre os supervisores e coordenadores de cada departamento. Você pode
-        renomear os setores que vêm do Questor ou criar um setor próprio.
-      </p>
-
       {isLoading ? (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {Array.from({ length: 4 }).map((_, i) => (

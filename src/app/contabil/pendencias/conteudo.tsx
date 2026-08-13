@@ -218,14 +218,10 @@ export default function PendenciasPage() {
   if (!temEmpresa) {
     return (
       <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-ent/12 text-ent">
+        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
           <Building2 className="size-6" />
         </span>
         <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
-        <p className="max-w-md text-xs text-muted">
-          A Central de Pendências reúne, de uma empresa por vez, as pendências da Conferência e os
-          achados da Auditoria no período escolhido.
-        </p>
       </section>
     );
   }
@@ -341,8 +337,8 @@ export default function PendenciasPage() {
 
           {filtrados.length > MAX_LINHAS && (
             <p className="border-t border-hairline px-4 py-2 text-[11px] text-muted">
-              Mostrando as {MAX_LINHAS.toLocaleString("pt-BR")} primeiras de{" "}
-              {filtrados.length.toLocaleString("pt-BR")} — trate ou reduza o período para ver o resto.
+              Mostrando {MAX_LINHAS.toLocaleString("pt-BR")} de{" "}
+              {filtrados.length.toLocaleString("pt-BR")}
             </p>
           )}
         </section>

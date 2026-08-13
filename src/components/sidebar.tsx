@@ -56,7 +56,7 @@ export function ModuloSidebar({
   if (!modulo) return null;
 
   return (
-    <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-hairline bg-surface px-3 py-5">
+    <aside className="glass sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r px-3 py-5">
       <Link
         href="/"
         className="flex items-center gap-1.5 px-2 text-xs text-muted transition-colors hover:text-ink"
@@ -80,7 +80,7 @@ export function ModuloSidebar({
               className={clsx(
                 "rounded-lg px-3 py-2 text-sm transition-colors",
                 ativa
-                  ? "bg-ent/12 font-medium text-ent"
+                  ? "bg-accent/12 font-medium text-accent"
                   : "text-ink-2 hover:bg-surface-2 hover:text-ink"
               )}
             >

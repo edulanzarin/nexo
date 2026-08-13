@@ -48,9 +48,6 @@ export function DpRankingTabela({ dados, carregando, recarregando, selecionado, 
       <header className="mb-4 flex items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold">Ranking de colaboradores do DP</h2>
-          <p className="mt-0.5 text-xs text-muted">
-            Trabalhos lançados por usuário no período · clique numa linha para filtrar os detalhes
-          </p>
         </div>
       </header>
 
@@ -100,7 +97,7 @@ export function DpRankingTabela({ dados, carregando, recarregando, selecionado, 
                     className={clsx(
                       "cursor-pointer border-b border-hairline/60 last:border-0 hover:bg-surface-2/50",
                       c.auto && "bg-surface-2/40",
-                      sel && "bg-ent/8 hover:bg-ent/12"
+                      sel && "bg-accent/8 hover:bg-accent/12"
                     )}
                   >
                     <td className="py-2.5 pr-2 text-right text-xs tabular-nums text-muted">{i + 1}</td>

@@ -20,9 +20,9 @@ import {
 } from "@/lib/folha-postmortem-tipos";
 
 const campo =
-  "w-full rounded-lg border border-hairline bg-surface-2 px-3 py-2 text-sm text-ink outline-none transition-colors placeholder:text-muted focus:border-ent disabled:cursor-not-allowed disabled:opacity-70";
+  "w-full rounded-lg border border-hairline bg-surface-2 px-3 py-2 text-sm text-ink outline-none transition-colors placeholder:text-muted focus:border-accent disabled:cursor-not-allowed disabled:opacity-70";
 const campoMini =
-  "w-full rounded-md border border-hairline bg-surface-2 px-2 py-1.5 text-xs text-ink outline-none focus:border-ent disabled:opacity-70";
+  "w-full rounded-md border border-hairline bg-surface-2 px-2 py-1.5 text-xs text-ink outline-none focus:border-accent disabled:opacity-70";
 
 function Secao({
   n,
@@ -245,7 +245,7 @@ export function FormularioPM({
             <button
               onClick={enviar}
               disabled={salvando || enviando}
-              className="flex items-center gap-1.5 rounded-lg bg-ent px-3 py-2 text-xs font-medium text-white hover:bg-ent/90 disabled:opacity-60"
+              className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-xs font-medium text-white hover:bg-accent/90 disabled:opacity-60"
             >
               {enviando ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
               Enviar relatório
@@ -255,7 +255,7 @@ export function FormularioPM({
       </div>
 
       {ro && (
-        <div className="card border-ent/30 bg-ent/5 px-4 py-3 text-xs text-ink-2">
+        <div className="card border-accent/30 bg-accent/5 px-4 py-3 text-xs text-ink-2">
           {inicial.status === "enviado"
             ? "Relatório enviado — leitura apenas. Preenchido por " + inicial.autorNome + "."
             : "Você está vendo o rascunho de " + inicial.autorNome + " (leitura apenas)."}
@@ -413,7 +413,6 @@ export function FormularioPM({
       <Secao
         n={4}
         titulo="Análise de causa raiz"
-        sub="Técnica dos 5 Porquês — parta do erro e pergunte “por quê” até a causa de fundo."
       >
         <div className="space-y-2">
           {d.cincoPorques.map((p, i) => (
@@ -453,7 +452,7 @@ export function FormularioPM({
       </Secao>
 
       {/* 5. Ações imediatas */}
-      <Secao n={5} titulo="Ações imediatas de correção" sub="O que já foi (ou precisa ser) feito para corrigir o erro pontualmente.">
+      <Secao n={5} titulo="Ações imediatas de correção">
         <Repetivel
           titulo="Ações corretivas"
           rows={d.acoesCorretivas}
@@ -474,7 +473,6 @@ export function FormularioPM({
       <Secao
         n={6}
         titulo="Ações preventivas e melhoria de processo"
-        sub="Processos, checklists, controles ou treinamentos para evitar recorrência."
       >
         <Repetivel
           titulo="Ações preventivas"
@@ -521,7 +519,7 @@ export function FormularioPM({
           <button
             onClick={enviar}
             disabled={salvando || enviando}
-            className="flex items-center gap-1.5 rounded-lg bg-ent px-3 py-2 text-xs font-medium text-white hover:bg-ent/90 disabled:opacity-60"
+            className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-xs font-medium text-white hover:bg-accent/90 disabled:opacity-60"
           >
             {enviando ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
             Enviar relatório

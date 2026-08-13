@@ -180,7 +180,7 @@ export function PlanoEditor({ empresa, plano, rotuloEstab, onFechar, onSalvo }: 
                         "px-2.5 py-1.5 text-xs transition-colors",
                         l.natureza === nat
                           ? nat === 1
-                            ? "bg-ent/12 font-medium text-ent"
+                            ? "bg-accent/12 font-medium text-accent"
                             : "bg-sai/12 font-medium text-sai"
                           : "bg-surface text-muted hover:text-ink"
                       )}
@@ -257,7 +257,7 @@ export function PlanoEditor({ empresa, plano, rotuloEstab, onFechar, onSalvo }: 
               onClick={salvar}
               disabled={salvando}
               className={clsx(
-                "flex items-center gap-1.5 rounded-lg bg-ent px-3 py-1.5 text-xs font-medium text-white",
+                "flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white",
                 salvando && "opacity-60"
               )}
             >

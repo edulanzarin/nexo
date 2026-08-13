@@ -20,7 +20,7 @@ const BADGE: Record<StatusCasamento, { rotulo: string; cor: string; icone: typeo
 // Mesma pegada de input das outras telas (usuario-form etc.), na altura h-9 dos
 // controles de barra para alinhar com os dropdowns.
 const campoInput =
-  "h-9 rounded-lg border border-hairline bg-surface px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-ent/50";
+  "h-9 rounded-lg border border-hairline bg-surface px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-accent/50";
 
 async function postJson<T>(url: string, body: unknown): Promise<T> {
   const res = await fetch(url, {
@@ -163,7 +163,7 @@ export default function Conteudo() {
   if (!temEmpresa) {
     return (
       <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-ent/12 text-ent">
+        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
           <Building2 className="size-6" />
         </span>
         <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
@@ -293,7 +293,7 @@ export default function Conteudo() {
                     ) : (
                       <button
                         onClick={() => setEditando(i)}
-                        className="flex items-center gap-1.5 text-left text-ink hover:text-ent"
+                        className="flex items-center gap-1.5 text-left text-ink hover:text-accent"
                       >
                         <span>
                           <span className="font-mono">{c.conta}</span>{" "}
@@ -368,7 +368,7 @@ export default function Conteudo() {
             <button
               onClick={gerar}
               disabled={ocupado || !podeGerar}
-              className="flex h-10 items-center gap-2 rounded-lg bg-ent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="flex h-10 items-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               <Download className="size-4" />
               Gerar arquivo do Questor
@@ -397,8 +397,8 @@ function Kpi({
     <button
       onClick={onClick}
       className={clsx(
-        "card p-3 text-left transition-colors hover:border-ent/40",
-        ativo && "border-ent/60 ring-1 ring-ent/40"
+        "card p-3 text-left transition-colors hover:border-accent/40",
+        ativo && "border-accent/60 ring-1 ring-accent/40"
       )}
     >
       <p className="text-[10px] uppercase tracking-wide text-muted">{rotulo}</p>

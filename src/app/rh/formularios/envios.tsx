@@ -310,7 +310,7 @@ export function EnviarModal({
             <div className="mb-1.5 flex items-center justify-between">
               <span className="text-xs font-medium text-ink-2">Gestores cadastrados</span>
               {lista.length > 0 && (
-                <button onClick={marcarTodos} className="text-xs font-medium text-ent hover:underline">
+                <button onClick={marcarTodos} className="text-xs font-medium text-accent hover:underline">
                   {todosMarcados ? "Limpar" : "Selecionar todos"}
                 </button>
               )}
@@ -361,7 +361,7 @@ export function EnviarModal({
               {chavesFiltradas.length > 0 && (
                 <button
                   onClick={marcarTodosColab}
-                  className="text-xs font-medium text-ent hover:underline"
+                  className="text-xs font-medium text-accent hover:underline"
                 >
                   {todosColabMarcados ? "Limpar" : "Selecionar todos"}
                 </button>
@@ -485,7 +485,7 @@ export function EnviosLista() {
     return (
       <div className="card grid place-items-center gap-2 py-16 text-center text-muted">
         <Send className="size-8 opacity-40" />
-        <p>Nenhuma campanha ainda. Envie um formulário pela aba Formulários.</p>
+        <p>Nenhuma campanha ainda.</p>
       </div>
     );
   }

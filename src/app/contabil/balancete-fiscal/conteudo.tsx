@@ -36,7 +36,7 @@ function ValLink({
     <button
       onClick={() => onDrill(lado, natureza)}
       className={clsx(
-        "tabular-nums text-ink transition-colors hover:text-ent hover:underline",
+        "tabular-nums text-ink transition-colors hover:text-accent hover:underline",
         forte && "font-medium"
       )}
     >
@@ -73,7 +73,7 @@ export default function BalanceteFiscalPage() {
   if (!temEmpresa) {
     return (
       <section className="card grid place-items-center gap-3 px-6 py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-2xl bg-ent/12 text-ent">
+        <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent">
           <Building2 className="size-6" />
         </span>
         <p className="text-sm font-medium text-ink">Selecione uma empresa</p>
@@ -87,21 +87,6 @@ export default function BalanceteFiscalPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold">Balancete fiscal × contábil</h2>
-            <p className="mt-0.5 text-xs text-muted">
-              {dados
-                ? soDif
-                  ? `${num(linhas.length)} ${linhas.length === 1 ? "conta onde" : "contas onde"} o esperado não bate com o real · clique na diferença pra ver as notas`
-                  : `${num(dados.cobertura.notas)} notas · movimento esperado pelas regras × o real do contábil`
-                : "…"}
-              {dados && !soDif && dados.cobertura.componentesPulados > 0 && (
-                <span
-                  className="ml-1 text-muted"
-                  title="Componentes de imposto ou serviço do plano (ISS, PIS/COFINS, retenções) cujo valor o motor ainda não calcula. As contas afetadas espelham o contábil real na comparação, então não distorcem a diferença."
-                >
-                  · {num(dados.cobertura.componentesPulados)} componentes de imposto/serviço não reproduzidos
-                </span>
-              )}
-            </p>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex rounded-lg border border-hairline bg-surface-2 p-0.5 text-xs">
@@ -161,10 +146,6 @@ export default function BalanceteFiscalPage() {
               : "notas de serviço a contabilizar"}{" "}
             · {brl(dados.pendentes.reduce((s, p) => s + p.valor, 0))}
           </div>
-          <p className="mt-0.5 text-xs text-muted">
-            NFSE sem lançamento no contábil — some do balancete comum. Somada ao esperado na conta
-            provável (pela história do fornecedor); confira e contabilize.
-          </p>
           <ul className="mt-2 flex flex-col gap-1">
             {dados.pendentes.map((p) => (
               <li

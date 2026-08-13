@@ -114,7 +114,7 @@ export function RegraExtratoLinha({ empresa, conta, regra, onSalvo }: Props) {
               className={clsx(
                 "px-2 py-1.5 text-[11px] transition-colors",
                 tipo === t
-                  ? "bg-ent/12 font-medium text-ent"
+                  ? "bg-accent/12 font-medium text-accent"
                   : "bg-surface text-muted hover:text-ink"
               )}
             >
@@ -150,7 +150,7 @@ export function RegraExtratoLinha({ empresa, conta, regra, onSalvo }: Props) {
               onClick={salvar}
               disabled={salvando || !podeSalvar}
               title={nova ? "Criar regra" : "Salvar alterações"}
-              className="grid size-7 place-items-center rounded-md text-ent hover:bg-ent/12 disabled:opacity-40 disabled:hover:bg-transparent"
+              className="grid size-7 place-items-center rounded-md text-ent hover:bg-accent/12 disabled:opacity-40 disabled:hover:bg-transparent"
             >
               {nova ? <Plus className="size-4" /> : <Check className="size-4" />}
             </button>

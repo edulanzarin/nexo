@@ -59,7 +59,6 @@ export function ContraparteModal({
       aberto={aberto}
       onFechar={onFechar}
       titulo="Contraparte"
-      subtitulo="Fornecedores e clientes com movimento no período"
       ariaLabel="Filtrar por contraparte"
     >
       <div className="flex items-center gap-2 border-b border-hairline px-6 py-3">
@@ -75,7 +74,7 @@ export function ContraparteModal({
       </div>
 
       {selecionado && (
-        <div className="flex items-center justify-between gap-2 border-b border-hairline bg-ent/8 px-6 py-2 text-sm">
+        <div className="flex items-center justify-between gap-2 border-b border-hairline bg-accent/8 px-6 py-2 text-sm">
           <span className="truncate">
             Filtrando por <span className="font-medium">{selecionado.nome}</span>
           </span>
@@ -84,7 +83,7 @@ export function ContraparteModal({
               onSelecionar(null);
               onFechar();
             }}
-            className="shrink-0 text-xs text-ent hover:underline"
+            className="shrink-0 text-xs text-accent hover:underline"
           >
             Limpar filtro
           </button>

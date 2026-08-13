@@ -194,7 +194,7 @@ export function ReplicarModal({ origem, onFechar, onReplicado }: Props) {
           <button
             onClick={replicar}
             disabled={salvando || !validos.length}
-            className="flex items-center gap-1.5 rounded-lg bg-ent px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
+            className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
           >
             <Copy className="size-3.5" /> Replicar para {validos.length || 0}
           </button>

@@ -89,9 +89,6 @@ export function ImpostosCard({ dados, carregando, recarregando, tipo, onTipo }: 
           </span>
           <div>
             <h2 className="text-sm font-semibold">Impostos</h2>
-            <p className="mt-0.5 text-xs text-muted">
-              Somatório do período ({tipo === "ent" ? "entradas" : "saídas"})
-            </p>
           </div>
         </div>
         <SeletorTipo tipo={tipo} onTipo={onTipo} />

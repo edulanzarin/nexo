@@ -1,23 +1,36 @@
 @import "tailwindcss";
 
-/* Tokens de tema — paleta validada do guia de dataviz */
+/* ============================================================================
+   Nexo — identidade visual "Índigo / Vidro"
+   Acento de marca ÍNDIGO/VIOLETA governa a interface (nav, botões, foco, links).
+   O azul (--ent) e o verde (--sai) ficam ESTRITAMENTE para os dados (entrada /
+   saída) — cor com significado de domínio, nunca decoração de UI.
+   ========================================================================== */
+
+/* ---- Tema claro ---------------------------------------------------------- */
 :root,
 :root[data-theme="light"] {
   color-scheme: light;
-  /* Página um tom mais escura + card branco puro: o card LEVANTA da página
-     (profundidade por contraste, não só por borda). */
-  --page: #f1f0ea;
+  /* Fundo levemente frio-lavanda; card branco puro LEVANTA da página. */
+  --page: #eef0f6;
   --surface: #ffffff;
-  --surface-2: #f5f4ef;
-  --ink: #111110;
-  --ink-2: #4a4945;
-  --muted: #87857e;
-  --grid: #e4e2da;
-  --baseline: #cac8bd;
-  /* Borda mais suave: a separação agora vem também da sombra. */
-  --hairline: rgba(17, 17, 16, 0.08);
-  /* Acentos mais vivos/encorpados, mesma identidade (azul entrada, verde saída). */
-  --ent: #1f6fe0;
+  --surface-2: #f3f4f9;
+  --ink: #14141b;
+  --ink-2: #464658;
+  --muted: #83849a;
+  --grid: #e2e3ee;
+  --baseline: #c7c8d8;
+  --hairline: rgba(20, 20, 27, 0.08);
+
+  /* Acento de marca (interface) — índigo → violeta. */
+  --accent: #4f46e5;          /* texto/ícone/nav/foco sobre fundo claro (AA vs branco) */
+  --accent-2: #7c3aed;        /* violeta vizinho, só p/ gradiente de marca */
+  --accent-solid: #4f46e5;    /* fundo de botão primário */
+  --accent-contrast: #ffffff; /* texto sobre o botão primário */
+  --accent-ring: rgba(79, 70, 229, 0.45);
+
+  /* Cores de DADO (não são UI). Azul entrada, verde saída. */
+  --ent: #2563eb;
   --sai: #0b8a43;
   --esp-1: #e87ba4;
   --esp-2: #eda100;
@@ -28,28 +41,42 @@
   --good: #0b8a43;
   --critical: #dc3a3a;
   --warning: #ef9f12;
-  /* Escala de elevação — profundidade por camada (antes era só borda plana). */
-  --shadow-1: 0 1px 2px rgba(17, 17, 16, 0.05), 0 1px 3px rgba(17, 17, 16, 0.05);
-  --shadow-2: 0 1px 2px rgba(17, 17, 16, 0.04), 0 4px 10px -4px rgba(17, 17, 16, 0.1);
-  --shadow-3: 0 10px 22px -8px rgba(17, 17, 16, 0.16), 0 4px 8px -6px rgba(17, 17, 16, 0.1);
-  --shadow-modal: 0 24px 60px -14px rgba(17, 17, 16, 0.28), 0 10px 22px -14px rgba(17, 17, 16, 0.16);
+
+  /* Vidro da chrome (sidebar/topo): superfície translúcida sobre o fundo. */
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(20, 20, 27, 0.07);
+
+  /* Elevação em camadas — profundidade por sombra, não só por borda. */
+  --shadow-1: 0 1px 2px rgba(20, 20, 40, 0.06), 0 1px 3px rgba(20, 20, 40, 0.05);
+  --shadow-2: 0 1px 2px rgba(20, 20, 40, 0.04), 0 6px 16px -6px rgba(20, 20, 40, 0.12);
+  --shadow-3: 0 14px 30px -10px rgba(20, 20, 40, 0.18), 0 6px 12px -8px rgba(20, 20, 40, 0.12);
+  --shadow-modal: 0 30px 70px -18px rgba(20, 20, 40, 0.34), 0 12px 26px -16px rgba(20, 20, 40, 0.18);
+  --shadow-accent: 0 6px 20px -6px rgba(79, 70, 229, 0.5);
+  /* Realce de luz no topo da superfície (borda interna clara) — dá "vidro". */
+  --sheen: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
+/* ---- Tema escuro (padrão) ------------------------------------------------ */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  /* Passos de superfície mais separados: as camadas se leem sem depender de sombra. */
-  --page: #0b0b0c;
-  --surface: #191a1d;
-  --surface-2: #232428;
-  --ink: #f7f7f5;
-  --ink-2: #cbcac3;
-  /* Mais claro que no tema claro de propósito: no fundo escuro o mesmo cinza
-     perde contraste perceptual e texto secundário ficava difícil de ler. */
-  --muted: #9d9b93;
-  --grid: #2f2f2d;
-  --baseline: #414039;
-  --hairline: rgba(255, 255, 255, 0.11);
-  /* Acentos mais claros/saturados pra não apagar no fundo escuro. */
+  /* Preto-azulado profundo; superfícies em passos separados que se leem sem sombra. */
+  --page: #08080d;
+  --surface: #14141c;
+  --surface-2: #1d1d28;
+  --ink: #f4f4fb;
+  --ink-2: #c5c5d6;
+  --muted: #8f8fa6;
+  --grid: #2a2a38;
+  --baseline: #3a3a4c;
+  --hairline: rgba(255, 255, 255, 0.09);
+
+  /* Acento mais claro/saturado p/ brilhar no escuro. */
+  --accent: #a9a6ff;          /* texto/ícone/nav/foco sobre fundo escuro */
+  --accent-2: #b98cff;
+  --accent-solid: #615dfa;    /* fundo de botão primário (AA vs branco) */
+  --accent-contrast: #ffffff;
+  --accent-ring: rgba(129, 124, 255, 0.55);
+
   --ent: #4a90ef;
   --sai: #18b25a;
   --esp-1: #d55181;
@@ -61,11 +88,16 @@
   --good: #18b25a;
   --critical: #ec6a6a;
   --warning: #f2b024;
-  /* Elevação no escuro: sombra mais funda (o preto some no fundo) + camadas ajudam. */
+
+  --glass: rgba(20, 20, 28, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.08);
+
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
-  --shadow-2: 0 2px 6px -2px rgba(0, 0, 0, 0.5), 0 8px 20px -10px rgba(0, 0, 0, 0.5);
-  --shadow-3: 0 14px 30px -10px rgba(0, 0, 0, 0.6);
-  --shadow-modal: 0 30px 70px -20px rgba(0, 0, 0, 0.8), 0 12px 28px -16px rgba(0, 0, 0, 0.6);
+  --shadow-2: 0 2px 6px -2px rgba(0, 0, 0, 0.55), 0 10px 24px -12px rgba(0, 0, 0, 0.6);
+  --shadow-3: 0 16px 34px -12px rgba(0, 0, 0, 0.7);
+  --shadow-modal: 0 34px 80px -20px rgba(0, 0, 0, 0.85), 0 14px 30px -16px rgba(0, 0, 0, 0.65);
+  --shadow-accent: 0 8px 26px -6px rgba(97, 93, 250, 0.6);
+  --sheen: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 @theme inline {
@@ -78,14 +110,24 @@
   --color-grid: var(--grid);
   --color-baseline: var(--baseline);
   --color-hairline: var(--hairline);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-solid: var(--accent-solid);
+  --color-accent-contrast: var(--accent-contrast);
   --color-ent: var(--ent);
   --color-sai: var(--sai);
   --color-good: var(--good);
   --color-critical: var(--critical);
   --color-warning: var(--warning);
   --font-sans: var(--font-geist-sans);
+
+  /* Cantos um tom mais suaves em todo o sistema (afeta rounded-lg/xl globais). */
+  --radius-lg: 0.625rem;   /* 10px */
+  --radius-xl: 0.875rem;   /* 14px */
+  --radius-2xl: 1.125rem;  /* 18px */
 }
 
+/* ---- Base ---------------------------------------------------------------- */
 html,
 body {
   background: var(--page);
@@ -93,8 +135,25 @@ body {
   font-family: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
+/* Fundo rico: halo de acento bem sutil no topo, fixo ao rolar. */
+body {
+  background-image: radial-gradient(
+    1100px 560px at 50% -8%,
+    color-mix(in oklab, var(--accent) 12%, transparent),
+    transparent 70%
+  );
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
 ::selection {
-  background: color-mix(in oklab, var(--ent) 30%, transparent);
+  background: color-mix(in oklab, var(--accent) 32%, transparent);
+}
+
+/* Foco visível único e moderno: anel de acento que segue o raio do elemento. */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* Scrollbar discreta */
@@ -103,61 +162,30 @@ body {
   scrollbar-color: var(--baseline) transparent;
 }
 
-/* Animações */
+/* ---- Animações ----------------------------------------------------------- */
 @keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
-
 @keyframes scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.97) translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+  from { opacity: 0; transform: scale(0.97) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
-
 @keyframes shimmer {
-  from {
-    background-position: 200% 0;
-  }
-  to {
-    background-position: -200% 0;
-  }
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
 }
 
-.anim-fade-up {
-  animation: fade-up 0.35s cubic-bezier(0.21, 0.61, 0.35, 1) both;
-}
-
-.anim-fade-in {
-  animation: fade-in 0.2s ease both;
-}
-
-.anim-scale-in {
-  animation: scale-in 0.22s cubic-bezier(0.21, 0.61, 0.35, 1) both;
-}
+.anim-fade-up { animation: fade-up 0.35s cubic-bezier(0.21, 0.61, 0.35, 1) both; }
+.anim-fade-in { animation: fade-in 0.2s ease both; }
+.anim-scale-in { animation: scale-in 0.22s cubic-bezier(0.21, 0.61, 0.35, 1) both; }
 
 .skeleton {
-  border-radius: 6px;
+  border-radius: 8px;
   background: linear-gradient(
     100deg,
     var(--surface-2) 40%,
@@ -168,28 +196,68 @@ body {
   animation: shimmer 1.6s linear infinite;
 }
 
-/* Cartão padrão — agora com elevação: levanta da página em vez de ser plano. */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  border-radius: 14px;
-  box-shadow: var(--shadow-2);
+/* ---- Componentes --------------------------------------------------------- */
+@layer components {
+  /* Cartão padrão — superfície elevada com realce de luz no topo. */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    box-shadow: var(--shadow-2), var(--sheen);
+  }
+
+  /* Chrome de vidro: sidebar e barras fixas. Translúcida sobre o fundo. */
+  .glass {
+    background: var(--glass);
+    -webkit-backdrop-filter: saturate(1.4) blur(16px);
+    backdrop-filter: saturate(1.4) blur(16px);
+    border-color: var(--glass-border);
+  }
+
+  /* Botão primário de marca — gradiente índigo→violeta com brilho de acento. */
+  .btn-accent {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-lg);
+    background-image: linear-gradient(135deg, var(--accent-solid), var(--accent-2));
+    color: var(--accent-contrast);
+    font-weight: 600;
+    box-shadow: var(--shadow-accent);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  }
+  .btn-accent:hover { filter: brightness(1.06); transform: translateY(-1px); }
+  .btn-accent:active { transform: translateY(0); }
+  .btn-accent:disabled { opacity: 0.5; filter: none; transform: none; box-shadow: none; }
+
+  /* Botão neutro — superfície com borda; para ações secundárias. */
+  .btn-soft {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+    border: 1px solid var(--hairline);
+    color: var(--ink);
+    font-weight: 500;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  }
+  .btn-soft:hover { border-color: color-mix(in oklab, var(--accent) 45%, var(--hairline)); }
 }
 
-/* Utilitários de elevação. Overlay (modal) pesa mais que o card da página;
-   .card + .elev-modal → a sombra de overlay vence (declarada depois). */
+/* Utilitários de elevação (declarados fora do layer p/ vencer .card quando somados). */
 .elev-1 { box-shadow: var(--shadow-1); }
 .elev-3 { box-shadow: var(--shadow-3); }
 .elev-modal { box-shadow: var(--shadow-modal); }
 
-/* Dados em recarregamento mantêm o quadro anterior esmaecido */
+/* Dados em recarregamento mantêm o quadro anterior esmaecido. */
 .refetching {
   opacity: 0.45;
   transition: opacity 0.25s ease;
   pointer-events: none;
 }
 
-/* Números tabulares apenas em colunas */
-.tnum {
-  font-variant-numeric: tabular-nums;
-}
+/* Números tabulares apenas em colunas. */
+.tnum { font-variant-numeric: tabular-nums; }

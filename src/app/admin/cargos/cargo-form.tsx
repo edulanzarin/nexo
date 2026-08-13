@@ -7,7 +7,7 @@ import { salvarCargo, excluirCargo } from "../actions";
 import type { CargoDetalhe, SetorOpcao, GrupoResumo } from "../dados";
 
 const input =
-  "h-10 rounded-lg border border-hairline bg-surface px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-ent/50";
+  "h-10 rounded-lg border border-hairline bg-surface px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-accent/50";
 const check = "size-4 accent-[var(--ent)]";
 
 /**
@@ -75,18 +75,10 @@ export function CargoForm({
         </label>
       </section>
 
-      {admin ? (
-        <p className="card px-4 py-3 text-sm text-muted">
-          Acesso total — este cargo concede todas as seções e todas as empresas. As seções e grupos
-          abaixo são ignorados para ele.
-        </p>
-      ) : (
+      {admin ? null : (
         <>
           <section>
             <h2 className="text-sm font-semibold">Permissões por seção</h2>
-            <p className="mt-0.5 text-xs text-muted">
-              O que este cargo concede. Quem tiver o cargo herda estas seções.
-            </p>
             <div className="mt-3">
               <PermissaoMatriz
                 valor={escolha}
@@ -97,7 +89,6 @@ export function CargoForm({
 
           <section>
             <h2 className="text-sm font-semibold">Grupos de empresa</h2>
-            <p className="mt-0.5 text-xs text-muted">Escopo de empresa que o cargo traz para o usuário.</p>
             <div className="card mt-3 max-h-56 max-w-md divide-y divide-hairline overflow-auto">
               {grupos.length === 0 && <p className="px-4 py-3 text-xs text-muted">Nenhum grupo criado.</p>}
               {grupos.map((g) => (
@@ -132,7 +123,7 @@ export function CargoForm({
         )}
         <button
           type="submit"
-          className="h-10 rounded-lg bg-ent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          className="h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         >
           {cargo ? "Salvar" : "Criar cargo"}
         </button>

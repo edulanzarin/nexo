@@ -12,12 +12,12 @@ export default async function UsuariosPage() {
         <div>
           <h1 className="text-xl font-semibold tracking-tight">Usuários</h1>
           <p className="mt-1 text-sm text-muted">
-            {usuarios.length} {usuarios.length === 1 ? "pessoa" : "pessoas"} · acesso, cargo e empresas
+            {usuarios.length} {usuarios.length === 1 ? "pessoa" : "pessoas"}
           </p>
         </div>
         <Link
           href="/admin/usuarios/novo"
-          className="flex h-9 items-center gap-1.5 rounded-lg bg-ent px-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          className="flex h-9 items-center gap-1.5 rounded-lg bg-accent px-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         >
           <Plus className="size-4" />
           Novo usuário

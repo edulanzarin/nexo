@@ -139,7 +139,7 @@ export function PeriodoMensalDropdown({
               >
                 <span className="grid size-4 place-items-center">
                   {presetAtivo?.nome === p.nome && (
-                    <Check className="size-4 stroke-[3] text-ent" />
+                    <Check className="size-4 stroke-[3] text-accent" />
                   )}
                 </span>
                 {p.nome}
@@ -195,7 +195,7 @@ export function PeriodoMensalDropdown({
                   aplicarMeses(mi, mf);
                   fechar();
                 }}
-                className="h-8 w-full rounded-md bg-ent text-xs font-medium text-white transition-opacity hover:opacity-90"
+                className="h-8 w-full rounded-md bg-accent text-xs font-medium text-white transition-opacity hover:opacity-90"
               >
                 Definir período
               </button>

@@ -75,8 +75,7 @@ export default async function AuditoriaPage({
       <div>
         <h1 className="text-xl font-semibold tracking-tight">Auditoria</h1>
         <p className="mt-1 text-sm text-muted">
-          {total} {total === 1 ? "evento registrado" : "eventos registrados"} · acesso a
-          ficha, laudo e exportações
+          {total} {total === 1 ? "evento" : "eventos"}
         </p>
       </div>
 
@@ -99,7 +98,7 @@ export default async function AuditoriaPage({
             name="busca"
             defaultValue={busca ?? ""}
             placeholder="Buscar por pessoa ou alvo…"
-            className="h-9 w-64 rounded-lg border border-hairline bg-surface px-3 text-sm outline-none placeholder:text-muted focus:border-ent/50"
+            className="h-9 w-64 rounded-lg border border-hairline bg-surface px-3 text-sm outline-none placeholder:text-muted focus:border-accent/50"
           />
         </form>
       </div>

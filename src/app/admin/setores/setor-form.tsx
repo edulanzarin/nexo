@@ -2,7 +2,7 @@ import { salvarSetor, excluirSetor } from "../actions";
 import type { SetorOpcao } from "../dados";
 
 const input =
-  "h-10 rounded-lg border border-hairline bg-surface px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-ent/50";
+  "h-10 rounded-lg border border-hairline bg-surface px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-accent/50";
 
 /** Cria ou edita um setor (só o nome). Server Action. */
 export function SetorForm({ setor }: { setor: SetorOpcao | null }) {
@@ -29,7 +29,7 @@ export function SetorForm({ setor }: { setor: SetorOpcao | null }) {
         )}
         <button
           type="submit"
-          className="h-10 rounded-lg bg-ent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          className="h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         >
           {setor ? "Salvar" : "Criar setor"}
         </button>

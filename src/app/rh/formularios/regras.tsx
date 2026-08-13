@@ -65,10 +65,7 @@ export function RegrasLista() {
 
   return (
     <>
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <p className="text-xs text-muted">
-          Regras que enviam um formulário sozinhas, na periodicidade escolhida.
-        </p>
+      <div className="mb-3 flex items-center justify-end gap-3">
         <button
           onClick={() => setEditar("nova")}
           className="flex h-9 items-center gap-1.5 rounded-lg bg-ink px-3 text-sm font-medium text-surface transition-opacity hover:opacity-90"
@@ -86,7 +83,7 @@ export function RegrasLista() {
       ) : (data ?? []).length === 0 ? (
         <div className="card grid place-items-center gap-2 py-16 text-center text-muted">
           <AlarmClock className="size-8 opacity-40" />
-          <p>Nenhuma regra automática. Crie uma para enviar formulários sozinho.</p>
+          <p>Nenhuma regra automática.</p>
         </div>
       ) : (
         <div className="card overflow-hidden">
@@ -288,7 +285,7 @@ function RegraModal({ regra, onFechar }: { regra: EnvioRegra | null; onFechar: (
           </select>
           {formsAtivos.length === 0 && (
             <span className="mt-1 block text-[11px] text-warning">
-              Nenhum formulário ativo. Marque um como “Ativo” para poder agendá-lo.
+              Nenhum formulário ativo.
             </span>
           )}
         </label>

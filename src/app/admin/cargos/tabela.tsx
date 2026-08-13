@@ -8,7 +8,7 @@ import type { Faceta } from "@/lib/types";
 import type { CargoResumo } from "../dados";
 
 const inputBusca =
-  "h-9 w-full rounded-lg border border-hairline bg-surface pl-9 pr-3 text-sm text-ink outline-none placeholder:text-muted focus:border-ent/50";
+  "h-9 w-full rounded-lg border border-hairline bg-surface pl-9 pr-3 text-sm text-ink outline-none placeholder:text-muted focus:border-accent/50";
 
 export function CargosTabela({ cargos }: { cargos: CargoResumo[] }) {
   const router = useRouter();

@@ -4,7 +4,7 @@ import type { GrupoEmpresaDetalhe } from "@/lib/grupos-empresa";
 import { salvarGrupoEmpresa, excluirGrupoEmpresa } from "./actions";
 
 const input =
-  "h-10 rounded-lg border border-hairline bg-surface px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-ent/50";
+  "h-10 rounded-lg border border-hairline bg-surface px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-accent/50";
 
 /** Cria ou edita um grupo de empresa de negócio (nome + empresas). Server Action.
  *  Reusa o EmpresaPicker e a lista de empresas do Questor do admin. */
@@ -32,7 +32,6 @@ export function GrupoEmpresaForm({
 
       <div className="max-w-2xl">
         <h2 className="text-sm font-semibold">Empresas do grupo</h2>
-        <p className="mt-0.5 text-xs text-muted">Busque e marque as empresas deste grupo de negócio.</p>
         <div className="mt-3">
           <EmpresaPicker name="empresas" empresas={empresas} inicial={grupo?.empresas ?? []} />
         </div>
@@ -52,7 +51,7 @@ export function GrupoEmpresaForm({
         )}
         <button
           type="submit"
-          className="h-10 rounded-lg bg-ent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          className="h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         >
           {grupo ? "Salvar" : "Criar grupo"}
         </button>

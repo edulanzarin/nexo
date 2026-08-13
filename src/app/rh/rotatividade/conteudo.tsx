@@ -242,7 +242,7 @@ export default function Conteudo() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <RotatividadeBarras
           titulo="Motivo do desligamento"
-          subtitulo="Causa da rescisão · clique para ver quem saiu"
+          subtitulo=""
           dados={motivos}
           cor="var(--critical)"
           vazio="Nenhum desligamento no período"
@@ -253,7 +253,7 @@ export default function Conteudo() {
         />
         <RotatividadeBarras
           titulo="Tempo de casa dos desligados"
-          subtitulo="Quanto tempo ficou quem saiu · clique para ver quem"
+          subtitulo=""
           dados={tenure}
           cor="var(--esp-5)"
           vazio="Nenhum desligamento no período"
@@ -267,7 +267,7 @@ export default function Conteudo() {
       {/* Quebras */}
       <RotatividadeQuebra
         titulo="Turnover por setor"
-        subtitulo="Cada setor com efetivo e movimentação · clique numa linha para ver as pessoas"
+        subtitulo=""
         rotuloColuna="Setor"
         dados={d?.organogramas}
         total={c}
@@ -278,7 +278,7 @@ export default function Conteudo() {
       />
       <RotatividadeQuebra
         titulo="Turnover por cargo"
-        subtitulo="Cada cargo com efetivo e movimentação · clique numa linha para ver as pessoas"
+        subtitulo=""
         rotuloColuna="Cargo"
         dados={d?.cargos}
         total={c}
@@ -292,7 +292,7 @@ export default function Conteudo() {
         <div className="md:col-span-2">
           <RotatividadeQuebra
             titulo="Turnover por faixa etária"
-            subtitulo="Onde a rotatividade se concentra por idade · clique para ver as pessoas"
+            subtitulo=""
             rotuloColuna="Faixa etária"
             dados={d?.faixaEtaria}
             total={c}
@@ -305,7 +305,7 @@ export default function Conteudo() {
         </div>
         <RotatividadeQuebra
           titulo="Turnover por estabelecimento"
-          subtitulo="Por filial · clique para ver as pessoas"
+          subtitulo=""
           rotuloColuna="Estabelecimento"
           dados={d?.estabelecimentos}
           total={c}
@@ -317,7 +317,7 @@ export default function Conteudo() {
         />
         <RotatividadeQuebra
           titulo="Turnover por sexo"
-          subtitulo="Rotatividade por sexo · clique para ver as pessoas"
+          subtitulo=""
           rotuloColuna="Sexo"
           dados={d?.sexo}
           total={c}
@@ -329,7 +329,7 @@ export default function Conteudo() {
         />
         <RotatividadeQuebra
           titulo="Turnover por escolaridade"
-          subtitulo="Rotatividade por grau de instrução · clique para ver as pessoas"
+          subtitulo=""
           rotuloColuna="Escolaridade"
           dados={d?.escolaridade}
           total={c}
@@ -340,12 +340,6 @@ export default function Conteudo() {
           compacto
         />
       </div>
-
-      <p className="text-[11px] text-muted">
-        Turnover = (admissões + desligamentos) ÷ 2, sobre os colaboradores ativos
-        (efetivo no fim do período), só das empresas NAVECON, FOUR e FINAVE. Clique em
-        qualquer quebra para ver as pessoas.
-      </p>
 
       <PessoasModal qsBase={qsAplicado ?? ""} drill={drill} onFechar={() => setDrill(null)} modulo="rh" />
       </>
