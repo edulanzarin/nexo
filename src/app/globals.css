@@ -4,52 +4,68 @@
 :root,
 :root[data-theme="light"] {
   color-scheme: light;
-  --page: #f9f9f7;
-  --surface: #fcfcfb;
-  --surface-2: #f0efec;
-  --ink: #0b0b0b;
-  --ink-2: #52514e;
-  --muted: #898781;
-  --grid: #e1e0d9;
-  --baseline: #c3c2b7;
-  --hairline: rgba(11, 11, 11, 0.1);
-  --ent: #2a78d6;
-  --sai: #008300;
+  /* Página um tom mais escura + card branco puro: o card LEVANTA da página
+     (profundidade por contraste, não só por borda). */
+  --page: #f1f0ea;
+  --surface: #ffffff;
+  --surface-2: #f5f4ef;
+  --ink: #111110;
+  --ink-2: #4a4945;
+  --muted: #87857e;
+  --grid: #e4e2da;
+  --baseline: #cac8bd;
+  /* Borda mais suave: a separação agora vem também da sombra. */
+  --hairline: rgba(17, 17, 16, 0.08);
+  /* Acentos mais vivos/encorpados, mesma identidade (azul entrada, verde saída). */
+  --ent: #1f6fe0;
+  --sai: #0b8a43;
   --esp-1: #e87ba4;
   --esp-2: #eda100;
   --esp-3: #1baf7a;
   --esp-4: #eb6834;
   --esp-5: #4a3aa7;
   --esp-outras: #898781;
-  --good: #006300;
-  --critical: #d03b3b;
-  --warning: #fab219;
+  --good: #0b8a43;
+  --critical: #dc3a3a;
+  --warning: #ef9f12;
+  /* Escala de elevação — profundidade por camada (antes era só borda plana). */
+  --shadow-1: 0 1px 2px rgba(17, 17, 16, 0.05), 0 1px 3px rgba(17, 17, 16, 0.05);
+  --shadow-2: 0 1px 2px rgba(17, 17, 16, 0.04), 0 4px 10px -4px rgba(17, 17, 16, 0.1);
+  --shadow-3: 0 10px 22px -8px rgba(17, 17, 16, 0.16), 0 4px 8px -6px rgba(17, 17, 16, 0.1);
+  --shadow-modal: 0 24px 60px -14px rgba(17, 17, 16, 0.28), 0 10px 22px -14px rgba(17, 17, 16, 0.16);
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --page: #0d0d0d;
-  --surface: #1c1c1b;
-  --surface-2: #272725;
-  --ink: #ffffff;
-  --ink-2: #cbcabf;
+  /* Passos de superfície mais separados: as camadas se leem sem depender de sombra. */
+  --page: #0b0b0c;
+  --surface: #191a1d;
+  --surface-2: #232428;
+  --ink: #f7f7f5;
+  --ink-2: #cbcac3;
   /* Mais claro que no tema claro de propósito: no fundo escuro o mesmo cinza
      perde contraste perceptual e texto secundário ficava difícil de ler. */
-  --muted: #a3a19a;
-  --grid: #31312e;
-  --baseline: #3e3e3a;
-  --hairline: rgba(255, 255, 255, 0.15);
-  --ent: #3987e5;
-  --sai: #00a300;
+  --muted: #9d9b93;
+  --grid: #2f2f2d;
+  --baseline: #414039;
+  --hairline: rgba(255, 255, 255, 0.11);
+  /* Acentos mais claros/saturados pra não apagar no fundo escuro. */
+  --ent: #4a90ef;
+  --sai: #18b25a;
   --esp-1: #d55181;
   --esp-2: #c98500;
   --esp-3: #199e70;
   --esp-4: #d95926;
   --esp-5: #9085e9;
   --esp-outras: #898781;
-  --good: #0ca30c;
-  --critical: #e66767;
-  --warning: #fab219;
+  --good: #18b25a;
+  --critical: #ec6a6a;
+  --warning: #f2b024;
+  /* Elevação no escuro: sombra mais funda (o preto some no fundo) + camadas ajudam. */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-2: 0 2px 6px -2px rgba(0, 0, 0, 0.5), 0 8px 20px -10px rgba(0, 0, 0, 0.5);
+  --shadow-3: 0 14px 30px -10px rgba(0, 0, 0, 0.6);
+  --shadow-modal: 0 30px 70px -20px rgba(0, 0, 0, 0.8), 0 12px 28px -16px rgba(0, 0, 0, 0.6);
 }
 
 @theme inline {
@@ -152,12 +168,19 @@ body {
   animation: shimmer 1.6s linear infinite;
 }
 
-/* Cartão padrão */
+/* Cartão padrão — agora com elevação: levanta da página em vez de ser plano. */
 .card {
   background: var(--surface);
   border: 1px solid var(--hairline);
   border-radius: 14px;
+  box-shadow: var(--shadow-2);
 }
+
+/* Utilitários de elevação. Overlay (modal) pesa mais que o card da página;
+   .card + .elev-modal → a sombra de overlay vence (declarada depois). */
+.elev-1 { box-shadow: var(--shadow-1); }
+.elev-3 { box-shadow: var(--shadow-3); }
+.elev-modal { box-shadow: var(--shadow-modal); }
 
 /* Dados em recarregamento mantêm o quadro anterior esmaecido */
 .refetching {

@@ -54,7 +54,7 @@ export function Modal({
     >
       <div
         className={clsx(
-          "anim-scale-in card flex max-h-[85vh] w-full flex-col overflow-hidden",
+          "anim-scale-in card elev-modal flex max-h-[85vh] w-full flex-col overflow-hidden",
           largura
         )}
         onClick={(e) => e.stopPropagation()}
