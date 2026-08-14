@@ -93,8 +93,10 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     contas: ["conferencia", "conciliacao", "implantacao"],
   },
   folha: {
-    // Painel (home do módulo): retrato do escritório, sem filtros.
+    // Painéis (home do módulo), separados por cargo e por permissão: o
+    // colaborador só alcança /painel; o gestor, /painel-gestao (com produtividade).
     painel: ["painel"],
+    "painel-gestao": ["painel-gestao"],
     filtros: ["rotatividade"],
     funcionario: ["rotatividade"],
     movimentacoes: ["rotatividade"],

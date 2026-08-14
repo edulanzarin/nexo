@@ -64,7 +64,7 @@ import type {
   RescisoesConfig,
   RescisaoDestinatario,
 } from "@/lib/rescisoes-tipos";
-import type { PainelDp } from "@/lib/painel-dp-tipos";
+import type { PainelColaborador, PainelGestao } from "@/lib/painel-dp-tipos";
 import type { EnvioDetalhe, EnvioResumo } from "@/lib/envios";
 import type { EnvioRegra } from "@/lib/envio-regras";
 import type { RespostaExperienciaDetalhe } from "@/lib/rh-experiencia-dados";
@@ -355,9 +355,13 @@ export const useConformidadeEsocial = (qs: string, enabled = true) =>
 export const useControleFerias = (qs: string, enabled = true) =>
   useApiQuery<ControleFeriasResp>(["ferias", qs], `/api/folha/ferias?${qs}`, enabled);
 
-/** Painel do DP: a home do módulo, retrato do escritório (sem filtros). */
-export const usePainelDp = (enabled = true) =>
-  useApiQuery<PainelDp>(["painel-dp"], `/api/folha/painel`, enabled);
+/** Painel do colaborador: fila de trabalho (pendências), sem filtros. */
+export const usePainelColaborador = (enabled = true) =>
+  useApiQuery<PainelColaborador>(["painel-colaborador"], `/api/folha/painel`, enabled);
+
+/** Painel de gestão: pendências + atividade do DP no mês, sem filtros. */
+export const usePainelGestao = (enabled = true) =>
+  useApiQuery<PainelGestao>(["painel-gestao"], `/api/folha/painel-gestao`, enabled);
 
 /** Fila de rescisões a pagar (prazo CLT 477: vencidas / a vencer). */
 export const useRescisoes = (qs: string, enabled = true) =>

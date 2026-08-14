@@ -1,12 +1,11 @@
 import { apiRoute } from "@/lib/api-route";
-import { montarPainelDp } from "@/lib/painel-dp";
-import type { PainelDp } from "@/lib/painel-dp-tipos";
+import { montarPainelColaborador } from "@/lib/painel-dp";
+import type { PainelColaborador } from "@/lib/painel-dp-tipos";
 
 /**
- * Painel do DP: a home do módulo. Sem filtros — carrega o retrato do escritório
- * (escopo pela sessão). Cada bloco é independente; um erro num deles não derruba
- * os outros (ver montarPainelDp).
+ * Painel do COLABORADOR: a home de quem não é gestor. Só pendências (a fila de
+ * trabalho) — sem produtividade nem ranking. Endpoint próprio, seção `painel`.
  */
 export const GET = apiRoute(async () => {
-  return (await montarPainelDp()) satisfies PainelDp;
+  return (await montarPainelColaborador()) satisfies PainelColaborador;
 });

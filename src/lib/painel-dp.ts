@@ -6,27 +6,29 @@ import { montarRescisoes } from "./rescisoes";
 import { periodosEmAberto } from "./controle-ferias";
 import type {
   PainelAtividade,
-  PainelDp,
+  PainelColaborador,
   PainelEsocial,
   PainelFerias,
+  PainelFeriasCritica,
+  PainelGestao,
+  PainelRescisaoUrgente,
   PainelRescisoes,
   PainelSeriePonto,
 } from "./painel-dp-tipos";
 
 /**
- * PAINEL DO DP — a home do módulo Folha/DP: um retrato do escritório inteiro que
- * carrega sozinho (sem filtro nem Executar). Junta duas coisas: as PENDÊNCIAS
- * que cobram ação (rescisões a pagar, férias vencidas, eSocial a resolver) e a
- * ATIVIDADE do DP no mês (o que cada trabalho movimentou).
+ * PAINÉIS DO DP — a home do módulo Folha/DP, em DUAS versões por cargo:
  *
- * Cada bloco é uma consulta INDEPENDENTE, colhida por `allSettled`: se uma falha
- * (ex.: a query office-wide de férias esbarrar num detalhe do schema não testado
- * no dev), o bloco vira `null` e o painel ainda mostra os outros — o painel não
- * cai por um card. Escopo de empresa pela sessão, como o resto da Folha.
+ *  - `montarPainelColaborador`: a fila de trabalho — só pendências (rescisões a
+ *    pagar, férias vencidas, eSocial a resolver) e as mais urgentes em lista.
+ *  - `montarPainelGestao`: a visão do gestor — pendências + a atividade do DP no
+ *    mês (produtividade, ranking de quem fez, série).
  *
- * Reusa o que já é office-wide e validado: `montarResumoDp` (produtividade) e
- * `montarRescisoes` (rescisões). Férias, eSocial e a série são agregados leves
- * próprios daqui. Ver [[Módulo de folha e eSocial do Questor]].
+ * Endpoints e permissões separados: o colaborador NÃO tem como buscar os dados
+ * de gestão (ranking/produtividade). Cada bloco é uma consulta independente
+ * colhida por `allSettled` — um erro num bloco vira `null` e o painel ainda
+ * mostra os outros. Escopo de empresa pela sessão. Ver [[Módulo de folha e
+ * eSocial do Questor]].
  */
 
 // ── Datas (locais) ───────────────────────────────────────────────────────────
@@ -38,7 +40,6 @@ function hojeISO(): string {
 function addDias(iso: string, n: number): string {
   return new Date(Date.parse(iso + "T00:00:00Z") + n * 86_400_000).toISOString().slice(0, 10);
 }
-/** Primeiro dia do mês de `iso`, opcionalmente `nMeses` atrás. */
 function primeiroDiaMes(iso: string, nMeses = 0): string {
   const [y, m] = iso.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1 + nMeses, 1)).toISOString().slice(0, 10);
@@ -50,11 +51,34 @@ async function escopoSessao(): Promise<number[] | "todas"> {
   return s ? empresasPermitidas(s) : [];
 }
 
-// ── Blocos office-wide próprios ──────────────────────────────────────────────
+/** Quantos itens as listas de prioridade mostram. */
+const TOP_URGENTES = 8;
 
-/** Férias vencidas (dobro) e a vencer (≤120 dias), no escopo. Mesma regra da
- *  tela de Férias (deriva de dataadm × recibos), agregada sem empresa fixa. */
-async function blocoFerias(scope: number[] | "todas"): Promise<PainelFerias> {
+// ── Rescisões (contagem + mais urgentes) ─────────────────────────────────────
+
+async function blocoRescisoes(): Promise<{ counts: PainelRescisoes; urgentes: PainelRescisaoUrgente[] }> {
+  const fim = hojeISO();
+  const r = await montarRescisoes({ inicio: addDias(fim, -180), fim, empresas: [] }, fim);
+  const urgentes = r.itens
+    .filter((i) => i.situacao !== "resolvida")
+    .slice(0, TOP_URGENTES)
+    .map<PainelRescisaoUrgente>((i) => ({
+      codigoempresa: i.codigoempresa,
+      empresa: i.empresa,
+      contrato: i.contrato,
+      funcionario: i.funcionario,
+      prazo: i.prazo,
+      diasParaPrazo: i.diasParaPrazo,
+      situacao: i.situacao,
+    }));
+  return { counts: { pendentes: r.pendentes, vencidas: r.vencidas, venceBreve: r.venceBreve }, urgentes };
+}
+
+// ── Férias (contagem + mais críticas) ────────────────────────────────────────
+
+async function blocoFerias(
+  scope: number[] | "todas"
+): Promise<{ counts: PainelFerias; criticas: PainelFeriasCritica[] }> {
   const ref = hojeISO();
   const empF = scope === "todas" ? "" : ` and f.codigoempresa = any($2::int[])`;
   const paramsF = scope === "todas" ? [ref] : [ref, scope];
@@ -62,10 +86,15 @@ async function blocoFerias(scope: number[] | "todas"): Promise<PainelFerias> {
   const paramsR = scope === "todas" ? [] : [scope];
 
   const [ativos, recibos] = await Promise.all([
-    query<{ chave: string; admissao: string }>(
+    query<{ chave: string; codigoempresa: number; empresa: string; contrato: number; funcionario: string; admissao: string }>(
       `select (f.codigoempresa || ':' || f.codigofunccontr) as chave,
+              f.codigoempresa,
+              coalesce(nullif(btrim(e.nomeempresa), ''), 'Empresa ' || f.codigoempresa) as empresa,
+              f.codigofunccontr as contrato,
+              coalesce(nullif(btrim(f.nomefunc), ''), 'Contrato ' || f.codigofunccontr) as funcionario,
               to_char(f.dataadm, 'YYYY-MM-DD') as admissao
          from funcionario f
+         left join empresa e on e.codigoempresa = f.codigoempresa
         where f.dataadm is not null and (f.datadem is null or f.datadem > $1)
           and f.categoria = '01'${empF}`,
       paramsF
@@ -88,20 +117,31 @@ async function blocoFerias(scope: number[] | "todas"): Promise<PainelFerias> {
 
   let vencidas = 0;
   let aVencer = 0;
+  const criticas: PainelFeriasCritica[] = [];
   for (const a of ativos) {
     const abertos = periodosEmAberto(a.admissao, ref, gozados.get(a.chave) ?? []);
-    if (abertos.some((p) => p.vencido)) {
+    const nVencidos = abertos.filter((p) => p.vencido).length;
+    if (nVencidos > 0) {
       vencidas++;
+      const critico = abertos.reduce((pior, p) => (p.diasParaLimite < pior.diasParaLimite ? p : pior));
+      criticas.push({
+        codigoempresa: a.codigoempresa,
+        empresa: a.empresa,
+        contrato: a.contrato,
+        funcionario: a.funcionario,
+        periodosVencidos: nVencidos,
+        diasParaLimite: critico.diasParaLimite,
+      });
     } else if (abertos.some((p) => p.diasParaLimite <= 120)) {
       aVencer++;
     }
   }
-  return { vencidas, aVencer };
+  criticas.sort((x, y) => y.periodosVencidos - x.periodosVencidos || x.diasParaLimite - y.diasParaLimite);
+  return { counts: { vencidas, aVencer }, criticas: criticas.slice(0, TOP_URGENTES) };
 }
 
-/** eSocial a resolver: transmissões dos últimos 90 dias sem recibo — pendentes
- *  (sem rejeição) e rejeitadas (status 13). Panorama por `esocialtransacao`,
- *  sem ligar ao contrato — ver [[Módulo de folha e eSocial do Questor]]. */
+// ── eSocial (só contagem) ────────────────────────────────────────────────────
+
 async function blocoEsocial(scope: number[] | "todas"): Promise<PainelEsocial> {
   const desde = addDias(hojeISO(), -90);
   const emp = scope === "todas" ? "" : ` and codigoempresa = any($2::int[])`;
@@ -116,7 +156,17 @@ async function blocoEsocial(scope: number[] | "todas"): Promise<PainelEsocial> {
   return { pendentes: row?.pendentes ?? 0, rejeitados: row?.rejeitados ?? 0 };
 }
 
-/** Série mensal dos quatro trabalhos do DP nos últimos 6 meses. */
+// ── Atividade e série (só gestão) ────────────────────────────────────────────
+
+async function blocoAtividade(inicio: string, fim: string): Promise<PainelAtividade> {
+  const resumo = await montarResumoDp({ inicio, fim, empresas: [], usuario: null });
+  const topOperadores = resumo.ranking
+    .filter((c) => !c.auto && c.total > 0)
+    .slice(0, 5)
+    .map((c) => ({ nome: c.nome, total: c.total }));
+  return { mes: resumo.totais, anterior: resumo.anterior, colaboradores: resumo.colaboradores, topOperadores };
+}
+
 async function blocoSerie(scope: number[] | "todas"): Promise<PainelSeriePonto[]> {
   const inicio = primeiroDiaMes(hojeISO(), -5);
   const emp = scope === "todas" ? "" : ` and codigoempresa = any($2::int[])`;
@@ -144,29 +194,38 @@ async function blocoSerie(scope: number[] | "todas"): Promise<PainelSeriePonto[]
   );
 }
 
-/** Atividade do mês corrente via a Produtividade do DP (já office-wide/validada). */
-async function blocoAtividade(inicio: string, fim: string): Promise<PainelAtividade> {
-  const resumo = await montarResumoDp({ inicio, fim, empresas: [], usuario: null });
-  const topOperadores = resumo.ranking
-    .filter((c) => !c.auto && c.total > 0)
-    .slice(0, 5)
-    .map((c) => ({ nome: c.nome, total: c.total }));
+// ── Assembladores ────────────────────────────────────────────────────────────
+
+function colher<T>(r: PromiseSettledResult<T>, nome: string): T | null {
+  if (r.status === "fulfilled") return r.value;
+  console.error(`[painel-dp] bloco '${nome}' falhou:`, r.reason);
+  return null;
+}
+
+export async function montarPainelColaborador(): Promise<PainelColaborador> {
+  const fim = hojeISO();
+  const inicio = primeiroDiaMes(fim);
+  const scope = await escopoSessao();
+
+  const [rescisoes, ferias, esocial] = await Promise.allSettled([
+    blocoRescisoes(),
+    blocoFerias(scope),
+    blocoEsocial(scope),
+  ]);
+  const r = colher(rescisoes, "rescisoes");
+  const f = colher(ferias, "ferias");
+
   return {
-    mes: resumo.totais,
-    anterior: resumo.anterior,
-    colaboradores: resumo.colaboradores,
-    topOperadores,
+    periodo: { inicio, fim },
+    rescisoes: r?.counts ?? null,
+    ferias: f?.counts ?? null,
+    esocial: colher(esocial, "esocial"),
+    rescisoesUrgentes: r?.urgentes ?? null,
+    feriasCriticas: f?.criticas ?? null,
   };
 }
 
-/** Rescisões a pagar em aberto (últimos 180 dias, como o cron). */
-async function blocoRescisoes(): Promise<PainelRescisoes> {
-  const fim = hojeISO();
-  const r = await montarRescisoes({ inicio: addDias(fim, -180), fim, empresas: [] }, fim);
-  return { pendentes: r.pendentes, vencidas: r.vencidas, venceBreve: r.venceBreve };
-}
-
-export async function montarPainelDp(): Promise<PainelDp> {
+export async function montarPainelGestao(): Promise<PainelGestao> {
   const fim = hojeISO();
   const inicio = primeiroDiaMes(fim);
   const scope = await escopoSessao();
@@ -178,19 +237,15 @@ export async function montarPainelDp(): Promise<PainelDp> {
     blocoAtividade(inicio, fim),
     blocoSerie(scope),
   ]);
-
-  const val = <T>(r: PromiseSettledResult<T>, nome: string): T | null => {
-    if (r.status === "fulfilled") return r.value;
-    console.error(`[painel-dp] bloco '${nome}' falhou:`, r.reason);
-    return null;
-  };
+  const r = colher(rescisoes, "rescisoes");
+  const f = colher(ferias, "ferias");
 
   return {
     periodo: { inicio, fim },
-    rescisoes: val(rescisoes, "rescisoes"),
-    ferias: val(ferias, "ferias"),
-    esocial: val(esocial, "esocial"),
-    atividade: val(atividade, "atividade"),
-    serie: val(serie, "serie"),
+    rescisoes: r?.counts ?? null,
+    ferias: f?.counts ?? null,
+    esocial: colher(esocial, "esocial"),
+    atividade: colher(atividade, "atividade"),
+    serie: colher(serie, "serie"),
   };
 }

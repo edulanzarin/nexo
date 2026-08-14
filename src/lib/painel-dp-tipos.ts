@@ -1,11 +1,21 @@
+import type { RescisaoSituacao } from "./rescisoes-tipos";
+
 /**
- * Tipos do Painel do DP — a home do módulo, um dashboard-resumo que carrega
- * sozinho (sem filtro/Executar). Compartilhados entre a lib server-only
- * (`painel-dp`) e o cliente. Cada bloco é INDEPENDENTE e opcional (`| null`): se
- * a consulta daquele bloco falhar, o painel ainda renderiza os outros.
+ * Tipos dos Painéis do DP. São DOIS painéis, home do módulo por cargo:
+ *
+ *  - **Colaborador** (`PainelColaborador`): a fila de trabalho — só PENDÊNCIAS
+ *    (o que cobra ação) e as mais urgentes em lista. Nada de produtividade nem
+ *    ranking de colegas (a tela é vista pelos funcionários).
+ *  - **Gestão** (`PainelGestao`): a visão do gestor — pendências + a ATIVIDADE do
+ *    DP no mês (quanto cada trabalho movimentou, ranking de quem fez, série).
+ *
+ * Cada bloco é INDEPENDENTE e opcional (`| null`): se a consulta daquele bloco
+ * falha, o painel ainda renderiza os outros.
  */
 
-/** Rescisões a pagar em aberto (janela de acompanhamento). */
+// ── Blocos de pendência (comuns aos dois painéis) ────────────────────────────
+
+/** Rescisões a pagar em aberto. */
 export interface PainelRescisoes {
   pendentes: number;
   vencidas: number;
@@ -24,6 +34,31 @@ export interface PainelEsocial {
   rejeitados: number;
 }
 
+// ── Itens das listas de prioridade (painel do colaborador) ───────────────────
+
+/** Uma rescisão na lista "mais urgentes". */
+export interface PainelRescisaoUrgente {
+  codigoempresa: number;
+  empresa: string;
+  contrato: number;
+  funcionario: string;
+  prazo: string;
+  diasParaPrazo: number | null;
+  situacao: RescisaoSituacao;
+}
+
+/** Um funcionário na lista "férias mais críticas". */
+export interface PainelFeriasCritica {
+  codigoempresa: number;
+  empresa: string;
+  contrato: number;
+  funcionario: string;
+  periodosVencidos: number;
+  diasParaLimite: number;
+}
+
+// ── Blocos de atividade (só painel de gestão) ────────────────────────────────
+
 /** Contagem dos quatro trabalhos do DP num período. */
 export interface PainelTrabalhos {
   avisos: number;
@@ -33,7 +68,7 @@ export interface PainelTrabalhos {
   total: number;
 }
 
-/** Um operador do DP e quanto fez no período (top do ranking). */
+/** Um operador do DP e quanto fez no período. */
 export interface PainelOperador {
   nome: string;
   total: number;
@@ -56,8 +91,20 @@ export interface PainelSeriePonto {
   ferias: number;
 }
 
-/** Payload do painel: período de referência + os blocos (cada um pode faltar). */
-export interface PainelDp {
+// ── Payloads ─────────────────────────────────────────────────────────────────
+
+/** Painel do colaborador: pendências + as mais urgentes em lista. */
+export interface PainelColaborador {
+  periodo: { inicio: string; fim: string };
+  rescisoes: PainelRescisoes | null;
+  ferias: PainelFerias | null;
+  esocial: PainelEsocial | null;
+  rescisoesUrgentes: PainelRescisaoUrgente[] | null;
+  feriasCriticas: PainelFeriasCritica[] | null;
+}
+
+/** Painel de gestão: pendências + atividade do mês. */
+export interface PainelGestao {
   periodo: { inicio: string; fim: string };
   rescisoes: PainelRescisoes | null;
   ferias: PainelFerias | null;

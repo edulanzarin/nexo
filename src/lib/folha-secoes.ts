@@ -19,15 +19,26 @@ import type { SecaoFiscal } from "./fiscal-secoes";
  * compartilhado — fica `false`.
  */
 export const SECOES_FOLHA: SecaoFiscal[] = [
-  // Painel é a HOME do módulo: primeira seção (o índice /folha cai na 1ª visível)
-  // e a única que carrega sozinha, sem barra de filtro/Executar (ver shell).
+  // Painel é a HOME do módulo: as primeiras seções (o índice /folha cai na 1ª
+  // visível) e carregam sozinhas, sem barra de filtro/Executar (ver shell). São
+  // DOIS, liberados por cargo: o colaborador vê a fila de trabalho (pendências);
+  // o gestor vê também a atividade/produtividade. Quem tiver só um cai nele; o
+  // recorte por cargo é permissão binária (uma seção por perfil).
   {
     id: "painel",
     icone: LayoutGrid,
     rotulo: "Painel",
     path: "/folha/painel",
     metrica: false,
-    descricao: "Retrato do DP: pendências (rescisões, férias, eSocial) e atividade do mês",
+    descricao: "Fila do DP: rescisões a pagar, férias vencidas e eSocial a resolver",
+  },
+  {
+    id: "painel-gestao",
+    icone: LayoutDashboard,
+    rotulo: "Painel · Gestão",
+    path: "/folha/painel-gestao",
+    metrica: false,
+    descricao: "Visão do gestor: pendências + atividade do DP no mês e ranking",
   },
   {
     id: "rotatividade",

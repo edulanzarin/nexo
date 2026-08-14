@@ -35,7 +35,8 @@ export function FolhaShell({ children }: { children: React.ReactNode }) {
   // Self-contained (não lê o Questor por empresa/período): não mostra a barra de
   // filtro nem espera "aplicar". O Painel (home) carrega sozinho com janelas
   // próprias; o Post Mortem é como as telas internas do RH.
-  const semFiltro = secao?.id === "painel" || (secao?.id?.startsWith("post-mortem") ?? false);
+  const semFiltro =
+    (secao?.id?.startsWith("painel") || secao?.id?.startsWith("post-mortem")) ?? false;
 
   return (
     <ProdutividadeTabsProvider>
