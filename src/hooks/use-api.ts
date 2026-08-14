@@ -66,6 +66,7 @@ import type {
 } from "@/lib/rescisoes-tipos";
 import type { PainelColaborador, PainelGestao } from "@/lib/painel-dp-tipos";
 import type { PainelContabil } from "@/lib/painel-contabil-tipos";
+import type { PainelRh } from "@/lib/painel-rh-tipos";
 import type { EnvioDetalhe, EnvioResumo } from "@/lib/envios";
 import type { EnvioRegra } from "@/lib/envio-regras";
 import type { RespostaExperienciaDetalhe } from "@/lib/rh-experiencia-dados";
@@ -367,6 +368,10 @@ export const usePainelGestao = (enabled = true) =>
 /** Painel do Contábil: contadores de atividade + base configurada, sem filtros. */
 export const usePainelContabil = (enabled = true) =>
   useApiQuery<PainelContabil>(["painel-contabil"], `/api/contabil/painel`, enabled);
+
+/** Painel do RH: pendências (experiências, denúncias, clima) + panorama do mês. */
+export const usePainelRh = (enabled = true) =>
+  useApiQuery<PainelRh>(["painel-rh"], `/api/rh/painel`, enabled);
 
 /** Fila de rescisões a pagar (prazo CLT 477: vencidas / a vencer). */
 export const useRescisoes = (qs: string, enabled = true) =>

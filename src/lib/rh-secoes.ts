@@ -1,4 +1,4 @@
-import { CalendarClock, FileText, Gauge, Repeat, ShieldAlert, UserCog, Users } from "lucide-react";
+import { CalendarClock, FileText, Gauge, LayoutGrid, Repeat, ShieldAlert, UserCog, Users } from "lucide-react";
 import type { SecaoFiscal } from "./fiscal-secoes";
 
 /**
@@ -10,6 +10,17 @@ import type { SecaoFiscal } from "./fiscal-secoes";
  * fica por último, como configuração.
  */
 export const SECOES_RH: SecaoFiscal[] = [
+  // Painel é a HOME do módulo: primeira seção (o índice /rh cai na 1ª visível).
+  // A casca do RH já é self-contained (sem barra de filtro), então o painel só
+  // carrega — nenhum tratamento especial no shell.
+  {
+    id: "painel",
+    icone: LayoutGrid,
+    rotulo: "Painel",
+    path: "/rh/painel",
+    metrica: false,
+    descricao: "Retrato do RH: pendências (experiências, denúncias, clima) e panorama do mês",
+  },
   {
     id: "diretorio",
     icone: Users,

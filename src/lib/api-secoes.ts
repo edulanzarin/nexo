@@ -125,6 +125,8 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     "post-mortem": ["post-mortem", "post-mortem-gestao"],
   },
   rh: {
+    // Painel (home do módulo): pendências + panorama do RH interno.
+    painel: ["painel"],
     // Diretório
     funcionarios: ["diretorio"],
     funcionario: ["diretorio", "rotatividade"], // ficha reusada no drill da rotatividade

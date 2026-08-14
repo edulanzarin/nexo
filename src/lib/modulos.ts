@@ -54,7 +54,9 @@ export const MODULOS: Modulo[] = [
     titulo: "RH",
     descricao: "Pessoal da Navecon: diretório e experiência",
     icone: "/images/rh.png",
-    home: "/rh/diretorio",
+    // Home = o índice, que redireciona pra 1ª seção visível (o Painel, para quem
+    // o tem; senão o Diretório).
+    home: "/rh",
   },
   {
     id: "config",
