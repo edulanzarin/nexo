@@ -6,6 +6,8 @@
     "dev": "next dev -p ${PORT:-4022}",
     "build": "next build",
     "start": "next start",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint",
     "migrate": "node scripts/migrate.mjs",
     "seed:admin": "node scripts/seed-admin.mjs",
@@ -38,6 +40,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   }
 }
