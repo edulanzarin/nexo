@@ -4,7 +4,8 @@ import { rodarCronRescisoes } from "@/lib/rescisoes";
 /**
  * Job diário dos avisos de rescisão a pagar. Igual aos crons do RH: NÃO passa
  * pelo apiRoute (não há sessão) — protegido pelo mesmo segredo `RH_CRON_SECRET`,
- * batido por um cron do host:
+ * batido pelo scheduler embutido (scripts/scheduler.mjs, serviço nexo-scheduler),
+ * às SCHEDULER_RESCISOES_HORA. Também pode ser disparado à mão:
  *   curl -H "x-cron-secret: ..." http://<host>/api/folha/cron/rescisoes
  * Sem o segredo configurado, a rota fica desabilitada (não roda aberta).
  */

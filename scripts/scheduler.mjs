@@ -1,6 +1,7 @@
-// Agendador embutido dos jobs do RH. Roda como um serviço próprio no compose
+// Agendador embutido dos jobs do app. Roda como um serviço próprio no compose
 // (nexo-scheduler) e bate as rotas de cron do app sozinho — assim o disparo
-// automático (experiência e campanhas/regras) NÃO depende de um crontab no host.
+// automático (experiência, campanhas/regras e rescisões) NÃO depende de um
+// crontab no host.
 // Uso: node scripts/scheduler.mjs
 //
 // Config (via ambiente / .env):
@@ -9,6 +10,8 @@
 //                      rede do compose).
 //   SCHEDULER_ENVIOS_MIN   intervalo das campanhas/regras (min, default 15).
 //   SCHEDULER_EXPERIENCIA_HORA  hora local do disparo diário da experiência
+//                      (0-23, default 8).
+//   SCHEDULER_RESCISOES_HORA  hora local do disparo diário das rescisões
 //                      (0-23, default 8).
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -30,6 +33,7 @@ const SEGREDO = process.env.RH_CRON_SECRET;
 const BASE = (process.env.SCHEDULER_APP_URL ?? "http://app:3000").replace(/\/$/, "");
 const ENVIOS_MS = Math.max(1, Number(process.env.SCHEDULER_ENVIOS_MIN ?? 15)) * 60_000;
 const HORA_EXPERIENCIA = Math.min(23, Math.max(0, Number(process.env.SCHEDULER_EXPERIENCIA_HORA ?? 8)));
+const HORA_RESCISOES = Math.min(23, Math.max(0, Number(process.env.SCHEDULER_RESCISOES_HORA ?? 8)));
 
 if (!SEGREDO) {
   console.error("[scheduler] RH_CRON_SECRET não definido — nada a agendar. Encerrando.");
@@ -52,20 +56,31 @@ async function bater(rota) {
   }
 }
 
+// Job diário: dispara na virada da hora configurada. Checa de minuto em minuto e
+// bate quando entra na hora certa (idempotente no servidor — pode rodar mais de
+// uma vez no dia sem duplicar). Fecha sobre `ultimoDia` próprio por rota.
+function agendarDiario(rota, hora) {
+  let ultimoDia = null;
+  setInterval(() => {
+    const agora = new Date();
+    const dia = agora.toISOString().slice(0, 10);
+    if (agora.getHours() === hora && ultimoDia !== dia) {
+      ultimoDia = dia;
+      bater(rota);
+    }
+  }, 60_000);
+}
+
 // Campanhas agendadas + regras recorrentes: a cada N minutos.
-log(`iniciado — base=${BASE}, envios a cada ${ENVIOS_MS / 60_000}min, experiência às ${HORA_EXPERIENCIA}h`);
+log(
+  `iniciado — base=${BASE}, envios a cada ${ENVIOS_MS / 60_000}min, ` +
+    `experiência às ${HORA_EXPERIENCIA}h, rescisões às ${HORA_RESCISOES}h`,
+);
 bater("/api/rh/cron/envios");
 setInterval(() => bater("/api/rh/cron/envios"), ENVIOS_MS);
 
-// Experiência: uma vez por dia, na virada da hora configurada. Checa de minuto em
-// minuto e dispara quando entra na hora certa (idempotente no servidor — pode
-// rodar mais de uma vez no dia sem duplicar).
-let ultimoDiaExperiencia = null;
-setInterval(() => {
-  const agora = new Date();
-  const dia = agora.toISOString().slice(0, 10);
-  if (agora.getHours() === HORA_EXPERIENCIA && ultimoDiaExperiencia !== dia) {
-    ultimoDiaExperiencia = dia;
-    bater("/api/rh/cron/experiencia");
-  }
-}, 60_000);
+// Experiência (RH): lembrete diário de 45/90 dias.
+agendarDiario("/api/rh/cron/experiencia", HORA_EXPERIENCIA);
+
+// Rescisões (DP): aviso diário de rescisões a pagar dentro/fora do prazo.
+agendarDiario("/api/folha/cron/rescisoes", HORA_RESCISOES);
