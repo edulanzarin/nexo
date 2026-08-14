@@ -35,7 +35,9 @@ export const MODULOS: Modulo[] = [
     titulo: "Contábil",
     descricao: "Conferência fiscal e conciliação bancária",
     icone: "/images/contabil.png",
-    home: "/contabil/conciliacao",
+    // Home = o índice, que redireciona pra 1ª seção visível (o Painel, para quem
+    // o tem; senão a Conciliação).
+    home: "/contabil",
   },
   {
     id: "folha",

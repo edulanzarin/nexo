@@ -1,4 +1,4 @@
-import { ClipboardCheck, FileSpreadsheet, Import, Landmark, ListChecks, Scale, ScanSearch, Table2 } from "lucide-react";
+import { ClipboardCheck, FileSpreadsheet, Import, Landmark, LayoutGrid, ListChecks, Scale, ScanSearch, Table2 } from "lucide-react";
 import type { SecaoFiscal } from "./fiscal-secoes";
 
 /**
@@ -34,7 +34,29 @@ export interface SecaoContabil extends SecaoFiscal {
  * caminho da seção (a Configuração do plano de contabilização, por exemplo).
  */
 export const SECOES_CONTABIL: SecaoContabil[] = [
-  // Conciliação primeiro: é o trabalho do dia a dia e a home do módulo.
+  // Painel é a HOME do módulo: primeira seção (o índice /contabil cai na 1ª
+  // visível) e a única self-contained — carrega sozinha, sem barra de filtro nem
+  // Executar (ver shell). É o placar da automação (o que o time rodou + a base
+  // configurada), não a automação: conciliação e cia continuam se rodando.
+  {
+    id: "painel",
+    rotulo: "Painel",
+    icone: LayoutGrid,
+    path: "/contabil/painel",
+    metrica: false,
+    descricao: "Retrato do Contábil: o que o time rodou e a base configurada",
+    abas: [
+      {
+        id: "painel",
+        rotulo: "Painel",
+        path: "/contabil/painel",
+        descricao: "Contadores de atividade (conciliações, laudos…) e a base configurada",
+        semPeriodo: true,
+        execucao: null,
+      },
+    ],
+  },
+  // Conciliação: o trabalho do dia a dia (era a home antes do Painel).
   {
     id: "conciliacao",
     rotulo: "Conciliação Bancária",

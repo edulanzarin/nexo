@@ -41,6 +41,9 @@ export function ContabilShell({ children }: { children: React.ReactNode }) {
   const aba = abaContabilAtual(pathname);
   const abas = abasDaSecao(pathname);
   const carregando = useIsFetching() > 0;
+  // Painel é self-contained (home do módulo): carrega sozinho, sem barra de
+  // filtro nem abas — como o Post Mortem/Painel no DP.
+  const ehPainel = secao?.id === "painel";
 
   // Busca, extrato carregado e memória de filtro valem pelo MÓDULO inteiro:
   // trocar de seção (ou de aba) mantém, e só "Trocar módulo" — quando este shell
@@ -88,6 +91,53 @@ export function ContabilShell({ children }: { children: React.ReactNode }) {
         }
       />
 
+      {ehPainel ? (
+        <div className="mt-5 space-y-4">{children}</div>
+      ) : (
+        <ConteudoComFiltro
+          aba={aba}
+          abas={abas}
+          secao={secao}
+          suffix={suffix}
+          usaPeriodo={usaPeriodo}
+          periodoMensal={periodoMensal}
+          execucao={execucao}
+          aplicado={aplicado}
+          jaExecutou={jaExecutou}
+        >
+          {children}
+        </ConteudoComFiltro>
+      )}
+    </div>
+  );
+}
+
+/** Corpo padrão de uma seção do Contábil: abas + barra de filtro + gate de execução. */
+function ConteudoComFiltro({
+  aba,
+  abas,
+  secao,
+  suffix,
+  usaPeriodo,
+  periodoMensal,
+  execucao,
+  aplicado,
+  jaExecutou,
+  children,
+}: {
+  aba: ReturnType<typeof abaContabilAtual>;
+  abas: ReturnType<typeof abasDaSecao>;
+  secao: ReturnType<typeof secaoContabilAtual>;
+  suffix: string;
+  usaPeriodo: boolean;
+  periodoMensal: boolean;
+  execucao: ReturnType<typeof execucaoDaAba>;
+  aplicado: boolean;
+  jaExecutou: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <>
       {aba && abas.length > 1 && (
         <nav className="mb-4 flex gap-1 border-b border-hairline" aria-label={secao?.rotulo}>
           {abas.map((a) => {
@@ -133,6 +183,6 @@ export function ContabilShell({ children }: { children: React.ReactNode }) {
           <FiltroPendente rotulo={execucao.rotulo} />
         )}
       </div>
-    </div>
+    </>
   );
 }
