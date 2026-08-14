@@ -108,6 +108,12 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     esocial: ["esocial"],
     // Controle de férias (vencidas / a vencer)
     ferias: ["ferias"],
+    // Controle de rescisões a pagar (todas as sub-rotas casam pelo 1º segmento:
+    // rescisoes, rescisoes/resolver). Config e destinatários têm 1º segmento próprio.
+    rescisoes: ["rescisoes"],
+    "rescisoes-config": ["rescisoes"],
+    "rescisoes-destinatarios": ["rescisoes"],
+    // /api/folha/cron/rescisoes é público (segredo próprio) — NÃO passa por apiRoute.
     // Relatório Post Mortem: analista (post-mortem) e gestor (post-mortem-gestao)
     // batem no mesmo endpoint; o handler recorta por dono (meus x todos).
     "post-mortem": ["post-mortem", "post-mortem-gestao"],

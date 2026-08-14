@@ -30,6 +30,8 @@ export function FolhaShell({ children }: { children: React.ReactNode }) {
   );
 
   const ehProdutividade = secao?.id === "produtividade";
+  // Rescisões, como a Produtividade, é o retrato do escritório: empresa opcional.
+  const empresaOpcional = ehProdutividade || secao?.id === "rescisoes";
   // O Post Mortem é self-contained (não lê o Questor por empresa/período): não
   // mostra a barra de filtro nem espera "aplicar" — como as telas internas do RH.
   const semFiltro = secao?.id?.startsWith("post-mortem") ?? false;
@@ -58,7 +60,7 @@ export function FolhaShell({ children }: { children: React.ReactNode }) {
 
             {/* Rotatividade se lê por empresa (uma por vez); Produtividade é o retrato
                 do escritório, então empresa vira filtro opcional (todas por padrão). */}
-            <ConfFilterBar mostrarFilial={false} empresaOpcional={ehProdutividade} />
+            <ConfFilterBar mostrarFilial={false} empresaOpcional={empresaOpcional} />
 
             <div className="mt-5 space-y-4">{aplicado ? children : <FiltroPendente />}</div>
           </>

@@ -1,6 +1,7 @@
 import {
   ClipboardList,
   Gauge,
+  HandCoins,
   LayoutDashboard,
   Plane,
   Repeat,
@@ -57,6 +58,14 @@ export const SECOES_FOLHA: SecaoFiscal[] = [
     path: "/folha/ferias",
     metrica: false,
     descricao: "Férias vencidas e a vencer — risco de dobro",
+  },
+  {
+    id: "rescisoes",
+    icone: HandCoins,
+    rotulo: "Rescisões a pagar",
+    path: "/folha/rescisoes",
+    metrica: false,
+    descricao: "Prazo de pagamento (CLT 477): vencidas, a vencer e avisos por e-mail",
   },
   // Relatório Post Mortem do DP. Duas seções pela doutrina de permissão binária
   // (restringir o que se faz = separar em outra seção): o analista preenche e vê

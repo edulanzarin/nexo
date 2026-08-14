@@ -59,6 +59,11 @@ import type {
 } from "@/lib/rh-tipos";
 import type { Formulario, FormularioResumo } from "@/lib/formularios-tipos";
 import type { DpResumo, DpLinha, DpQuebra, DpTipo } from "@/lib/dp-tipos";
+import type {
+  RescisoesResumo,
+  RescisoesConfig,
+  RescisaoDestinatario,
+} from "@/lib/rescisoes-tipos";
 import type { EnvioDetalhe, EnvioResumo } from "@/lib/envios";
 import type { EnvioRegra } from "@/lib/envio-regras";
 import type { RespostaExperienciaDetalhe } from "@/lib/rh-experiencia-dados";
@@ -348,6 +353,22 @@ export const useConformidadeEsocial = (qs: string, enabled = true) =>
 /** Controle de férias: quem tem férias vencidas (dobro) ou a vencer. */
 export const useControleFerias = (qs: string, enabled = true) =>
   useApiQuery<ControleFeriasResp>(["ferias", qs], `/api/folha/ferias?${qs}`, enabled);
+
+/** Fila de rescisões a pagar (prazo CLT 477: vencidas / a vencer). */
+export const useRescisoes = (qs: string, enabled = true) =>
+  useApiQuery<RescisoesResumo>(["rescisoes", qs], `/api/folha/rescisoes?${qs}`, enabled);
+
+/** Config do controle de rescisões (prazo + antecedência do aviso). */
+export const useRescisoesConfig = (enabled = true) =>
+  useApiQuery<RescisoesConfig>(["rescisoes-config"], `/api/folha/rescisoes-config`, enabled);
+
+/** Destinatários dos avisos de rescisão (time do DP). */
+export const useRescisoesDestinatarios = (enabled = true) =>
+  useApiQuery<RescisaoDestinatario[]>(
+    ["rescisoes-destinatarios"],
+    `/api/folha/rescisoes-destinatarios`,
+    enabled
+  );
 
 /** Opções dos filtros da Folha para a empresa (não muda com a seleção). */
 export const useFolhaFiltros = (qs: string, enabled = true) =>
