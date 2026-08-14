@@ -247,17 +247,6 @@ export const SECOES_CONTABIL: SecaoContabil[] = [
       },
     ],
   },
-  //
-  // PARKED (fora do ar de propósito): Contas de Controle, Provisões e Fechamento
-  // saíram da sidebar do Contábil. O código continua todo no repo, dormente —
-  // páginas (src/app/contabil/{contas-controle,provisoes,fechamento}), rotas
-  // (src/app/api/contabil/{contas-controle,provisoes,fechamento}), libs
-  // (contas-controle.ts, provisoes.ts, fechamento.ts) e hooks. Para religar,
-  // reponha aqui a seção correspondente (ver git em contabil-secoes.ts) e o ícone
-  // (Layers / Umbrella / ListChecks) no import. Provisões, em especial, precisa
-  // antes rever a conferência: a provisão NÃO é folha 70/71, mora em
-  // provisaoferias(emdias)/provisao13 e o contábil mistura accrual com baixa
-  // (ver nota do Módulo de folha do Questor no Brain).
 ];
 
 const TODAS_ABAS: { aba: AbaContabil; secao: SecaoContabil }[] = SECOES_CONTABIL.flatMap((secao) =>

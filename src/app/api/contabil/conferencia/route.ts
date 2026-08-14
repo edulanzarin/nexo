@@ -8,7 +8,7 @@ import { conferir, type Opcoes, type Ordem } from "@/lib/conferencia-servico";
  * (origem FI) e com o plano de contabilização do CFOP. Devolve TODAS as notas
  * com a sua situação — não só as problemáticas —, para dar de filtrar por
  * corretas, pendentes, divergentes etc. O núcleo `conferir` mora em
- * `@/lib/conferencia-servico`, compartilhado com o Fechamento mensal.
+ * `@/lib/conferencia-servico`, compartilhado com a Central de Pendências.
  */
 export const GET = apiRoute(async (req) => {
   const filters = parseFilters(req.nextUrl.searchParams);

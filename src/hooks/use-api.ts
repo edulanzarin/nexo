@@ -43,9 +43,6 @@ import type {
   ReplicarPreviewResp,
   AnaliseBalanceteResp,
   LaudoEscritoResp,
-  FechamentoResp,
-  ContasControleResp,
-  ProvisoesResp,
   AuditoriaResp,
   CustoFolhaResp,
   ConformidadeEsocialResp,
@@ -450,22 +447,6 @@ export const useConferencia = (qs: string, enabled = true) =>
     `/api/contabil/conferencia?${qs}`,
     enabled
   );
-
-/** Fechamento mensal: o semáforo com as checagens do mês. Custo zero. */
-export const useFechamento = (qs: string, enabled = true) =>
-  useApiQuery<FechamentoResp>(["fechamento", qs], `/api/contabil/fechamento?${qs}`, enabled);
-
-/** Contas de controle: movimento patrimonial do mês repartido por origem. */
-export const useContasControle = (qs: string, enabled = true) =>
-  useApiQuery<ContasControleResp>(
-    ["contas-controle", qs],
-    `/api/contabil/contas-controle?${qs}`,
-    enabled
-  );
-
-/** Provisões: folha calculada × contábil lançado, com a divergência. */
-export const useProvisoes = (qs: string, enabled = true) =>
-  useApiQuery<ProvisoesResp>(["provisoes", qs], `/api/contabil/provisoes?${qs}`, enabled);
 
 /** Auditoria: lançamentos com anomalia no período, agrupados por tipo de achado. */
 export const useAuditoria = (qs: string, enabled = true) =>

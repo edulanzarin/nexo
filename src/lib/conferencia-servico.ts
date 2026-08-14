@@ -1,7 +1,7 @@
 /**
  * Serviço da Conferência Fiscal — o núcleo `conferir` que cruza as notas do
  * período com os lançamentos contábeis e o plano de contabilização. Vive na base
- * (e não na rota) porque o Fechamento mensal também consome o `resumo` desta
+ * (e não na rota) porque a Central de Pendências também consome o `resumo` desta
  * conferência: extrair aqui é o que evita duplicar a classificação de nota.
  */
 import { PoolClient } from "pg";
@@ -491,7 +491,7 @@ export async function conferirTudo(
 /**
  * Conferência da TELA: roda `conferirTudo` e aplica situação/busca/espécie/
  * CFOP, facetas e paginação por cima. Assinatura preservada — é o que a rota
- * de Conferência e o Fechamento mensal consomem.
+ * de Conferência e a Central de Pendências consomem.
  */
 export async function conferir(
   client: PoolClient,

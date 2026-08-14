@@ -79,12 +79,6 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     // Conciliação (+ aba Regras)
     "extrato-importar": ["conciliacao"],
     "extrato-regras": ["conciliacao"],
-    // Fechamento mensal (orquestra as checagens; seção própria)
-    fechamento: ["fechamento"],
-    // Contas de controle (composição do saldo por origem; seção própria)
-    "contas-controle": ["controle"],
-    // Provisões (folha calculada × contábil lançado; lê folha, mas é seção do contábil)
-    provisoes: ["provisoes"],
     // Implantação de saldos (todas as sub-rotas casam pelo 1º segmento)
     implantacao: ["implantacao"],
     // Auditoria de lançamentos (varredura do lctoctb; seção própria)
