@@ -3,6 +3,7 @@ import {
   Gauge,
   HandCoins,
   LayoutDashboard,
+  LayoutGrid,
   Plane,
   Repeat,
   ShieldCheck,
@@ -18,6 +19,16 @@ import type { SecaoFiscal } from "./fiscal-secoes";
  * compartilhado — fica `false`.
  */
 export const SECOES_FOLHA: SecaoFiscal[] = [
+  // Painel é a HOME do módulo: primeira seção (o índice /folha cai na 1ª visível)
+  // e a única que carrega sozinha, sem barra de filtro/Executar (ver shell).
+  {
+    id: "painel",
+    icone: LayoutGrid,
+    rotulo: "Painel",
+    path: "/folha/painel",
+    metrica: false,
+    descricao: "Retrato do DP: pendências (rescisões, férias, eSocial) e atividade do mês",
+  },
   {
     id: "rotatividade",
     icone: Repeat,

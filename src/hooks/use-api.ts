@@ -64,6 +64,7 @@ import type {
   RescisoesConfig,
   RescisaoDestinatario,
 } from "@/lib/rescisoes-tipos";
+import type { PainelDp } from "@/lib/painel-dp-tipos";
 import type { EnvioDetalhe, EnvioResumo } from "@/lib/envios";
 import type { EnvioRegra } from "@/lib/envio-regras";
 import type { RespostaExperienciaDetalhe } from "@/lib/rh-experiencia-dados";
@@ -353,6 +354,10 @@ export const useConformidadeEsocial = (qs: string, enabled = true) =>
 /** Controle de férias: quem tem férias vencidas (dobro) ou a vencer. */
 export const useControleFerias = (qs: string, enabled = true) =>
   useApiQuery<ControleFeriasResp>(["ferias", qs], `/api/folha/ferias?${qs}`, enabled);
+
+/** Painel do DP: a home do módulo, retrato do escritório (sem filtros). */
+export const usePainelDp = (enabled = true) =>
+  useApiQuery<PainelDp>(["painel-dp"], `/api/folha/painel`, enabled);
 
 /** Fila de rescisões a pagar (prazo CLT 477: vencidas / a vencer). */
 export const useRescisoes = (qs: string, enabled = true) =>

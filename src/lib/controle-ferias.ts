@@ -43,8 +43,9 @@ interface PeriodoAberto {
   vencido: boolean;
 }
 
-/** Deriva os períodos aquisitivos completos e não gozados de um funcionário. */
-function periodosEmAberto(admissao: string, ref: string, gozados: string[]): PeriodoAberto[] {
+/** Deriva os períodos aquisitivos completos e não gozados de um funcionário.
+ *  Exportado para o Painel do DP reusar a mesma regra num agregado office-wide. */
+export function periodosEmAberto(admissao: string, ref: string, gozados: string[]): PeriodoAberto[] {
   const abertos: PeriodoAberto[] = [];
   // k avança enquanto o período aquisitivo k já se completou até a referência.
   for (let k = 0; k < 60; k++) {
