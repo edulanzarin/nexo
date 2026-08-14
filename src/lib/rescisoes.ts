@@ -7,11 +7,17 @@ import { enviarEmail } from "./mailer";
 import { appUrl } from "./app-url";
 import type {
   RescisaoItem,
-  RescisaoSituacao,
   RescisoesConfig,
   RescisoesResumo,
   RescisaoDestinatario,
 } from "./rescisoes-tipos";
+import {
+  type RescisaoRaw,
+  addDias,
+  montarItem,
+  ordenarItens,
+  slotDeAviso,
+} from "./rescisoes-calculo";
 
 /**
  * CONTROLE DE RESCISÕES A PAGAR (DP). Junta o FATO do Questor — desligamento
@@ -80,16 +86,10 @@ async function escopoEmpresas(empresas: number[]): Promise<number[] | "todas"> {
   return empresas.length ? empresas.filter((e) => escopo.includes(e)) : escopo;
 }
 
-// ── Datas (locais, sem lib) ──────────────────────────────────────────────────
+// ── Datas ────────────────────────────────────────────────────────────────────
+// addDias/diffDias vivem em rescisoes-calculo (puros, testáveis). Aqui fica só o
+// "agora" do servidor, que depende do relógio.
 
-/** ISO "YYYY-MM-DD" + n dias (UTC, para não escorregar por fuso). */
-function addDias(iso: string, n: number): string {
-  return new Date(Date.parse(iso + "T00:00:00Z") + n * 86_400_000).toISOString().slice(0, 10);
-}
-/** Dias entre duas datas ISO (a − b). */
-function diffDias(a: string, b: string): number {
-  return Math.round((Date.parse(a + "T00:00:00Z") - Date.parse(b + "T00:00:00Z")) / 86_400_000);
-}
 /** Hoje em ISO, no fuso do servidor. */
 function hojeISO(): string {
   const d = new Date();
@@ -192,18 +192,6 @@ export async function desmarcarResolvida(codigoempresa: number, codigofunccontr:
 
 // ── Consulta do Questor ──────────────────────────────────────────────────────
 
-interface RescisaoRaw {
-  codigoempresa: number;
-  empresa: string;
-  contrato: number;
-  funcionario: string;
-  data_dem: string;
-  causa: string | null;
-  data_aviso: string | null;
-  calculada: boolean;
-  data_pgto: string | null;
-}
-
 const chave = (empresa: number, contrato: number) => `${empresa}:${contrato}`;
 
 /**
@@ -261,46 +249,6 @@ async function carregarResolvidas(): Promise<Map<string, { resolvidaEm: string; 
   return mapa;
 }
 
-/** Combina uma linha do Questor com o override e o prazo, derivando a situação. */
-function montarItem(
-  raw: RescisaoRaw,
-  referencia: string,
-  cfg: RescisoesConfig,
-  override: { resolvidaEm: string; observacao: string | null } | undefined
-): RescisaoItem {
-  const prazo = addDias(raw.data_dem, cfg.prazoDias);
-  let situacao: RescisaoSituacao;
-  let diasParaPrazo: number | null;
-  if (override) {
-    situacao = "resolvida";
-    diasParaPrazo = null;
-  } else {
-    diasParaPrazo = diffDias(prazo, referencia);
-    if (diasParaPrazo < 0) situacao = "vencida";
-    else if (diasParaPrazo <= cfg.diasAntes) situacao = "vence_breve";
-    else situacao = "no_prazo";
-  }
-  return {
-    codigoempresa: raw.codigoempresa,
-    empresa: raw.empresa,
-    contrato: raw.contrato,
-    funcionario: raw.funcionario,
-    dataDesligamento: raw.data_dem,
-    causa: raw.causa,
-    dataAviso: raw.data_aviso,
-    calculada: raw.calculada,
-    pgtoPrevisto: raw.data_pgto,
-    prazo,
-    diasParaPrazo,
-    situacao,
-    resolvidaEm: override?.resolvidaEm ?? null,
-    resolvidaFonte: override ? "manual" : null,
-    observacao: override?.observacao ?? null,
-  };
-}
-
-const PESO: Record<RescisaoSituacao, number> = { vencida: 0, vence_breve: 1, no_prazo: 2, resolvida: 3 };
-
 export async function montarRescisoes(f: RescisoesFiltros, referencia: string): Promise<RescisoesResumo> {
   const escopo = await escopoEmpresas(f.empresas);
   const [raws, resolvidas, cfg] = await Promise.all([
@@ -309,14 +257,9 @@ export async function montarRescisoes(f: RescisoesFiltros, referencia: string): 
     carregarConfigRescisoes(),
   ]);
 
-  const itens = raws
-    .map((r) => montarItem(r, referencia, cfg, resolvidas.get(chave(r.codigoempresa, r.contrato))))
-    .sort(
-      (a, b) =>
-        PESO[a.situacao] - PESO[b.situacao] ||
-        (a.diasParaPrazo ?? Infinity) - (b.diasParaPrazo ?? Infinity) ||
-        a.funcionario.localeCompare(b.funcionario)
-    );
+  const itens = ordenarItens(
+    raws.map((r) => montarItem(r, referencia, cfg, resolvidas.get(chave(r.codigoempresa, r.contrato))))
+  );
 
   const resolvidasN = itens.filter((i) => i.situacao === "resolvida").length;
   return {
@@ -413,11 +356,8 @@ export async function rodarCronRescisoes(): Promise<ResumoCronRescisoes> {
   for (const raw of raws) {
     if (resolvidas.has(chave(raw.codigoempresa, raw.contrato))) continue;
     const item = montarItem(raw, hoje, cfg, undefined);
-    const dias = item.diasParaPrazo ?? 0;
-    let slot: number;
-    if (dias < 0) slot = dias; // vencida: um aviso por dia (slot muda a cada dia)
-    else if (dias <= cfg.diasAntes) slot = cfg.diasAntes; // antecedência: aviso único
-    else continue; // ainda folgado
+    const slot = slotDeAviso(item.diasParaPrazo, cfg.diasAntes);
+    if (slot === null) continue; // ainda folgado
     candidatos.push({ item, slot });
   }
 
