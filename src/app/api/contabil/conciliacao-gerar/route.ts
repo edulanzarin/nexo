@@ -2,10 +2,10 @@ import { apiRoute, assertEmpresaVisivel } from "@/lib/api-route";
 import { FilterError } from "@/lib/fiscal-filters";
 import { pool } from "@/lib/db";
 import { registrarAuditoria } from "@/lib/auditoria";
-import { gerarArquivoConciliacao, type LancamentoNli } from "@/lib/conciliacao-gerar";
+import { gerarArquivoConciliacao, type LancamentoCsv } from "@/lib/conciliacao-gerar";
 
 /**
- * Gera o arquivo de importação do Questor a partir dos lançamentos JÁ resolvidos
+ * Gera o CSV de importação do Questor a partir dos lançamentos JÁ resolvidos
  * da Conciliação (regra casada ou conta escolhida à mão). Só os prontos entram —
  * pendência não vira linha. Não grava nada no Questor; devolve o texto que o
  * contador importa. Gerar dado contábil é evento auditável.
@@ -14,14 +14,12 @@ export const POST = apiRoute(async (req) => {
   const body = (await req.json()) as {
     empresa?: number;
     estab?: number;
-    codigoHistorico?: number;
-    lancamentos?: LancamentoNli[];
+    lancamentos?: LancamentoCsv[];
   };
 
   if (!Number.isInteger(body.empresa)) throw new FilterError("Selecione uma empresa");
   await assertEmpresaVisivel(body.empresa!);
   if (!Number.isInteger(body.estab)) throw new FilterError("Informe a filial (estabelecimento)");
-  if (!Number.isInteger(body.codigoHistorico)) throw new FilterError("Escolha o histórico do lançamento");
   if (!Array.isArray(body.lancamentos) || !body.lancamentos.length) {
     throw new FilterError("Nenhum lançamento pronto para exportar");
   }
@@ -50,11 +48,7 @@ export const POST = apiRoute(async (req) => {
     throw new FilterError(`Conta ${faltando.join(", ")} não existe no plano desta empresa (ou não é analítica)`);
   }
 
-  const res = gerarArquivoConciliacao(body.lancamentos, {
-    empresa: body.empresa!,
-    estab: body.estab!,
-    codigoHistorico: body.codigoHistorico!,
-  });
+  const res = gerarArquivoConciliacao(body.lancamentos, { estab: body.estab! });
 
   await registrarAuditoria({
     acao: "contabil.conciliacao.gerar",

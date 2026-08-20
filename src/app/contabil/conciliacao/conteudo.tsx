@@ -16,7 +16,6 @@ import {
 import clsx from "clsx";
 import { toast } from "sonner";
 import { ContaDropdown } from "@/components/conta-dropdown";
-import { HistoricoDropdown } from "@/components/historico-dropdown";
 import { Kpi } from "@/components/kpi-conf";
 import { Badge, Button, Card, EmptyState } from "@/components/ui";
 import { useEstadoSecao } from "@/hooks/use-estado-secao";
@@ -45,7 +44,6 @@ export default function ImportarPage() {
   const [filtro, setFiltro] = useEstadoSecao<Filtro>("filtro", "todos");
   // Parâmetros da exportação (sobrevivem à navegação na seção).
   const [estab, setEstab] = useEstadoSecao<string>("estab", "1");
-  const [historico, setHistorico] = useEstadoSecao<number | null>("historicoConc", null);
   const [gerando, setGerando] = useState(false);
   // Índices cujo ajuste manual já virou regra — para trocar o botão por "salva".
   const [salvas, setSalvas] = useState<Set<number>>(new Set());
@@ -124,7 +122,7 @@ export default function ImportarPage() {
   }
 
   async function gerar() {
-    if (!previa || !prontos.length || historico == null) return;
+    if (!previa || !prontos.length) return;
     setGerando(true);
     try {
       const res = await fetch("/api/contabil/conciliacao-gerar", {
@@ -133,17 +131,16 @@ export default function ImportarPage() {
         body: JSON.stringify({
           empresa,
           estab: Number(estab),
-          codigoHistorico: historico,
           lancamentos: prontos,
         }),
       });
       const corpo = await res.json();
       if (!res.ok) throw new Error(corpo?.error ?? "Falha ao gerar o arquivo");
-      const blob = new Blob([corpo.arquivo], { type: "text/plain;charset=utf-8" });
+      const blob = new Blob([corpo.arquivo], { type: "text/csv;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `conciliacao_${empresa}_${previa.contaBanco.conta}.txt`;
+      a.download = `conciliacao_${empresa}_${previa.contaBanco.conta}.csv`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success(`${corpo.linhas} lançamentos exportados`);
@@ -370,8 +367,8 @@ export default function ImportarPage() {
         </div>
       </Card>
 
-      {/* Exportação: gera o arquivo de importação do Questor (mesmo layout .nli
-          da Implantação). Só os prontos entram; a pendência fica de fora. */}
+      {/* Exportação: gera o CSV de importação do Questor (ver conciliacao-gerar).
+          Só os prontos entram; a pendência fica de fora. */}
       <Card as="section" animate="none" className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
           <label className="grid gap-1.5">
@@ -382,27 +379,17 @@ export default function ImportarPage() {
               className="h-9 w-14 rounded-lg border border-hairline bg-surface px-2 text-center text-sm text-ink outline-none focus:border-accent/50"
             />
           </label>
-          <label className="grid gap-1.5">
-            <span className="text-xs font-medium text-ink-2">Histórico do lançamento</span>
-            <HistoricoDropdown valor={historico} onMudar={(h) => setHistorico(h?.codigo ?? null)} />
-          </label>
         </div>
         <div className="flex flex-col items-end gap-1.5">
           <Button
             variant="primary"
             size="lg"
             onClick={gerar}
-            disabled={gerando || !prontos.length || historico == null || !estab}
-            title={
-              !prontos.length
-                ? "Nenhum lançamento pronto para exportar"
-                : historico == null
-                  ? "Escolha o histórico do lançamento"
-                  : undefined
-            }
+            disabled={gerando || !prontos.length || !estab}
+            title={!prontos.length ? "Nenhum lançamento pronto para exportar" : undefined}
           >
             <Download className="size-4" />
-            Gerar arquivo do Questor
+            Gerar CSV do Questor
           </Button>
           <p className="text-[11px] text-muted">
             {num(prontos.length)} {prontos.length === 1 ? "lançamento pronto" : "lançamentos prontos"}
