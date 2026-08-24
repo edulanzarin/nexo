@@ -56,6 +56,7 @@ import type {
 } from "@/lib/rh-tipos";
 import type { Formulario, FormularioResumo } from "@/lib/formularios-tipos";
 import type { DpResumo, DpLinha, DpQuebra, DpTipo } from "@/lib/dp-tipos";
+import type { ContabilProdutividadeResp } from "@/lib/contabil-produtividade-tipos";
 import type {
   RescisoesResumo,
   RescisoesConfig,
@@ -438,6 +439,14 @@ export const useDpQuebra = (qs: string, tipo: DpTipo, enabled = true) =>
   useApiQuery<DpQuebra>(
     ["dp-quebra", tipo, qs],
     `/api/folha/dp-quebra?${qs}&tipo=${tipo}`,
+    enabled
+  );
+
+/** Produtividade do Contábil: lançamentos do período por pessoa, origem e empresa. */
+export const useContabilProdutividade = (qs: string, enabled = true) =>
+  useApiQuery<ContabilProdutividadeResp>(
+    ["contabil-produtividade", qs],
+    `/api/contabil/produtividade?${qs}`,
     enabled
   );
 
