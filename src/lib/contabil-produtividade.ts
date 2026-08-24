@@ -85,10 +85,14 @@ interface GraoRow {
   v: number;
 }
 
-/** Teto de empresas no ranking do time — a tela é resumo, não listagem. */
-const TOP_EMPRESAS = 20;
-/** Teto de empresas guardadas por pessoa (para a tela isolar alguém sem refetch). */
-const TOP_EMPRESAS_PESSOA = 12;
+/**
+ * Tetos de empresas. O gráfico mostra uma dúzia, mas a EXPORTAÇÃO sai daqui —
+ * por isso o teto é generoso: 200 empresas são ~12 KB no payload e cobrem o
+ * escritório inteiro, em vez de entregar uma planilha truncada em 20.
+ */
+const TOP_EMPRESAS = 200;
+/** Por pessoa o teto é menor: multiplica pelo tamanho do time no payload. */
+const TOP_EMPRESAS_PESSOA = 25;
 
 /** Acumulador interno de uma pessoa enquanto o grão é percorrido. */
 interface Acc {

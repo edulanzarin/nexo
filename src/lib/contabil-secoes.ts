@@ -263,10 +263,15 @@ export const SECOES_CONTABIL: SecaoContabil[] = [
     // Única tela do módulo que NÃO é bancada de uma empresa: varre o escopo
     // inteiro (empresa é filtro, não obrigação), como a Produtividade do DP. O
     // recorte é a data em que o lançamento foi FEITO, não a do fato.
+    // A aba se chama LANÇAMENTOS, não "Produtividade": a seção mede o trabalho
+    // do time e hoje só enxerga o `lctoctb`. Quando entrar outra fonte (o que o
+    // time rodou no app — conciliações, laudos, triagens — mora na trilha
+    // `auditoria`), ela é uma aba irmã aqui, não uma reescrita. Com uma aba só o
+    // shell não desenha a barra de abas, então o nome não aparece ainda.
     abas: [
       {
-        id: "produtividade",
-        rotulo: "Produtividade",
+        id: "lancamentos",
+        rotulo: "Lançamentos",
         path: "/contabil/produtividade",
         descricao:
           "Lançamentos do lctoctb por pessoa, origem, empresa, dia e hora — quem alimentou a contabilidade",

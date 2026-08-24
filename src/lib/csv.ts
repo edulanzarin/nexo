@@ -1,4 +1,12 @@
 /**
+ * Número decimal como o Excel pt-BR espera: vírgula. Sem isso a célula chega
+ * como TEXTO (o separador do arquivo é `;`, então a planilha lê o ponto como
+ * decimal errado ou como string) e ninguém consegue somar a coluna.
+ */
+export const decimalBR = (v: number | null | undefined): string =>
+  v == null ? "" : v.toFixed(2).replace(".", ",");
+
+/**
  * Exporta uma tabela como CSV e dispara o download no navegador. Separador `;` e
  * BOM UTF-8 para o Excel pt-BR abrir com acentos e colunas certas.
  */

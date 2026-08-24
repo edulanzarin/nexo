@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Building2, Clock, FileText, Layers, Users } from "lucide-react";
 import { StatTile, Delta } from "@/components/ui";
 import { CtbPessoaFiltro } from "@/components/ctb-pessoa-filtro";
+import { ExportarMenu, type CorteExport } from "@/components/exportar-menu";
 import { CtbProdTabela } from "@/components/ctb-prod-tabela";
 import { CtbProdBarras, type BarraItem } from "@/components/ctb-prod-barras";
 import { CtbProdSerie } from "@/components/charts/ctb-prod-serie";
@@ -12,6 +13,7 @@ import { CalendarioAtividade } from "@/components/charts/calendario-atividade";
 import { useFiltros } from "@/hooks/use-filters";
 import { useContabilProdutividade } from "@/hooks/use-api";
 import { brl, brlCompact, dataBR, deltaPct, num, numCompact } from "@/lib/format";
+import { decimalBR } from "@/lib/csv";
 import {
   CLASSES,
   zeroClasses,
@@ -45,6 +47,17 @@ function serieDaPessoa(
     total: porBucket.get(p.bucket) ?? 0,
     ...zeroClasses(),
   }));
+}
+
+/** Nome vira pedaço de nome de arquivo: sem acento, sem espaço. */
+function slug(nome: string): string {
+  return nome
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 40);
 }
 
 function pico(celulas: CtbDia[]): CtbDia | null {
@@ -155,6 +168,149 @@ export default function ProdutividadeContabilPage() {
     };
   }, [d, pessoa]);
 
+  // ── Exportação: os mesmos cortes da tela, com o recorte ativo aplicado ──
+  const cortes = useMemo<CorteExport[]>(() => {
+    if (!d) return [];
+    const periodo = `${d.periodo.inicio}_${d.periodo.fim}`;
+    const alvo = pessoa ? `-${slug(pessoa.nome)}` : "";
+    const arquivo = (corte: string, doTime = false) =>
+      `produtividade-contabil-${corte}-${periodo}${doTime ? "" : alvo}`;
+    const rotuloOrigem = new Map(d.origens.map((o) => [o.chave, o.nome]));
+    const rotuloClasse = new Map(CLASSES.map((c) => [c.id, c.rotulo]));
+    const classeDe = new Map(d.origens.map((o) => [o.chave, o.classe]));
+    const escala = d.periodo.granularidade === "mes" ? "Mês" : "Dia";
+
+    return [
+      {
+        id: "pessoas",
+        rotulo: "Ranking de pessoas",
+        descricao: "Uma linha por pessoa, com a quebra por natureza — sempre o time inteiro",
+        nome: arquivo("pessoas", true),
+        montar: () => ({
+          cabecalhos: [
+            "Código", "Pessoa", "Situação", "Lançamentos", "Digitado", "Importado",
+            "Integrado", "Apuração", "Outros", "Rodadas", "Empresas", "Dias ativos",
+            "Último lançamento", "Valor",
+          ],
+          linhas: d.ranking.map((p) => [
+            p.codigo,
+            p.nome,
+            p.inativo ? "desligado" : "ativo",
+            p.lancamentos,
+            p.porClasse.digitado,
+            p.porClasse.importado,
+            p.porClasse.integrado,
+            p.porClasse.apuracao,
+            p.porClasse.outros,
+            p.rodadas,
+            p.empresas,
+            p.diasAtivos,
+            p.ultimo ? dataBR(p.ultimo) : "",
+            decimalBR(p.valor),
+          ]),
+        }),
+      },
+      {
+        id: "pessoa-origem",
+        rotulo: "Pessoa × origem",
+        descricao: "Cruzamento completo — dá tabela dinâmica direto no Excel",
+        nome: arquivo("pessoa-origem", true),
+        montar: () => ({
+          cabecalhos: ["Pessoa", "Código da origem", "Origem", "Natureza", "Lançamentos"],
+          linhas: d.ranking.flatMap((p) =>
+            p.origens.map((o) => [
+              p.nome,
+              o.chave,
+              rotuloOrigem.get(o.chave) ?? o.chave,
+              rotuloClasse.get(classeDe.get(o.chave) ?? "outros") ?? "",
+              o.qtd,
+            ])
+          ),
+        }),
+      },
+      {
+        id: "origens",
+        rotulo: pessoa ? `Origens de ${pessoa.nome}` : "Origens do time",
+        descricao: "De onde vieram os lançamentos, com a natureza de cada origem",
+        nome: arquivo("origens"),
+        montar: () => ({
+          cabecalhos: pessoa
+            ? ["Código", "Origem", "Natureza", "Lançamentos"]
+            : ["Código", "Origem", "Natureza", "Lançamentos", "Pessoas", "Valor"],
+          linhas: pessoa
+            ? pessoa.origens.map((o) => [
+                o.chave,
+                rotuloOrigem.get(o.chave) ?? o.chave,
+                rotuloClasse.get(classeDe.get(o.chave) ?? "outros") ?? "",
+                o.qtd,
+              ])
+            : d.origens.map((o) => [
+                o.chave,
+                o.nome,
+                rotuloClasse.get(o.classe) ?? "",
+                o.qtd,
+                o.pessoas,
+                decimalBR(o.valor),
+              ]),
+        }),
+      },
+      {
+        id: "empresas",
+        rotulo: pessoa ? `Empresas de ${pessoa.nome}` : "Empresas do time",
+        descricao: pessoa
+          ? "As 25 empresas em que mais lançou"
+          : "As 200 empresas com mais lançamentos no período",
+        nome: arquivo("empresas"),
+        montar: () => ({
+          cabecalhos: ["Código", "Empresa", "Lançamentos", "Valor"],
+          linhas: (pessoa ? pessoa.topEmpresas : d.empresas).map((e) => [
+            e.chave,
+            e.nome,
+            e.qtd,
+            decimalBR(e.valor),
+          ]),
+        }),
+      },
+      {
+        id: "serie",
+        rotulo: "Evolução no período",
+        descricao: `Um ${escala.toLowerCase()} por linha${pessoa ? " — só o total da pessoa" : ", com a quebra por natureza"}`,
+        nome: arquivo("evolucao"),
+        montar: () => ({
+          cabecalhos: pessoa
+            ? [escala, "Lançamentos"]
+            : [escala, "Total", "Digitado", "Importado", "Integrado", "Apuração", "Outros"],
+          linhas: (serie ?? []).map((p) =>
+            pessoa
+              ? [dataBR(p.bucket), p.total]
+              : [
+                  dataBR(p.bucket),
+                  p.total,
+                  p.digitado,
+                  p.importado,
+                  p.integrado,
+                  p.apuracao,
+                  p.outros,
+                ]
+          ),
+        }),
+      },
+      {
+        id: "horas",
+        rotulo: "Por hora do dia",
+        descricao: "24 linhas — quando o trabalho acontece",
+        nome: arquivo("horas"),
+        montar: () => ({
+          cabecalhos: ["Hora", "Lançamentos"],
+          linhas: (pessoa ? pessoa.porHora : d.porHora).map((n, h) => [
+            `${String(h).padStart(2, "0")}h`,
+            n,
+          ]),
+        }),
+      },
+    ];
+  }, [d, pessoa, serie]);
+
   const lancamentos = pessoa ? pessoa.lancamentos : (d?.totais.lancamentos ?? 0);
   const valor = pessoa ? pessoa.valor : (d?.totais.valor ?? 0);
   const porClasse = pessoa ? pessoa.porClasse : (d?.totais.porClasse ?? zeroClasses());
@@ -171,6 +327,9 @@ export default function ProdutividadeContabilPage() {
             ? "Mostrando só o trabalho desta pessoa · o ranking segue com o time todo"
             : "Período pela data em que o lançamento foi feito, não pela data do fato"}
         </span>
+        <div className="ml-auto">
+          <ExportarMenu modulo="contabil" cortes={cortes} desabilitado={!d || carregando} />
+        </div>
       </div>
 
       {/* KPIs */}
