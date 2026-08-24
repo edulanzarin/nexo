@@ -15,6 +15,10 @@ interface Props {
   dados: ProdutividadeCalendario | undefined;
   carregando: boolean;
   recarregando: boolean;
+  /** Subtítulo do cartão — o padrão é o do Fiscal (notas). */
+  subtitulo?: string;
+  /** Como se chama a unidade contada ("notas", "lançamentos"). */
+  rotuloItem?: string;
 }
 
 function heat(n: number, max: number): string {
@@ -34,7 +38,7 @@ interface Dia {
 }
 
 /** Grade diária estilo GitHub, ocupando toda a largura (colunas flexíveis). */
-function Grade({ dados }: { dados: ProdutividadeCalendario }) {
+function Grade({ dados, rotuloItem }: { dados: ProdutividadeCalendario; rotuloItem: string }) {
   const { dias, numWeeks, max, segmentos } = useMemo(() => {
     const mapa = new Map(dados.celulas.map((c) => [c.d, c.n]));
     const inicio = utc(dados.inicio);
@@ -129,7 +133,7 @@ function Grade({ dados }: { dados: ProdutividadeCalendario }) {
             d.inRange ? (
               <div
                 key={i}
-                title={`${dataBR(d.iso)} · ${num(d.n)} notas`}
+                title={`${dataBR(d.iso)} · ${num(d.n)} ${rotuloItem}`}
                 className="rounded-[3px]"
                 style={{
                   background: heat(d.n, max),
@@ -147,19 +151,25 @@ function Grade({ dados }: { dados: ProdutividadeCalendario }) {
   );
 }
 
-export function CalendarioAtividade({ dados, carregando, recarregando }: Props) {
+export function CalendarioAtividade({
+  dados,
+  carregando,
+  recarregando,
+  subtitulo = "Notas lançadas por dia no período (entradas + saídas)",
+  rotuloItem = "notas",
+}: Props) {
   const pico = dados?.pico;
   return (
     <ChartCard
       titulo="Calendário de atividade"
-      subtitulo="Notas lançadas por dia no período (entradas + saídas)"
+      subtitulo={subtitulo}
       carregando={carregando || !dados}
       recarregando={recarregando}
       alturaSkeleton="h-40"
       acao={
         pico ? (
           <span className="hidden text-xs text-muted sm:block">
-            Pico: {dataBR(pico.d)} · {num(pico.n)} notas
+            Pico: {dataBR(pico.d)} · {num(pico.n)} {rotuloItem}
           </span>
         ) : undefined
       }
@@ -168,7 +178,7 @@ export function CalendarioAtividade({ dados, carregando, recarregando }: Props) 
         <p className="grid h-32 place-items-center text-sm text-muted">Sem lançamentos no período</p>
       ) : dados ? (
         <>
-          <Grade dados={dados} />
+          <Grade dados={dados} rotuloItem={rotuloItem} />
           <div className="mt-3 flex items-center justify-end gap-2 pr-1 text-[11px] text-muted">
             <span>menos</span>
             <div className="flex gap-0.5">
