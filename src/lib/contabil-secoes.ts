@@ -1,4 +1,4 @@
-import { ClipboardCheck, FileSpreadsheet, Import, Landmark, LayoutGrid, ListChecks, Scale, ScanSearch, Table2 } from "lucide-react";
+import { ClipboardCheck, FileSpreadsheet, Gauge, Import, Landmark, LayoutGrid, ListChecks, Scale, ScanSearch, Table2 } from "lucide-react";
 import type { SecaoFiscal } from "./fiscal-secoes";
 
 /**
@@ -14,6 +14,12 @@ export interface AbaContabil {
   semPeriodo?: boolean;
   /** Período por MÊS em vez de por dia (o balancete é mensal). */
   periodoMensal?: boolean;
+  /**
+   * Empresa vira filtro, não obrigação: "Todas as empresas" é o padrão. Só faz
+   * sentido em tela que varre o escopo inteiro (Produtividade) — o resto do
+   * módulo é bancada, roda uma empresa por vez.
+   */
+  empresaOpcional?: boolean;
   /**
    * Como a tela dispara sua consulta ([[executar-com-botao]]):
    * - ausente → botão "Executar" (consulta que computa algo);
@@ -247,6 +253,28 @@ export const SECOES_CONTABIL: SecaoContabil[] = [
       },
     ],
   },
+  {
+    id: "produtividade",
+    rotulo: "Produtividade",
+    icone: Gauge,
+    path: "/contabil/produtividade",
+    metrica: false,
+    descricao: "O que o time lançou no período, por pessoa e por origem",
+    // Única tela do módulo que NÃO é bancada de uma empresa: varre o escopo
+    // inteiro (empresa é filtro, não obrigação), como a Produtividade do DP. O
+    // recorte é a data em que o lançamento foi FEITO, não a do fato.
+    abas: [
+      {
+        id: "produtividade",
+        rotulo: "Produtividade",
+        path: "/contabil/produtividade",
+        descricao:
+          "Lançamentos do lctoctb por pessoa, origem, empresa, dia e hora — quem alimentou a contabilidade",
+        empresaOpcional: true,
+        execucao: "Executar",
+      },
+    ],
+  },
 ];
 
 const TODAS_ABAS: { aba: AbaContabil; secao: SecaoContabil }[] = SECOES_CONTABIL.flatMap((secao) =>
@@ -280,6 +308,11 @@ export function abasDaSecao(pathname: string): AbaContabil[] {
  */
 export function abaUsaPeriodo(pathname: string): boolean {
   return !casar(pathname)?.aba.semPeriodo;
+}
+
+/** A aba trata empresa como filtro opcional (varre o escopo inteiro)? */
+export function abaEmpresaOpcional(pathname: string): boolean {
+  return !!casar(pathname)?.aba.empresaOpcional;
 }
 
 /** A aba escolhe período por mês (balancete), não por dia? */

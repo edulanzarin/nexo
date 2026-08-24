@@ -15,6 +15,7 @@ import { useFiltros } from "@/hooks/use-filters";
 import {
   abaContabilAtual,
   abasDaSecao,
+  abaEmpresaOpcional,
   abaUsaPeriodo,
   abaUsaPeriodoMensal,
   execucaoDaAba,
@@ -59,6 +60,7 @@ export function ContabilShell({ children }: { children: React.ReactNode }) {
   );
   const usaPeriodo = abaUsaPeriodo(pathname);
   const periodoMensal = abaUsaPeriodoMensal(pathname);
+  const empresaOpcional = abaEmpresaOpcional(pathname);
   const execucao = execucaoDaAba(pathname);
 
   // Quando uma aba executa (aplicado), lembra disso pela vida do módulo — assim
@@ -101,6 +103,7 @@ export function ContabilShell({ children }: { children: React.ReactNode }) {
           suffix={suffix}
           usaPeriodo={usaPeriodo}
           periodoMensal={periodoMensal}
+          empresaOpcional={empresaOpcional}
           execucao={execucao}
           aplicado={aplicado}
           jaExecutou={jaExecutou}
@@ -120,6 +123,7 @@ function ConteudoComFiltro({
   suffix,
   usaPeriodo,
   periodoMensal,
+  empresaOpcional,
   execucao,
   aplicado,
   jaExecutou,
@@ -131,6 +135,7 @@ function ConteudoComFiltro({
   suffix: string;
   usaPeriodo: boolean;
   periodoMensal: boolean;
+  empresaOpcional: boolean;
   execucao: ReturnType<typeof execucaoDaAba>;
   aplicado: boolean;
   jaExecutou: boolean;
@@ -167,6 +172,7 @@ function ConteudoComFiltro({
         mostrarPeriodo={usaPeriodo}
         periodoMensal={periodoMensal}
         mostrarFilial={usaPeriodo}
+        empresaOpcional={empresaOpcional}
         execucao={execucao}
         extras={(() => {
           const Controles = aba ? CONTROLES_BARRA[aba.id] : undefined;
