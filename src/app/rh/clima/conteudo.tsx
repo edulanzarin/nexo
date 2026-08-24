@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -9,9 +9,19 @@ import { Button, Card } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { LinkPublico } from "@/components/link-publico";
 import { CamposFormulario } from "@/components/formulario-campos";
+import { ApuracaoFormulario } from "@/components/apuracao-formulario";
+import { ExportarMenu, type CorteExport } from "@/components/exportar-menu";
 import { useClimaDashboard, useFormularios, useRodadasClima } from "@/hooks/use-api";
 import { mutar } from "@/hooks/mutar";
 import { dataBR } from "@/lib/format";
+import { decimalBR } from "@/lib/csv";
+import {
+  MIN_ANONIMATO,
+  apurarFormulario,
+  filtrarRespostas,
+  type Segmento,
+} from "@/lib/formularios-apuracao";
+import { escalaDoCampo, type FormularioCampo, type RespostaValores } from "@/lib/formularios-tipos";
 import type { ClimaDashboard } from "@/lib/clima-tipos";
 
 const CAMPO = "h-9 rounded-lg border border-hairline bg-surface px-3 text-sm outline-none focus:border-ink/30";
@@ -93,7 +103,7 @@ export default function Conteudo() {
           Ainda sem respostas nesta rodada.
         </p>
       ) : (
-        <Respostas dash={dash} />
+        <Resultados dash={dash} />
       )}
 
       {novaAberta && (
@@ -104,6 +114,72 @@ export default function Conteudo() {
             setNovaAberta(false);
           }}
         />
+      )}
+    </div>
+  );
+}
+
+type Aba = "resumo" | "respostas";
+
+/**
+ * Resultados da rodada. O RESUMO é a visão padrão: o painel se monta sozinho a
+ * partir das perguntas do formulário (ver `ApuracaoFormulario`). A lista de
+ * respostas uma a uma continua existindo — vira a segunda aba, para quando se
+ * quer ler um envio inteiro em vez do agregado.
+ */
+function Resultados({ dash }: { dash: ClimaDashboard }) {
+  const [aba, setAba] = useState<Aba>("resumo");
+  const [segmento, setSegmento] = useState<Segmento | null>(null);
+
+  const valores = useMemo(() => dash.respostas.map((r) => r.valores), [dash.respostas]);
+  const filtradas = useMemo(() => filtrarRespostas(valores, segmento), [valores, segmento]);
+  // A trava de anonimato vale para a tela E para a exportação: recorte pequeno
+  // não vira planilha.
+  const travado = segmento != null && filtradas.length < MIN_ANONIMATO;
+
+  const cortes = useMemo<CorteExport[]>(
+    () => cortesClima(dash, filtradas, segmento),
+    [dash, filtradas, segmento]
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <nav className="flex gap-1 border-b border-hairline" aria-label="Resultados">
+          {([
+            { id: "resumo", rotulo: "Resumo" },
+            { id: "respostas", rotulo: `Respostas (${dash.total})` },
+          ] as const).map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setAba(t.id)}
+              aria-current={aba === t.id ? "page" : undefined}
+              className={clsx(
+                "-mb-px border-b-2 px-3 py-2 text-sm transition-colors",
+                aba === t.id
+                  ? "border-accent font-medium text-accent"
+                  : "border-transparent text-muted hover:border-hairline hover:text-ink"
+              )}
+            >
+              {t.rotulo}
+            </button>
+          ))}
+        </nav>
+        <div className="ml-auto">
+          <ExportarMenu modulo="rh" cortes={cortes} desabilitado={travado} />
+        </div>
+      </div>
+
+      {aba === "resumo" ? (
+        <ApuracaoFormulario
+          campos={dash.campos}
+          respostas={valores}
+          anonimo
+          segmento={segmento}
+          onSegmento={setSegmento}
+        />
+      ) : (
+        <Respostas dash={dash} />
       )}
     </div>
   );
@@ -127,6 +203,82 @@ function Respostas({ dash }: { dash: ClimaDashboard }) {
       ))}
     </div>
   );
+}
+
+/** Valor de um campo como texto de planilha (a escala vira "3 · Bom"). */
+function celula(campo: FormularioCampo, valores: RespostaValores): string {
+  const v = valores[String(campo.id)];
+  if (v == null || v === "") return "";
+  if (Array.isArray(v)) return v.join(" | ");
+  if (campo.tipo === "nota" && typeof v === "number") {
+    const escala = escalaDoCampo(campo);
+    const rotulo = escala[v];
+    return rotulo && rotulo !== String(v + 1) ? `${v + 1} · ${rotulo}` : String(v + 1);
+  }
+  return String(v);
+}
+
+/** Os três cortes que uma rodada de clima rende em planilha. */
+function cortesClima(
+  dash: ClimaDashboard,
+  filtradas: RespostaValores[],
+  segmento: Segmento | null
+): CorteExport[] {
+  const sufixo = segmento ? `-recorte` : "";
+  const nome = (corte: string) => `clima-${dash.rodada.slug}-${corte}${sufixo}`;
+  const apuracoes = apurarFormulario(dash.campos, filtradas);
+  // A lista individual precisa da data, que não vive em `valores` — reencontra a
+  // resposta original pelo objeto (é o mesmo que o filtro devolveu).
+  const dataDe = new Map(dash.respostas.map((r) => [r.valores, r.criadoEm]));
+
+  return [
+    {
+      id: "respostas",
+      rotulo: "Respostas (uma linha por pessoa)",
+      descricao: "Uma coluna por pergunta — o formato que abre direto no Excel",
+      nome: nome("respostas"),
+      montar: () => ({
+        cabecalhos: ["Nº", "Enviada em", ...dash.campos.map((c) => c.rotulo)],
+        linhas: filtradas.map((valores, i) => [
+          i + 1,
+          dataBR(dataDe.get(valores) ?? null),
+          ...dash.campos.map((c) => celula(c, valores)),
+        ]),
+      }),
+    },
+    {
+      id: "apuracao",
+      rotulo: "Apuração por pergunta",
+      descricao: "Cada opção/nível com contagem e percentual, como no resumo",
+      nome: nome("apuracao"),
+      montar: () => ({
+        cabecalhos: ["Pergunta", "Tipo", "Item", "Respostas", "% dos respondentes"],
+        linhas: apuracoes.flatMap((a) =>
+          a.forma === "texto"
+            ? [[a.campo.rotulo, "Texto", "(respostas escritas)", a.respondentes, ""]]
+            : a.fatias.map((f) => [
+                a.campo.rotulo,
+                a.forma === "escala" ? "Escala" : a.forma === "numero" ? "Número" : "Marcação",
+                f.rotulo,
+                f.n,
+                decimalBR(f.pct),
+              ])
+        ),
+      }),
+    },
+    {
+      id: "comentarios",
+      rotulo: "Respostas escritas",
+      descricao: "Só o que as pessoas escreveram, pergunta a pergunta",
+      nome: nome("comentarios"),
+      montar: () => ({
+        cabecalhos: ["Pergunta", "Resposta"],
+        linhas: apuracoes.flatMap((a) =>
+          a.forma === "texto" ? a.textos.map((t) => [a.campo.rotulo, t]) : []
+        ),
+      }),
+    },
+  ];
 }
 
 function NovaRodadaModal({ onFechar, onCriada }: { onFechar: () => void; onCriada: (id: number) => void }) {
