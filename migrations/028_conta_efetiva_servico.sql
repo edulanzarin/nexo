@@ -6,9 +6,17 @@
 -- mai–jul/2026, a conta do plano só acerta 62% das NFSE, e em 443 pares
 -- (empresa, filial, natureza) TODAS as notas caem numa conta só, diferente da
 -- configurada — em 79% deles a conta do plano não teve nenhum movimento no
--- trimestre. É configuração morta: a empresa criou conta nova (às vezes com o
--- mesmo nome e o mesmo apelido) e a natureza continuou apontando pra velha.
--- Resultado: toda NFSE daquela natureza aparecia como "conta errada" todo mês.
+-- trimestre. São dois caminhos, medidos nos 446 pares do trimestre:
+--   * 373 — natureza ESPECÍFICA apontando pra conta aposentada. A empresa criou
+--     conta nova (às vezes mesmo nome e mesmo apelido: emp 42, "Manutenção de
+--     Veículos" 4507 de 2007 x 5973 de 2024) e só o contábil mudou de conta.
+--   * 73 — natureza GENÉRICA. O e-Doc importa a nota como "Serviço Tomados
+--     Geral" (8000001), cuja tabela é vala-comum (3171 "Serviços de Terceiros"),
+--     e a contabilização usa a natureza específica do catálogo da empresa
+--     (8001015 "Serv. Profiss." -> 4537). Essa escolha NÃO fica gravada na nota:
+--     nem a conta nem o número da tabela aparecem em qualquer coluna de qualquer
+--     tabela lctofisent* dela (procurado coluna a coluna).
+-- Nos dois, toda NFSE daquela natureza aparecia como "conta errada" todo mês.
 --
 -- O sinal bom está no próprio histórico: a conta habitual da natureza acerta
 -- 86%. Este cadastro guarda esse aprendizado; o que foge dele é que vira

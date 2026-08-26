@@ -8,11 +8,14 @@ import { CFOP_SERVICO_MIN, contaDoPlano, type ContaEfetiva } from "./conta-efeti
  * porque para serviço a tabela de contabilização do Questor envelhece.
  *
  * Na mercadoria o CFOP determina a conta e a regra é viva. Na natureza de
- * serviço (código 8xxxxxx) não: a empresa cria conta nova — às vezes com o mesmo
- * nome e o mesmo apelido da antiga — e a natureza continua apontando pra velha.
- * O motor então cobrava a conta morta e marcava TODA nota daquela natureza como
- * "conta errada", todo mês. Medido em mai–jul/2026: a conta do plano acerta 62%
- * das NFSE; a conta habitual da natureza acerta 86%.
+ * serviço (código 8xxxxxx) não, por dois caminhos: a natureza específica aponta
+ * pra conta aposentada (a empresa criou outra, às vezes com o mesmo nome e o
+ * mesmo apelido, e só o contábil mudou); ou a nota entra pelo e-Doc com a
+ * natureza GENÉRICA ("Serviço Tomados Geral") e é contabilizada pela específica
+ * do catálogo da empresa — escolha que não fica gravada em lugar nenhum da nota.
+ * O motor então cobrava a conta do papel e marcava TODA nota daquela natureza
+ * como "conta errada", todo mês. Medido em mai–jul/2026: a conta do plano acerta
+ * 62% das NFSE; a conta habitual da natureza acerta 86%.
  *
  * Aqui o aprendizado é só a CONTA (o "este CFOP contabiliza?" mora em
  * aprender-contabilizacao). Precedência: override manual > conta efetiva >
