@@ -70,7 +70,7 @@ export interface ExperienciaItem {
   classiforgan: string | null;
   dataadm: string;
   marco: Marco;
-  vencimento: string; // YYYY-MM-DD (dataadm + marco)
+  vencimento: string; // YYYY-MM-DD (dataadm + marco - 1: a admissão conta como dia 1)
   status: StatusExperiencia;
   diasParaVencer: number; // negativo = venceu
   gestores: number; // quantos gestores cadastrados no setor

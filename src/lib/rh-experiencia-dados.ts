@@ -259,9 +259,13 @@ export async function buscarUmContrato(
   return row ?? null;
 }
 
-/** Data de vencimento de um marco (admissão + marco dias). */
+/**
+ * Data de vencimento de um marco. A contagem do contrato de experiência começa
+ * NO dia da admissão (a admissão é o dia 1), então o marco de 45 dias vence em
+ * `admissão + 44`: quem entra dia 01/09 fecha 45 dias em 15/10.
+ */
 export function vencimentoMarco(dataadm: string, marco: Marco): string {
-  return addDias(dataadm, marco);
+  return addDias(dataadm, marco - 1);
 }
 
 /** Corpo do e-mail do formulário de experiência (HTML simples, inline). */
@@ -393,7 +397,7 @@ export async function montarPainelExperiencia(
 
   for (const c of contratos) {
     for (const marco of MARCOS) {
-      const vencimento = addDias(c.dataadm, marco);
+      const vencimento = vencimentoMarco(c.dataadm, marco);
       const chave = `${c.codigoempresa}|${c.codigofunccontr}|${marco}`;
       const linha = porChave.get(chave);
       const diasParaVencer = diasEntre(hoje, vencimento);
@@ -493,7 +497,7 @@ export async function rodarCronExperiencia(
       const cfg = config.get(marco);
       if (!cfg) continue; // marco sem formulário ligado: não dispara
 
-      const vencimento = addDias(c.dataadm, marco);
+      const vencimento = vencimentoMarco(c.dataadm, marco);
       const dias = diasEntre(hoje, vencimento);
 
       // Antes do fim: UM disparo, quando entra na antecedência configurada (padrão
@@ -549,7 +553,8 @@ export async function materializarExperiencia(params: {
         (codigoempresa, codigofunccontr, marco, data_admissao, data_vencimento, token, formulario_id)
      values ($1, $2, $3, $4, $5, $6, $7)
      on conflict (codigoempresa, codigofunccontr, marco)
-       do update set atualizado_em = now(), formulario_id = excluded.formulario_id
+       do update set atualizado_em = now(), formulario_id = excluded.formulario_id,
+                     data_vencimento = excluded.data_vencimento
      returning id, token`,
     [
       params.codigoempresa,

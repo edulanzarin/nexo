@@ -6,6 +6,9 @@
  *
  * Experiência CLT: 45 + 45 dias (o Questor traz `diaprorrogcontrexp = 45`).
  * Dois marcos de avaliação: 45 dias (decidir prorrogar) e 90 (efetivar/desligar).
+ * A contagem inclui o dia da admissão — admissão é o dia 1 —, então o marco de
+ * 45 vence em `admissão + 44` (entrou 01/09, fecha 15/10). O cálculo mora em
+ * `vencimentoMarco` (rh-experiencia-dados).
  */
 
 export const MARCOS = [45, 90] as const;
