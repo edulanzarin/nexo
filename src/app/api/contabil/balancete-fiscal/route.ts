@@ -69,9 +69,11 @@ export const GET = apiRoute(async (req) => {
     // Movimento FISCAL (hipotético) — entradas + saídas. `produzidas` recebe
     // "origem:chave:natureza" das notas que o motor reproduziu (o espelho as usa).
     const produzidas = new Set<string>();
+    // Notas de natureza de serviço sem regra de conta — espelham sempre.
+    const semRegraConta = new Set<string>();
     const [ent, sai] = await Promise.all([
-      balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", undefined, observadas, undefined, produzidas, lancadas, undefined, f.estabs),
-      balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", undefined, observadas, undefined, produzidas, lancadas, undefined, f.estabs),
+      balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", undefined, observadas, undefined, produzidas, lancadas, undefined, f.estabs, semRegraConta),
+      balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", undefined, observadas, undefined, produzidas, lancadas, undefined, f.estabs, semRegraConta),
     ]);
     const fiscalPorConta = new Map<number, { deb: number; cred: number }>();
     for (const mov of [ent, sai]) {
@@ -86,7 +88,10 @@ export const GET = apiRoute(async (req) => {
     // Espelho do real no fiscal — o que o motor NÃO reproduz entra com o próprio
     // real (fiscal = real, sem falso positivo): consolidação (MOV), apuração
     // (IM), retenção (RE), contrapartida fornecedor/cliente, NFSE sem fórmula.
-    // Duas exclusões, por natureza:
+    // Três exclusões — a primeira manda nas outras duas:
+    // 0. Por NOTA, sem regra: natureza de serviço genérica (a conta se decide na
+    //    nota) espelha sempre, mesmo em conta regrada. Sem isto ela ficaria sem
+    //    contrapartida no fiscal e a conta acusaria uma falta do tamanho dela.
     // 1. Por CONTA: conta que o motor movimenta é comparação, não espelho.
     // 2. Por NOTA: nota que o motor reproduziu não é espelhada em conta NENHUMA —
     //    a versão do motor a substitui. É o que faz conta errada aparecer: a
@@ -102,6 +107,7 @@ export const GET = apiRoute(async (req) => {
       const m = NOTA_RE.exec(r.chaveorigem);
       if (
         m &&
+        !semRegraConta.has(`${m[1]}:${m[2]}`) &&
         (regrada.has(`${r.natureza}:${r.conta}`) ||
           produzidas.has(`${m[1]}:${m[2]}:${r.natureza}`))
       ) {

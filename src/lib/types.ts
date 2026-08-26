@@ -450,6 +450,14 @@ export interface PlanoCfop {
    * porquê ("lançou em 157 de 162 notas"). Ausente = ainda não aprendido.
    */
   aprendido?: { contabiliza: boolean; notas: number; contabilizadas: number } | null;
+  /**
+   * Natureza de SERVIÇO em que o histórico desmentiu a tabela do Questor: a
+   * conta configurada (`de`) não é a que a natureza recebe. `para` é a conta
+   * habitual que passou a ser cobrada — ou null quando nenhuma domina (natureza
+   * genérica: a conta se decide na nota, e nada é cobrado). Evidência de config
+   * morta, para a tela poder mostrar o porquê.
+   */
+  contaEfetiva?: { de: number; para: number | null; notas: number; acertos: number } | null;
 }
 
 // ── Balancete de verificação CONTÁBIL (o real, montado dos saldos) ───────────

@@ -2,6 +2,12 @@ import { PoolClient } from "pg";
 import { planoQuestor } from "./plano-contabil";
 import { aplicarOverrides, listarOverrides } from "./plano-override";
 import { aprenderContabilizacao, buscarAutoContabiliza } from "./aprender-contabilizacao";
+import { aplicarContaEfetiva } from "./conta-efetiva-calculo";
+import {
+  aprenderContaEfetiva,
+  buscarContaEfetiva,
+  precisaAprenderContaEfetiva,
+} from "./conta-efetiva";
 import { avaliarRegra, type ValoresNota } from "./divergencias";
 
 /**
@@ -135,7 +141,16 @@ export async function balanceteFiscal(
   producao?: Map<string, { conta: number; valor: number }>,
   /** Filiais (codigoestab) a recortar; vazio = todas. O recorte entra só na
    *  scan das notas — os demais scans seguem as chaves já filtradas. */
-  estabs: number[] = []
+  estabs: number[] = [],
+  /**
+   * Se presente, recebe "origem:chave" das notas cuja natureza de SERVIÇO não
+   * tem regra de conta (genérica: a conta se decide na nota — ver conta-efetiva).
+   * Para elas o motor não produz conta nenhuma, então o chamador precisa
+   * espelhar o real MESMO em conta regrada: o gate por conta é um atalho que
+   * aqui erraria, deixando a nota sem contrapartida no lado fiscal e inventando
+   * uma diferença do tamanho dela.
+   */
+  semRegraConta?: Set<string>
 ): Promise<BalanceteFiscalMov> {
   const c = LADO[tipo];
 
@@ -221,7 +236,13 @@ export async function balanceteFiscal(
     planoQuestor(client, empresa, { cfops: [...todosCfops] }),
     listarOverrides(empresa),
   ]);
-  const plano = aplicarOverrides(planoBruto, overrides);
+  const comOverride = aplicarOverrides(planoBruto, overrides);
+  // Natureza de serviço com tabela de contabilização velha cobraria uma conta
+  // que ninguém mais usa — o motor espera a conta que ela de fato recebe.
+  if (await precisaAprenderContaEfetiva(empresa)) {
+    await aprenderContaEfetiva(client, empresa, new Map(comOverride.map((p) => [`${p.estab}:${p.cfop}`, p])));
+  }
+  const plano = aplicarContaEfetiva(comOverride, await buscarContaEfetiva(empresa));
   let auto = await buscarAutoContabiliza(empresa);
   if (auto.size === 0) {
     await aprenderContabilizacao(client, empresa);
@@ -254,6 +275,10 @@ export async function balanceteFiscal(
     for (const cf of cfops) {
       const p = porChave.get(`${n.estab}:${cf}`);
       if (!p || !p.contabiliza) continue;
+      // Natureza genérica de serviço: sem conta habitual, não há o que cobrar.
+      if (semRegraConta && p.contaEfetiva && p.contaEfetiva.para == null) {
+        semRegraConta.add(`${tipo === "ent" ? "ME" : "MS"}:${n.chave}`);
+      }
       // Valores da PARCELA deste CFOP (não o total da nota — senão dobra em multi-CFOP).
       const vc = valoresCfop.get(`${n.chave}:${cf}`);
       const cont = vc?.cont ?? (umCfop ? n.vlrcontabil : 0);

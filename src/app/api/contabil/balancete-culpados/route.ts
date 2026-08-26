@@ -78,8 +78,12 @@ export const GET = apiRoute(async (req) => {
     const detSai = mk();
     // Conta que o plano manda por nota — a "certa", mesmo fora do alvo.
     const producao = new Map<string, { conta: number; valor: number }>();
-    await balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", undefined, observadas, detEnt, produzidas, lancadas, producao, f.estabs);
-    await balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", undefined, observadas, detSai, produzidas, lancadas, producao, f.estabs);
+    // Notas de natureza de serviço sem regra de conta: espelham na célula, logo
+    // não carregam diferença — e por isso não podem aparecer aqui, senão a soma
+    // da lista deixa de fechar com a coluna Diferença.
+    const semRegraConta = new Set<string>();
+    await balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", undefined, observadas, detEnt, produzidas, lancadas, producao, f.estabs, semRegraConta);
+    await balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", undefined, observadas, detSai, produzidas, lancadas, producao, f.estabs, semRegraConta);
 
     // Só as contas que o motor de fato REGRA entram na comparação: conta sem
     // regra espelha o real (fiscal = real), então não tem diferença — incluí-la
@@ -178,6 +182,7 @@ export const GET = apiRoute(async (req) => {
 
     const culpados: BalanceteCulpado[] = [];
     for (const a of mapa.values()) {
+      if (semRegraConta.has(`${a.origem}:${a.chave}`)) continue; // espelhada: sem diferença
       const diferenca = a.esperado - a.real;
       let tipo: BalanceteCulpado["tipo"];
       if (Math.abs(diferenca) <= TOL) {

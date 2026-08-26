@@ -106,10 +106,12 @@ export const GET = apiRoute(async (req) => {
     // `produzidas` recebe "origem:chave:natureza" das notas reproduzidas — o
     // espelho as exclui (a versão do motor substitui o real da nota).
     const produzidas = new Set<string>();
+    // Natureza de serviço sem regra de conta: espelha sempre, igual à célula.
+    const semRegraConta = new Set<string>();
     const detEnt: DetalheFiscal = { contas: contasSet, natureza, porNota: new Map(), regradas: new Set() };
     const detSai: DetalheFiscal = { contas: contasSet, natureza, porNota: new Map(), regradas: new Set() };
-    await balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", undefined, observadas, detEnt, produzidas, lancadas, undefined, f.estabs);
-    await balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", undefined, observadas, detSai, produzidas, lancadas, undefined, f.estabs);
+    await balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", undefined, observadas, detEnt, produzidas, lancadas, undefined, f.estabs, semRegraConta);
+    await balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", undefined, observadas, detSai, produzidas, lancadas, undefined, f.estabs, semRegraConta);
     const regradas = new Set<number>([...detEnt.regradas, ...detSai.regradas]);
 
     const regra: BalanceteLancamento[] = [...detEnt.porNota.values(), ...detSai.porNota.values()].map(
@@ -138,6 +140,7 @@ export const GET = apiRoute(async (req) => {
         (r) =>
           !(
             ehNota(r.origem) &&
+            !(r.chave != null && semRegraConta.has(`${r.origem}:${r.chave}`)) &&
             (regradas.has(r.conta) ||
               (r.chave != null && produzidas.has(`${r.origem}:${r.chave}:${natureza}`)))
           )

@@ -8,6 +8,12 @@ import { PoolClient } from "pg";
 import { planoQuestor } from "@/lib/plano-contabil";
 import { aplicarOverrides, listarOverrides } from "@/lib/plano-override";
 import { aprenderContabilizacao, buscarAutoContabiliza } from "@/lib/aprender-contabilizacao";
+import { aplicarContaEfetiva } from "@/lib/conta-efetiva-calculo";
+import {
+  aprenderContaEfetiva,
+  buscarContaEfetiva,
+  precisaAprenderContaEfetiva,
+} from "@/lib/conta-efetiva";
 import { conferirNota, type LancamentoReal, type ValoresNota } from "@/lib/divergencias";
 import type {
   ConferenciaResp,
@@ -284,7 +290,13 @@ export async function conferirTudo(
     planoQuestor(client, empresa, { cfops: [...todosCfops] }),
     listarOverrides(empresa),
   ]);
-  const plano = aplicarOverrides(planoBruto, overrides);
+  const comOverride = aplicarOverrides(planoBruto, overrides);
+  // Mesma regra do Balancete Fiscal: em natureza de serviço, a conta cobrada é a
+  // que ela de fato recebe, não a que a tabela do Questor congelou.
+  if (await precisaAprenderContaEfetiva(empresa)) {
+    await aprenderContaEfetiva(client, empresa, new Map(comOverride.map((p) => [`${p.estab}:${p.cfop}`, p])));
+  }
+  const plano = aplicarContaEfetiva(comOverride, await buscarContaEfetiva(empresa));
 
   // "Este CFOP contabiliza?" vem do cadastro aprendido do histórico (últimos 12
   // meses) — não do mês da tela, que classificava tudo como "não exige" num mês
