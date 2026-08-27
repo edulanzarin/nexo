@@ -418,6 +418,13 @@ export interface LinhaPlano {
   descrConta: string | null;
   /** Fórmula do Questor, ex.: "vlrContabil-vlrIPI-vlrICMS". */
   regraValor: string | null;
+  /**
+   * Histórico contábil que o Questor carimba no lançamento gerado por esta
+   * linha. É o que identifica, na apuração mensal, o lançamento que veio DESTA
+   * regra — o ajuste que alguém lançou à mão no mesmo par de contas tem outro
+   * histórico (em geral 0) e não pode ser confundido com ela.
+   */
+  historico: number | null;
 }
 
 /** Slot de contabilização do CFOP: o valor contábil ou um tributo. */
@@ -550,6 +557,14 @@ export interface BalanceteFiscalResp {
   nivelMax: number;
   /** NFSE a contabilizar não refletidas no real (ver BalancetePendente). */
   pendentes: BalancetePendente[];
+  /**
+   * Componente que a natureza fecha na apuração mensal e cuja contrapartida NÃO
+   * foi encontrada no período (nem pelo histórico da regra, nem pelo par de
+   * contas). O valor esperado existe, mas não há contra quem conferir — então
+   * ele não entra na coluna Diferença, e aparece aqui para a tela dizer o que
+   * ficou de fora. Silêncio sobre o que não foi conferido lê-se como "conferido".
+   */
+  semApuracao: Array<{ conta: number; natureza: 1 | -1; esperado: number }>;
 }
 
 /** Um lançamento que compõe o movimento de uma conta (drill-down). */
@@ -615,8 +630,12 @@ export interface BalanceteCulpado {
    *   erradas; mostrado à parte pra reconciliação continuar exata;
    * - `extra`: lançada sem o motor esperar E sem plano reproduzível (NFSE/serviço
    *   ou CFOP sem tabela) — o motor não reproduz de jeito nenhum, exige olhar manual.
+   * - `apuracao`: não é nota — é o componente que a natureza fecha uma vez por
+   *   mês (o ICMS da devolução, p.ex.). Esperado = a soma do período; real = o
+   *   que a apuração lançou. Entra na lista para a soma continuar fechando com a
+   *   coluna Diferença.
    */
-  tipo: "valor" | "faltando" | "conta_errada" | "interno" | "extra";
+  tipo: "valor" | "faltando" | "conta_errada" | "interno" | "extra" | "apuracao";
 }
 
 export interface BalanceteCulpadosResp {

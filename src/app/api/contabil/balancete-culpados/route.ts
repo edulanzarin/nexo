@@ -90,8 +90,8 @@ export const GET = apiRoute(async (req) => {
       observadas, observadasPorNatureza, produzidas, lancadas, producao,
       estabs: f.estabs, semRegraConta, contrapartidaVariavel,
     };
-    await balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", { ...comum, detalhe: detEnt });
-    await balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", { ...comum, detalhe: detSai });
+    const movEnt = await balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", { ...comum, detalhe: detEnt });
+    const movSai = await balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", { ...comum, detalhe: detSai });
 
     // Só as contas que o motor de fato REGRA entram na comparação: conta sem
     // regra espelha o real (fiscal = real), então não tem diferença — incluí-la
@@ -192,7 +192,72 @@ export const GET = apiRoute(async (req) => {
       }
     }
 
+    // Componente que a natureza fecha na apuração mensal: entra na lista como
+    // UMA linha (não é nota), senão a soma da lista não fecha com a célula.
+    const agregado = new Map<string, { valor: number; irmas: number[] }>();
+    for (const mov of [movEnt, movSai]) {
+      for (const [k, a] of mov.agregado) {
+        if (!a.irmas.length) continue;
+        const conta = Number(k.split(":")[1]);
+        if (!contasSet.has(conta)) continue;
+        const atual = agregado.get(k);
+        if (atual) atual.valor += a.valor;
+        else agregado.set(k, { valor: a.valor, irmas: [...a.irmas] });
+      }
+    }
+    const apuracaoReal = agregado.size
+      ? (
+          await client.query<{ conta: number; nat: number; historico: number | null; contraconta: number | null; valor: number }>(
+            `select contactbdeb conta, 1 nat, codigohistctb historico, contactbcred contraconta,
+                    sum(valorlctoctb)::float valor
+               from lctoctb where codigoempresa=$1 and codigooriglctoctb='FI'
+                 and datalctoctb between $2 and $3 and contactbdeb = any($4::bigint[])
+                 and chaveorigem !~ '^M[ES][0-9]+$'
+              group by 1,3,4
+             union all
+             select contactbcred, -1, codigohistctb, contactbdeb, sum(valorlctoctb)::float
+               from lctoctb where codigoempresa=$1 and codigooriglctoctb='FI'
+                 and datalctoctb between $2 and $3 and contactbcred = any($4::bigint[])
+                 and chaveorigem !~ '^M[ES][0-9]+$'
+              group by 1,3,4`,
+            [empresa, f.inicio, f.fim, contas]
+          )
+        ).rows
+      : [];
+
     const culpados: BalanceteCulpado[] = [];
+    for (const [k, a] of agregado) {
+      const [natTxt, contaTxt, histTxt] = k.split(":");
+      const nat = Number(natTxt);
+      const conta = Number(contaTxt);
+      const casadas = apuracaoReal.filter(
+        (r) =>
+          r.conta === conta &&
+          r.nat === nat &&
+          r.contraconta != null &&
+          a.irmas.includes(r.contraconta) &&
+          String(r.historico ?? 0) === histTxt
+      );
+      if (!casadas.length) continue; // sem apuração pra comparar: não vira diferença
+      const real = casadas.reduce((t, r) => t + (nat === 1 ? r.valor : -r.valor), 0);
+      const esperado = nat === 1 ? a.valor : -a.valor;
+      const diferenca = esperado - real;
+      if (Math.abs(diferenca) <= TOL) continue;
+      culpados.push({
+        chave: null,
+        origem: "IM",
+        numero: null,
+        especie: null,
+        conta,
+        contaEsperada: a.irmas[0] ?? null,
+        contraparte: "Apuração do período",
+        esperado,
+        real,
+        diferenca,
+        tipo: "apuracao",
+      });
+    }
+
     for (const a of mapa.values()) {
       if (semRegraConta.has(`${a.origem}:${a.chave}`)) continue; // espelhada: sem diferença
       const diferenca = a.esperado - a.real;

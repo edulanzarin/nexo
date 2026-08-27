@@ -35,16 +35,29 @@ export const GET = apiRoute(async (req) => {
     // apuração IM + retenção RE) — pra o Contábil ficar completo: varejo vende
     // muito por cupom consolidado (origem MOV), que não é nota individual. Por
     // CHAVE (não só por conta): o espelho decide por NOTA o que espelhar.
-    const real = await client.query<{ conta: number; natureza: number; chaveorigem: string; valor: number }>(
-      `select contactbdeb conta, 1 natureza, chaveorigem, sum(valorlctoctb)::float valor
+    // `contraconta` e `historico` = o outro lado da MESMA linha e o carimbo da
+    // regra que a gerou. Juntos acham, na apuração, o lançamento que corresponde
+    // ao componente mensal (o par 382/2835 com o histórico da devolução) sem
+    // varrer junto o ajuste que alguém lançou à mão no mesmo par de contas.
+    const real = await client.query<{
+      conta: number;
+      natureza: number;
+      chaveorigem: string;
+      contraconta: number | null;
+      historico: number | null;
+      valor: number;
+    }>(
+      `select contactbdeb conta, 1 natureza, chaveorigem, contactbcred contraconta,
+              codigohistctb historico, sum(valorlctoctb)::float valor
          from lctoctb where codigoempresa=$1 and codigooriglctoctb='FI'
            and datalctoctb between $2 and $3 and contactbdeb is not null${estabReal}
-        group by contactbdeb, chaveorigem
+        group by contactbdeb, chaveorigem, contactbcred, codigohistctb
        union all
-       select contactbcred, -1, chaveorigem, sum(valorlctoctb)::float
+       select contactbcred, -1, chaveorigem, contactbdeb, codigohistctb,
+              sum(valorlctoctb)::float
          from lctoctb where codigoempresa=$1 and codigooriglctoctb='FI'
            and datalctoctb between $2 and $3 and contactbcred is not null${estabReal}
-        group by contactbcred, chaveorigem`,
+        group by contactbcred, chaveorigem, contactbdeb, codigohistctb`,
       realParams
     );
     const NOTA_RE = /^(M[ES])0*(\d+)$/;
@@ -77,6 +90,22 @@ export const GET = apiRoute(async (req) => {
       balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", comum),
       balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", comum),
     ]);
+    // O que cada natureza deve à conta no mês inteiro (componente que fecha na
+    // apuração). Substitui o espelho da linha correspondente — ver abaixo.
+    const agregado = new Map<string, { valor: number; irmas: number[]; encontrada: boolean }>();
+    for (const mov of [ent, sai]) {
+      for (const [k, a] of mov.agregado) {
+        // Componente sem conta irmã (a contrapartida é o fornecedor/cliente) não
+        // é de apuração: não há par a procurar, então não vira soma do mês.
+        if (!a.irmas.length) continue;
+        const atual = agregado.get(k);
+        if (atual) {
+          atual.valor += a.valor;
+          for (const i of a.irmas) if (!atual.irmas.includes(i)) atual.irmas.push(i);
+        } else agregado.set(k, { valor: a.valor, irmas: [...a.irmas], encontrada: false });
+      }
+    }
+
     const fiscalPorConta = new Map<number, { deb: number; cred: number }>();
     for (const mov of [ent, sai]) {
       for (const [conta, m] of mov.porConta) {
@@ -100,25 +129,82 @@ export const GET = apiRoute(async (req) => {
     //    conta do plano fica com a nota a mais (+), a conta onde o contábil de
     //    fato lançou fica com ela a menos (−), e as duas se anulam no total
     //    (o dinheiro não some, muda de conta) sem dobrar o débito.
+    /**
+     * Casa cada componente mensal com a linha da apuração que o corresponde, em
+     * DUAS passadas sobre o real (nota fica de fora, é outro fluxo):
+     *
+     * 1. pelo HISTÓRICO da regra — é ele que separa a apuração do ajuste que
+     *    alguém lançou à mão no mesmo par de contas (na 2827/1541 convivem a
+     *    apuração do mês e "VLR ICMS S/REMESSA", que o motor não reproduz);
+     * 2. só pelo par de contas, e apenas para o componente que a primeira passada
+     *    não achou — há empresa cuja apuração entra por importação e carimba
+     *    histórico 0 em tudo, e ali o histórico não separa nada.
+     *
+     * A ordem importa: fazer a segunda passada sem a primeira faria o ajuste
+     * manual ser lido como se fosse a apuração, e a diferença apareceria
+     * invertida, do tamanho do ajuste.
+     *
+     * Componente que não casa em nenhuma das duas NÃO vira expectativa: a soma
+     * iria contra um zero que só diz que não sabemos onde ela foi parar. Fica em
+     * `semApuracao`, para a tela dizer o que deixou de ser conferido — silêncio
+     * sobre o que não foi conferido lê-se como "conferido".
+     */
+    const consumidas = new Set<number>();
+    const casar = (estrito: boolean) => {
+      real.rows.forEach((r, i) => {
+        if (consumidas.has(i) || r.contraconta == null) return;
+        if (NOTA_RE.test(r.chaveorigem)) return;
+        const prefixo = estrito
+          ? `${r.natureza}:${r.conta}:${r.historico ?? 0}:`
+          : `${r.natureza}:${r.conta}:`;
+        for (const [k, a] of agregado) {
+          if (!k.startsWith(prefixo)) continue;
+          if (!estrito && a.encontrada) continue;
+          if (!a.irmas.includes(r.contraconta)) continue;
+          a.encontrada = true;
+          consumidas.add(i);
+          return;
+        }
+      });
+    };
+    casar(true);
+    casar(false);
+
     const regrada = new Set<string>();
     for (const [conta, m] of fiscalPorConta) {
       if (m.deb > 0.005) regrada.add(`1:${conta}`);
       if (m.cred > 0.005) regrada.add(`-1:${conta}`);
     }
-    for (const r of real.rows) {
+    real.rows.forEach((r, i) => {
       const m = NOTA_RE.exec(r.chaveorigem);
+      // Nota que o motor reproduziu: a versão dele substitui o real dela.
       if (
         m &&
         !semRegraConta.has(`${m[1]}:${m[2]}`) &&
         (regrada.has(`${r.natureza}:${r.conta}`) ||
           produzidas.has(`${m[1]}:${m[2]}:${r.natureza}`))
       ) {
-        continue;
+        return;
       }
+      // Lançamento de apuração que o motor sabe recompor: não espelha — quem
+      // entra no lado fiscal é a soma do período, e a diferença entre as duas
+      // é justamente o que a apuração deixou de lançar.
+      if (consumidas.has(i)) return;
       const a = fiscalPorConta.get(r.conta) ?? { deb: 0, cred: 0 };
       if (r.natureza === 1) a.deb += r.valor;
       else a.cred += r.valor;
       fiscalPorConta.set(r.conta, a);
+    });
+
+    // A soma do período entra no lado fiscal no lugar do que foi espelhado —
+    // só onde a apuração correspondente foi encontrada (ver `casar`).
+    for (const [k, a] of agregado) {
+      if (!a.encontrada) continue;
+      const conta = Number(k.split(":")[1]);
+      const alvo = fiscalPorConta.get(conta) ?? { deb: 0, cred: 0 };
+      if (k.startsWith("1:")) alvo.deb += a.valor;
+      else alvo.cred += a.valor;
+      fiscalPorConta.set(conta, alvo);
     }
 
     // NFSE obrigada mas NÃO contabilizada: o motor não a reproduz (sem CFOP) e
@@ -224,6 +310,13 @@ export const GET = apiRoute(async (req) => {
         componentesPulados: ent.pulados + sai.pulados,
       },
       nivelMax: linhas.reduce((mx, l) => Math.max(mx, l.nivel), 1),
+      semApuracao: [...agregado]
+        .filter(([, a]) => !a.encontrada)
+        .map(([k, a]) => ({
+          conta: Number(k.split(":")[1]),
+          natureza: (k.startsWith("1:") ? 1 : -1) as 1 | -1,
+          esperado: a.valor,
+        })),
       pendentes: pendentes.map((pd) => ({
         chave: pd.chave,
         numero: pd.numero,

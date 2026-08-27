@@ -74,19 +74,21 @@ export const GET = apiRoute(async (req) => {
 
     // Lançamentos REAIS (itemizados) da conta, para o espelho e a origem.
     const realRows = (
-      await client.query<BalanceteLancamento>(
+      await client.query<BalanceteLancamento & { contraconta: number | null; histctb: number | null }>(
         `with lc as (
            select to_char(l.datalctoctb,'YYYY-MM-DD') data,
                   case when l.chaveorigem like 'MOV%' then 'MOV'
                        else substring(l.chaveorigem from 1 for 2) end origem,
                   case when l.chaveorigem ~ '^M[ES][0-9]+$'
                        then substring(l.chaveorigem from 3)::bigint end chave,
-                  l.valorlctoctb::float valor, l.complhist hist, l.${natCol} conta
+                  l.valorlctoctb::float valor, l.complhist hist, l.${natCol} conta,
+                  l.${natCol === "contactbdeb" ? "contactbcred" : "contactbdeb"} contraconta,
+                  l.codigohistctb histctb
              from lctoctb l
             where l.codigoempresa=$1 and l.codigooriglctoctb='FI'
               and l.datalctoctb between $2 and $3 and l.${natCol} = any($4::bigint[])${temEstab ? ` and l.codigoestab = any($5::int[])` : ""}
          )
-         select lc.data, lc.origem, lc.chave, lc.valor, lc.conta,
+         select lc.data, lc.origem, lc.chave, lc.valor, lc.conta, lc.contraconta, lc.histctb,
                 coalesce(nullif(lc.hist,''), '') historico,
                 coalesce(e.numeronf, s.numeronf) numero,
                 upper(btrim(coalesce(e.especienf, s.especienf))) especie,
@@ -112,8 +114,8 @@ export const GET = apiRoute(async (req) => {
     const detSai: DetalheFiscal = { contas: contasSet, natureza, porNota: new Map(), regradas: new Set() };
     const observadasPorNatureza = await calibrarPorNatureza(client, empresa, f.inicio, f.fim, f.estabs);
     const comum = { observadas, observadasPorNatureza, produzidas, lancadas, estabs: f.estabs, semRegraConta };
-    await balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", { ...comum, detalhe: detEnt });
-    await balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", { ...comum, detalhe: detSai });
+    const movEnt = await balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", { ...comum, detalhe: detEnt });
+    const movSai = await balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", { ...comum, detalhe: detSai });
     const regradas = new Set<number>([...detEnt.regradas, ...detSai.regradas]);
 
     const regra: BalanceteLancamento[] = [...detEnt.porNota.values(), ...detSai.porNota.values()].map(
@@ -137,7 +139,51 @@ export const GET = apiRoute(async (req) => {
     // substitui — mesma regra da célula). O resto (MOV/IM/RE, nota sem regra)
     // espelha.
     const ehNota = (o: string) => o === "ME" || o === "MS";
+    // Componente que a natureza fecha na apuração: a linha real dela sai do
+    // espelho (é o que a célula faz) e entra como UMA linha de regra, com a soma
+    // do período — senão a lista não fecha com a célula.
+    const agregado = new Map<string, { valor: number; irmas: number[] }>();
+    for (const mov of [movEnt, movSai]) {
+      for (const [k, a] of mov.agregado) {
+        if (!a.irmas.length) continue;
+        const [natTxt, contaTxt] = k.split(":");
+        if (Number(natTxt) !== natureza || !contasSet.has(Number(contaTxt))) continue;
+        const atual = agregado.get(k);
+        if (atual) atual.valor += a.valor;
+        else agregado.set(k, { valor: a.valor, irmas: [...a.irmas] });
+      }
+    }
+    const consumidas = new Set<(typeof realRows)[number]>();
+    const apuracao: BalanceteLancamento[] = [];
+    for (const [k, a] of agregado) {
+      const [, contaTxt, histTxt] = k.split(":");
+      const conta = Number(contaTxt);
+      const casadas = realRows.filter(
+        (r) =>
+          !ehNota(r.origem) &&
+          r.conta === conta &&
+          r.contraconta != null &&
+          a.irmas.includes(r.contraconta) &&
+          String(r.histctb ?? 0) === histTxt
+      );
+      if (!casadas.length) continue;
+      for (const r of casadas) consumidas.add(r);
+      apuracao.push({
+        tipo: "regra",
+        data: f.fim,
+        origem: "IM",
+        chave: null,
+        conta,
+        valor: a.valor,
+        historico: "Apuração do período",
+        numero: null,
+        especie: null,
+        contraparte: null,
+      });
+    }
+
     const espelho: BalanceteLancamento[] = realRows
+      .filter((r) => !consumidas.has(r))
       .filter(
         (r) =>
           !(
@@ -149,7 +195,7 @@ export const GET = apiRoute(async (req) => {
       )
       .map((r) => ({ ...r, tipo: "espelho" as const }));
 
-    const todos = [...regra, ...espelho].sort((a, b) => b.valor - a.valor);
+    const todos = [...regra, ...apuracao, ...espelho].sort((a, b) => b.valor - a.valor);
 
     // Teto de linhas na resposta — o esperado por nota pode render muitas linhas
     // (uma por nota); acima disso a lista (e a soma) fica parcial, sinalizada por

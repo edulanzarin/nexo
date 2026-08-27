@@ -62,6 +62,9 @@ export async function listarOverrides(empresa: number): Promise<Override[]> {
       origemConta: l.origem_conta,
       descrConta: l.rotulo,
       regraValor: l.regra_valor,
+      // Override é regra de quem confere, não do ERP: não carimba histórico, e
+      // por isso não se casa com lançamento de apuração.
+      historico: null,
     };
     const lista = porRegra.get(l.regra_id);
     if (lista) lista.push(linha);

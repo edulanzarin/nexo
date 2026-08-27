@@ -68,6 +68,7 @@ interface LinhaRow {
   naturlctoctb: number;
   contactb: number | null;
   regravalorlctoctb: string | null;
+  codigohistctb: number | null;
 }
 
 /**
@@ -112,7 +113,7 @@ export async function planoQuestor(
 
   const linhas = await client.query<LinhaRow>(
     `select l.codigotabctbfis, t.descrtabctbfis, l.seq, l.origemcontactb,
-            l.naturlctoctb, l.contactb, l.regravalorlctoctb
+            l.naturlctoctb, l.contactb, l.regravalorlctoctb, l.codigohistctb
        from tabelactbfislctoctb l
        join tabelactbfis t
          on t.codigoempresa = l.codigoempresa and t.codigotabctbfis = l.codigotabctbfis
@@ -174,6 +175,7 @@ function montarLinha(l: LinhaRow, nomes: Map<number, string>): LinhaPlano {
     origemConta: l.origemcontactb,
     descrConta: l.contactb != null ? (nomes.get(l.contactb) ?? null) : null,
     regraValor: l.regravalorlctoctb,
+    historico: l.codigohistctb,
   };
 }
 

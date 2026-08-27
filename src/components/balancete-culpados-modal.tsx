@@ -32,6 +32,12 @@ const TIPO: Record<string, { rotulo: string; tone: BadgeTone; titulo: string }> 
     titulo:
       "Lançada em outra conta DENTRO deste grupo (veja na coluna Conta: esperada → lançada). Não altera o total da sintética — por isso a diferença é zero —, mas as duas analíticas ficam erradas",
   },
+  apuracao: {
+    rotulo: "Apuração do período",
+    tone: "accent",
+    titulo:
+      "Não é nota: é o componente que a natureza fecha uma vez por mês (o ICMS da devolução de venda, por exemplo). Esperado é a soma do período; real é o que a apuração lançou",
+  },
   extra: {
     rotulo: "Sem regra reproduzível",
     tone: "neutral",

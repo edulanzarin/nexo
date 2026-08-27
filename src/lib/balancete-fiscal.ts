@@ -42,6 +42,22 @@ export interface BalanceteFiscalMov {
   notas: number;
   /** Componentes do plano pulados por não ter como avaliar a fórmula (fase 2). */
   pulados: number;
+  /**
+   * O que a natureza deve à conta no PERÍODO INTEIRO, e não nota a nota:
+   * componente que o contábil fecha na apuração mensal (o ICMS da devolução de
+   * venda, p.ex., que sai num lançamento só no dia 31). Chave "natureza:conta".
+   *
+   * Sem isto, parar de cobrar por nota vira parar de conferir: o motor não
+   * distinguiria "não é lançado por nota" de "nunca foi lançado".
+   *
+   * A chave é "natureza:conta:histórico:irmãs" e `irmas` são as outras contas
+   * fixas do mesmo componente: juntos identificam, na apuração, a linha que veio
+   * DESTA regra. Só o par de contas não basta — na 2827/1541 (ICMS sobre vendas) o
+   * mesmo par recebe a apuração do mês E os ajustes que alguém lança à mão, que
+   * o motor não tem como reproduzir; o histórico separa os dois (a regra carimba
+   * o dela, o ajuste manual vai com 0).
+   */
+  agregado: Map<string, { valor: number; irmas: number[] }>;
 }
 
 interface NotaRow {
@@ -279,7 +295,7 @@ export async function balanceteFiscal(
       params
     )
   ).rows;
-  if (!notas.length) return { porConta: new Map(), notas: 0, pulados: 0 };
+  if (!notas.length) return { porConta: new Map(), notas: 0, pulados: 0, agregado: new Map() };
 
   const chaves = notas.map((n) => n.chave);
 
@@ -357,6 +373,7 @@ export async function balanceteFiscal(
   }
 
   const porConta = new Map<number, MovConta>();
+  const agregado = new Map<string, { valor: number; irmas: number[] }>();
   let pulados = 0;
   const add = (conta: number, natureza: 1 | -1, valor: number) => {
     let m = porConta.get(conta);
@@ -466,7 +483,26 @@ export async function balanceteFiscal(
               : (observadas?.has(`${linha.natureza}:${conta}`) ?? true);
           if (observadas && conta !== CONTA_CONTRAPARTIDA && !lancaPorNota) {
             const notaLancada = lancadas?.has(`${origem}:${n.chave}`) ?? false;
-            if (!(comp.id === "vlrcontabil" && notaLancada)) continue;
+            if (!(comp.id === "vlrcontabil" && notaLancada)) {
+              // A natureza lança por nota, mas NESTA conta não: é componente que
+              // o contábil fecha na apuração. Não se cobra da nota — se cobra do
+              // mês, somando aqui o que a apuração deveria ter lançado.
+              if (observadasPorNatureza?.has(`${cf}:*`)) {
+                const irmas = comp.linhas
+                  .filter((l) => !l.contaVariavel && l.conta != null && l.conta !== conta)
+                  .map((l) => l.conta as number)
+                  .sort((a, b) => a - b);
+                // A conta irmã entra na chave: duas naturezas podem debitar a
+                // MESMA conta com o mesmo histórico contra créditos diferentes
+                // (382 contra 3040 e contra 3097). Somadas numa chave só, a
+                // expectativa casaria com um lado e sobraria do outro.
+                const k = `${linha.natureza}:${conta}:${linha.historico ?? 0}:${irmas.join(",")}`;
+                const ac = agregado.get(k) ?? { valor: 0, irmas };
+                ac.valor += valor;
+                agregado.set(k, ac);
+              }
+              continue;
+            }
             // Bypass disparou: a nota foi lançada, mas a conta do plano nunca
             // recebe nota — o lançamento real dela (nesta natureza) está em conta
             // errada e sai do espelho (a versão do motor o substitui). SÓ no
@@ -507,5 +543,5 @@ export async function balanceteFiscal(
     }
   }
 
-  return { porConta, notas: notas.length, pulados };
+  return { porConta, notas: notas.length, pulados, agregado };
 }
