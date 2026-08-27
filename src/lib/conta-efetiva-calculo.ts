@@ -33,9 +33,9 @@ export function contaDoPlano(p: PlanoCfop): number | null {
 }
 
 /**
- * Ajusta o componente PRINCIPAL das naturezas de serviço ao que o histórico diz.
- * Dois casos, e só o principal — as linhas de tributo (PIS/COFINS a recuperar)
- * seguem a regra do Questor, que nelas não envelhece:
+ * Ajusta o componente PRINCIPAL da natureza ao que o histórico diz. Dois casos,
+ * e só o principal — as linhas de tributo (PIS/COFINS a recuperar) seguem a
+ * regra do Questor, que nelas não envelhece:
  *
  * - natureza com conta habitual, diferente da configurada: cobra a habitual (a
  *   do Questor é config morta);

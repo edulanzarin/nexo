@@ -38,6 +38,13 @@ interface ContagemRow {
  * Por (estab, natureza de serviço) nos últimos 12 meses: em que conta caiu o
  * lançamento PRINCIPAL de cada nota, e quantas vezes. Só nota de UMA natureza —
  * em nota multi-natureza não dá para atribuir a conta a uma delas.
+ *
+ * Só SERVIÇO. Em mercadoria a mesma medição existe (76% das notas marcadas são
+ * natureza inteira caindo noutra conta), mas o sinal "conta do maior lançamento
+ * da nota" não serve lá: a nota tem várias pernas fixas (estoque, tributo a
+ * recuperar, compensação) e o maior valor às vezes é a compensação — aprender
+ * por ele troca despesa por conta de compensação. Ali o aprendizado teria que
+ * ser por LINHA do componente, não por nota.
  */
 async function contarContas(
   client: PoolClient,

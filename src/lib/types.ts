@@ -636,6 +636,13 @@ export interface BalanceteCulpado {
    *   coluna Diferença.
    */
   tipo: "valor" | "faltando" | "conta_errada" | "interno" | "extra" | "apuracao";
+  /**
+   * O motor reproduziu esta nota pela METADE: alguma linha do plano usa token
+   * que ele ainda não avalia (`vlrPISOutros`/`vlrCOFINSOutros` da fase 2). O
+   * esperado dela é parcial, então a diferença mede a incompletude do motor
+   * tanto quanto o lançamento — a tela avisa em vez de acusar.
+   */
+  incompleta?: boolean;
 }
 
 export interface BalanceteCulpadosResp {

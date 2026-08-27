@@ -85,10 +85,13 @@ export const GET = apiRoute(async (req) => {
     // Contrapartida de fornecedor/cliente: conta que nasce no lançamento, então
     // nota lançada ali não é "conta errada".
     const contrapartidaVariavel = new Set<string>();
+    // Nota que o motor só reproduziu pela metade (token de fase 2): não dá para
+    // concluir nada comparando contas.
+    const incompletas = new Set<string>();
     const observadasPorNatureza = await calibrarPorNatureza(client, empresa, f.inicio, f.fim, f.estabs);
     const comum = {
       observadas, observadasPorNatureza, produzidas, lancadas, producao,
-      estabs: f.estabs, semRegraConta, contrapartidaVariavel,
+      estabs: f.estabs, semRegraConta, contrapartidaVariavel, incompletas,
     };
     const movEnt = await balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", { ...comum, detalhe: detEnt });
     const movSai = await balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", { ...comum, detalhe: detSai });
@@ -147,6 +150,8 @@ export const GET = apiRoute(async (req) => {
       contaReal: number | null;
       contaRealAbs: number;
       contaEsp: number | null;
+      /** Todas as contas do alvo onde o motor esperou a nota. */
+      contasEsp: Set<number>;
     };
     const mapa = new Map<string, Ac>();
     const pega = (
@@ -159,7 +164,7 @@ export const GET = apiRoute(async (req) => {
       const k = `${origem}:${chave}`;
       let a = mapa.get(k);
       if (!a) {
-        a = { origem, chave, numero, especie, contraparte, esperado: 0, real: 0, contaReal: null, contaRealAbs: 0, contaEsp: null };
+        a = { origem, chave, numero, especie, contraparte, esperado: 0, real: 0, contaReal: null, contaRealAbs: 0, contaEsp: null, contasEsp: new Set() };
         mapa.set(k, a);
       }
       if (a.numero == null && numero != null) a.numero = numero;
@@ -172,6 +177,7 @@ export const GET = apiRoute(async (req) => {
         const a = pega(n.origem, n.chave, n.numero, n.especie, n.contraparte);
         a.esperado += n.valor;
         if (a.contaEsp == null) a.contaEsp = n.conta;
+        for (const c of n.contas) a.contasEsp.add(c);
       }
     }
     for (const r of realRows) {
@@ -266,11 +272,17 @@ export const GET = apiRoute(async (req) => {
         // Diferença zero MAS em contas diferentes = remanejo INTERNO (só numa
         // sintética): a nota está no grupo, na gaveta errada — não altera o total
         // do grupo, mas as duas analíticas ficam erradas. Mostra à parte.
+        // Remanejo interno de verdade: o motor esperava a nota em contas do
+        // grupo e o real dela caiu em OUTRA — não numa das esperadas. Uma nota
+        // que toca duas contas do alvo (o CTE gera frete E ICMS a recuperar)
+        // tem a de maior valor diferente da primeira esperada, e isso não é
+        // remanejo nenhum: é a nota fazendo o que a regra manda.
         const interno =
           Math.abs(a.esperado) > TOL &&
           a.contaEsp != null &&
           a.contaReal != null &&
-          a.contaEsp !== a.contaReal;
+          !a.contasEsp.has(a.contaReal) &&
+          !incompletas.has(`${a.origem}:${a.chave}`);
         if (!interno) continue;
         tipo = "interno";
         // Mantém o resíduo sub-tolerância REAL: ele pertence à célula (é o
@@ -308,6 +320,7 @@ export const GET = apiRoute(async (req) => {
         real: a.real,
         diferenca,
         tipo,
+        incompleta: incompletas.has(`${a.origem}:${a.chave}`),
       });
     }
     // Primeiro as diferenças de verdade (valor/faltando/conta errada), depois os

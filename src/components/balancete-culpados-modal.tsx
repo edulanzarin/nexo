@@ -209,7 +209,13 @@ export function CulpadosModal({
                     </td>
                   )}
                   <td className="py-1.5 pr-3">
-                    {nfse && c.tipo === "extra" ? (
+                    {c.incompleta ? (
+                      <span title="O motor reproduziu esta nota pela metade (a fórmula usa token que ele ainda não avalia), então o esperado é parcial — confira manualmente">
+                        <Badge tone="neutral" size="xs">
+                          Reprodução incompleta
+                        </Badge>
+                      </span>
+                    ) : nfse && c.tipo === "extra" ? (
                       <span title="Serviço (NFSE) — o motor não reproduz; confira a contabilização manualmente">
                         <Badge tone="warning" size="xs">
                           Verificar manual

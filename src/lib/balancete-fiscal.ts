@@ -83,6 +83,13 @@ export interface FiscalDetalheNota {
   valor: number;
   /** Conta alvo onde o motor esperou a maior parte do valor (para o detalhe da diferença). */
   conta: number | null;
+  /**
+   * TODAS as contas do alvo onde o motor esperou esta nota. Uma nota costuma
+   * tocar mais de uma (o CTE gera o frete E o ICMS a recuperar): sem a lista,
+   * comparar "a primeira esperada" com "a de maior valor real" acusa remanejo
+   * onde só houve uma nota com duas pernas.
+   */
+  contas: Set<number>;
 }
 
 /**
@@ -245,6 +252,15 @@ export interface OpcoesBalanceteFiscal {
    * uma diferença do tamanho dela.
    */
   semRegraConta?: Set<string>;
+  /**
+   * Se presente, recebe "origem:chave" da nota cuja reprodução ficou INCOMPLETA:
+   * alguma linha do plano usa token que o motor ainda não avalia (os
+   * `vlrPISOutros`/`vlrCOFINSOutros` da fase 2, p.ex.). O CTE de frete é o caso
+   * típico — a linha da despesa depende desses tokens e não é produzida, então
+   * sobra só o ICMS, e comparar "a conta esperada" com "a conta do maior
+   * lançamento" acusa remanejo onde só houve reprodução pela metade.
+   */
+  incompletas?: Set<string>;
 }
 
 export async function balanceteFiscal(
@@ -266,6 +282,7 @@ export async function balanceteFiscal(
     producao,
     estabs = [],
     semRegraConta,
+    incompletas,
   } = opts;
   const c = LADO[tipo];
 
@@ -444,6 +461,11 @@ export async function balanceteFiscal(
           const valor = avaliarRegra(linha.regraValor, valores);
           if (valor == null) {
             pulados += 1; // token de fase 2 (serviço/retenção) — não sei o valor ainda
+            // A nota fica marcada: quem compara contas precisa saber que esta
+            // reprodução está pela metade.
+            if (incompletas && !linha.contaVariavel && linha.conta != null) {
+              incompletas.add(`${tipo === "ent" ? "ME" : "MS"}:${n.chave}`);
+            }
             continue;
           }
           if (Math.abs(valor) < 0.005) continue;
@@ -525,8 +547,10 @@ export async function balanceteFiscal(
             // No modo líquido, débito soma e crédito subtrai; senão o valor cru.
             const v = detalhe.net && linha.natureza === -1 ? -valor : valor;
             const ex = detalhe.porNota.get(n.chave);
-            if (ex) ex.valor += v;
-            else
+            if (ex) {
+              ex.valor += v;
+              ex.contas.add(conta);
+            } else
               detalhe.porNota.set(n.chave, {
                 chave: n.chave,
                 numero: n.numero,
@@ -536,6 +560,7 @@ export async function balanceteFiscal(
                 origem: tipo === "ent" ? "ME" : "MS",
                 valor: v,
                 conta,
+                contas: new Set([conta]),
               });
           }
         }

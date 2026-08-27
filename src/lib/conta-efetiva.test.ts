@@ -79,17 +79,15 @@ describe("aplicarContaEfetiva", () => {
     expect(p.componentes.find((c) => c.id === "pis")!.linhas[0].conta).toBe(384);
   });
 
-  it("override manual e natureza de mercadoria ficam intactos", () => {
+  it("override manual fica intacto — é a decisão de quem sabe", () => {
     const over = natureza(8000001, 3171, "override");
-    const merc = natureza(1102, 3171);
-    const [a, b] = aplicarContaEfetiva(
-      [over, merc],
-      new Map([
-        ["1:8000001", aprendido()],
-        ["1:1102", aprendido()],
-      ])
-    );
+    const [a] = aplicarContaEfetiva([over], new Map([["1:8000001", aprendido()]]));
     expect(a).toBe(over);
-    expect(b).toBe(merc);
+  });
+
+  it("natureza de mercadoria fica intacta — lá o aprendizado por nota não serve", () => {
+    const merc = [natureza(1102, 3171)];
+    const [p] = aplicarContaEfetiva(merc, new Map([["1:1102", aprendido()]]));
+    expect(p).toBe(merc[0]);
   });
 });
