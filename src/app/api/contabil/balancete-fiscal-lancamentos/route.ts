@@ -110,7 +110,11 @@ export const GET = apiRoute(async (req) => {
     const produzidas = new Set<string>();
     // Natureza de serviço sem regra de conta: espelha sempre, igual à célula.
     const semRegraConta = new Set<string>();
-    const porNotaConta = { produzidas: new Set<string>(), puladas: new Set<string>() };
+    const porNotaConta = {
+      produzidas: new Set<string>(),
+      puladas: new Set<string>(),
+      principal: new Map<string, number>(),
+    };
     const detEnt: DetalheFiscal = { contas: contasSet, natureza, porNota: new Map(), regradas: new Set() };
     const detSai: DetalheFiscal = { contas: contasSet, natureza, porNota: new Map(), regradas: new Set() };
     const observadasPorNatureza = await calibrarPorNatureza(client, empresa, f.inicio, f.fim, f.estabs);
@@ -120,7 +124,6 @@ export const GET = apiRoute(async (req) => {
     };
     const movEnt = await balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", { ...comum, detalhe: detEnt });
     const movSai = await balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", { ...comum, detalhe: detSai });
-    const regradas = new Set<number>([...detEnt.regradas, ...detSai.regradas]);
 
     const regra: BalanceteLancamento[] = [...detEnt.porNota.values(), ...detSai.porNota.values()].map(
       (n) => ({
@@ -195,7 +198,8 @@ export const GET = apiRoute(async (req) => {
         const nc = `${r.origem}:${r.chave}:${natureza}:${r.conta}`;
         if (porNotaConta.produzidas.has(nc)) return false;
         if (porNotaConta.puladas.has(nc)) return true;
-        return !(regradas.has(r.conta) || produzidas.has(`${r.origem}:${r.chave}:${natureza}`));
+        const pr = porNotaConta.principal.get(`${r.origem}:${r.chave}:${natureza}`);
+        return !(pr != null && Math.abs(Math.abs(r.valor) - pr) < 0.02);
       })
       .map((r) => ({ ...r, tipo: "espelho" as const }));
 

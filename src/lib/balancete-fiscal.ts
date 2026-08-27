@@ -275,7 +275,24 @@ export interface OpcoesBalanceteFiscal {
    * nenhuma das duas segue a regra antiga — e é o que mantém "conta errada"
    * aparecendo como par que se anula.
    */
-  porNotaConta?: { produzidas: Set<string>; puladas: Set<string> };
+  porNotaConta?: {
+    produzidas: Set<string>;
+    puladas: Set<string>;
+    /**
+     * Por nota E natureza ("origem:chave:natureza"), o VALOR da perna principal
+     * que o motor produziu. É com isso que o chamador acha, no real, a perna
+     * correspondente — esteja ela na conta certa ou na errada — e só ELA deixa
+     * de espelhar.
+     *
+     * Uma entrada por natureza, e não uma por nota: a natureza de remessa tem
+     * DUAS pernas principais (D 2563 / C 1303 na CHAMBER), e guardar só a maior
+     * deixava o crédito espelhando — a conta errada aparecia de um lado só e o
+     * total parava de fechar em zero. E só a perna: o resto da nota não é da
+     * regra e continua espelhando (uma remessa em conta de compensação pendurada
+     * na mesma nota criava R$ 156 mil de diferença falsa na empresa 28).
+     */
+    principal: Map<string, number>;
+  };
 }
 
 export async function balanceteFiscal(
@@ -555,6 +572,25 @@ export async function balanceteFiscal(
           }
           if (porNotaConta && conta !== CONTA_CONTRAPARTIDA) {
             porNotaConta.produzidas.add(`${origem}:${n.chave}:${linha.natureza}:${conta}`);
+          }
+          // Perna PRINCIPAL reproduzida (a linha fixa cuja fórmula é da família
+          // do valor contábil): daqui em diante o real desta nota, nesta
+          // natureza, não espelha em conta nenhuma. É o que faz a conta errada
+          // aparecer como PAR — a conta certa com o esperado sem real, a errada
+          // com o real sem esperado — e é a pergunta que o antigo gate por conta
+          // só aproximava ("esta conta tem regra?" em vez de "esta NOTA foi
+          // reproduzida?").
+          if (
+            conta !== CONTA_CONTRAPARTIDA &&
+            comp.id === "vlrcontabil" &&
+            (linha.regraValor ?? "").startsWith("vlrCont")
+          ) {
+            produzidas?.add(`${origem}:${n.chave}:${linha.natureza}`);
+            const k = `${origem}:${n.chave}:${linha.natureza}`;
+            const ant = porNotaConta?.principal.get(k);
+            if (porNotaConta && (ant == null || Math.abs(valor) > ant)) {
+              porNotaConta.principal.set(k, Math.abs(valor));
+            }
           }
           add(conta, linha.natureza, valor);
           // Drill-down do Fiscal: registra a contribuição desta nota à conta alvo.

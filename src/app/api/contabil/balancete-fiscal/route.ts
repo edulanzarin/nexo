@@ -86,7 +86,11 @@ export const GET = apiRoute(async (req) => {
     const semRegraConta = new Set<string>();
     // Espelho por NOTA E CONTA: o que o motor reproduziu não espelha, o que ele
     // não conseguiu reproduzir espelha, e o resto segue a regra por conta.
-    const porNotaConta = { produzidas: new Set<string>(), puladas: new Set<string>() };
+    const porNotaConta = {
+      produzidas: new Set<string>(),
+      puladas: new Set<string>(),
+      principal: new Map<string, number>(),
+    };
     const observadasPorNatureza = await calibrarPorNatureza(client, empresa, f.inicio, f.fim, f.estabs);
     const comum = {
       observadas, observadasPorNatureza, produzidas, lancadas,
@@ -125,12 +129,14 @@ export const GET = apiRoute(async (req) => {
     // Espelho do real no fiscal — o que o motor NÃO reproduz entra com o próprio
     // real (fiscal = real, sem falso positivo): consolidação (MOV), apuração
     // (IM), retenção (RE), contrapartida fornecedor/cliente, NFSE sem fórmula.
-    // Três exclusões — a primeira manda nas outras duas:
+    // O espelho decide por NOTA, nunca por conta:
     // 0. Por NOTA, sem regra: natureza de serviço genérica (a conta se decide na
     //    nota) espelha sempre, mesmo em conta regrada. Sem isto ela ficaria sem
     //    contrapartida no fiscal e a conta acusaria uma falta do tamanho dela.
-    // 1. Por CONTA: conta que o motor movimenta é comparação, não espelho.
-    // 2. Por NOTA: nota que o motor reproduziu não é espelhada em conta NENHUMA —
+    // 1. Por NOTA e CONTA: onde ele pôs, não espelha; onde o plano mandava e ele
+    //    não soube reproduzir, espelha.
+    // 2. Por NOTA: nota cuja perna principal ele reproduziu não é espelhada em
+    //    conta NENHUMA —
     //    a versão do motor a substitui. É o que faz conta errada aparecer: a
     //    conta do plano fica com a nota a mais (+), a conta onde o contábil de
     //    fato lançou fica com ela a menos (−), e as duas se anulam no total
@@ -176,11 +182,6 @@ export const GET = apiRoute(async (req) => {
     casar(true);
     casar(false);
 
-    const regrada = new Set<string>();
-    for (const [conta, m] of fiscalPorConta) {
-      if (m.deb > 0.005) regrada.add(`1:${conta}`);
-      if (m.cred > 0.005) regrada.add(`-1:${conta}`);
-    }
     real.rows.forEach((r, i) => {
       const m = NOTA_RE.exec(r.chaveorigem);
       if (m && !semRegraConta.has(`${m[1]}:${m[2]}`)) {
@@ -189,15 +190,13 @@ export const GET = apiRoute(async (req) => {
         if (porNotaConta.produzidas.has(nc)) return;
         // O plano manda a nota aqui e o motor não soube reproduzir: espelha, ou
         // a conta acusa uma falta que é do motor, não do lançamento.
-        if (!porNotaConta.puladas.has(nc)) {
-          // Nem uma coisa nem outra: vale a regra por conta — é ela que faz a
-          // conta errada aparecer como par (a certa a mais, a errada a menos).
-          if (
-            regrada.has(`${r.natureza}:${r.conta}`) ||
-            produzidas.has(`${m[1]}:${m[2]}:${r.natureza}`)
-          ) {
-            return;
-          }
+        // A perna principal desta nota foi reproduzida e caiu em OUTRA conta:
+        // aquela perna não espelha, e é isso que faz a conta errada aparecer
+        // como PAR — a certa com o esperado sem real, a errada com o real sem
+        // esperado. Só a perna: o resto da nota não é da regra e espelha.
+        const pr = porNotaConta.principal.get(`${m[1]}:${m[2]}:${r.natureza}`);
+        if (!porNotaConta.puladas.has(nc) && pr != null && Math.abs(Math.abs(r.valor) - pr) < 0.02) {
+          return;
         }
       }
       // Lançamento de apuração que o motor sabe recompor: não espelha — quem

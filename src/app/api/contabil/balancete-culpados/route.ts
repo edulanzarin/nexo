@@ -89,7 +89,11 @@ export const GET = apiRoute(async (req) => {
     // concluir nada comparando contas.
     const incompletas = new Set<string>();
     // Mesmo critério de espelho da célula — por NOTA E CONTA.
-    const porNotaConta = { produzidas: new Set<string>(), puladas: new Set<string>() };
+    const porNotaConta = {
+      produzidas: new Set<string>(),
+      puladas: new Set<string>(),
+      principal: new Map<string, number>(),
+    };
     const observadasPorNatureza = await calibrarPorNatureza(client, empresa, f.inicio, f.fim, f.estabs);
     const comum = {
       observadas, observadasPorNatureza, produzidas, lancadas, producao,
@@ -98,14 +102,9 @@ export const GET = apiRoute(async (req) => {
     const movEnt = await balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", { ...comum, detalhe: detEnt });
     const movSai = await balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", { ...comum, detalhe: detSai });
 
-    // Só as contas que o motor de fato REGRA entram na comparação: conta sem
-    // regra espelha o real (fiscal = real), então não tem diferença — incluí-la
-    // (numa sintética, p.ex.) contaria o real dela como falsa diferença.
-    const regradasSet = new Set<number>([...detEnt.regradas, ...detSai.regradas]);
-
-    // REAL por nota, itemizado por conta E natureza, em TODAS as contas alvo (não
-    // só as regradas): o líquido (para a diferença) segue a MESMA regra do espelho
-    // da célula — conta regrada OU nota que o motor reproduziu naquela natureza —,
+    // REAL por nota, itemizado por conta E natureza, em TODAS as contas alvo: o
+    // líquido (para a diferença) segue a MESMA regra do espelho da célula — por
+    // nota, nunca por conta —,
     // e a CONTA onde a nota bate vem de todas, pra mostrar que um "faltando" na
     // verdade foi lançado noutra conta do alvo (conta errada), não sumiu.
     const realRows = (
@@ -188,10 +187,11 @@ export const GET = apiRoute(async (req) => {
       // espelha não entra na comparação — espelhado é fiscal = real, diferença
       // zero. Divergir daqui é a lista deixar de fechar com a coluna Diferença.
       const nc = `${r.origem}:${r.chave}:${r.nat}:${r.conta}`;
+      const pr = porNotaConta.principal.get(`${r.origem}:${r.chave}:${r.nat}`);
+      const ehPerna = pr != null && Math.abs(Math.abs(r.net) - pr) < 0.02;
       const espelhado = porNotaConta.produzidas.has(nc)
         ? false
-        : porNotaConta.puladas.has(nc) ||
-          !(regradasSet.has(r.conta) || produzidas.has(`${r.origem}:${r.chave}:${r.nat}`));
+        : porNotaConta.puladas.has(nc) || !ehPerna;
       if (!espelhado) a.real += r.net;
       // …e a conta onde a nota mais bate vem de TODAS as contas alvo — menos a
       // contrapartida variável: o plano manda a nota cair na conta do
