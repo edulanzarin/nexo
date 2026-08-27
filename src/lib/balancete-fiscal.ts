@@ -261,6 +261,21 @@ export interface OpcoesBalanceteFiscal {
    * lançamento" acusa remanejo onde só houve reprodução pela metade.
    */
   incompletas?: Set<string>;
+  /**
+   * Se presente, recebe "origem:chave:natureza:conta" nos dois sentidos:
+   *
+   * - `produzidas` — o motor de fato somou aquela nota naquela conta;
+   * - `puladas`    — o plano manda a nota naquela conta e o motor NÃO conseguiu
+   *                  (token de fase 2).
+   *
+   * É com isso que o espelho decide por NOTA E CONTA, e não por conta: a metade
+   * que o motor não reproduz precisa espelhar o real, senão a conta acusa uma
+   * falta do tamanho dela (R$ 334 mil na 42721 da empresa 1200); e a conta em
+   * que ele reproduziu não pode espelhar, senão dobra. O que não está em
+   * nenhuma das duas segue a regra antiga — e é o que mantém "conta errada"
+   * aparecendo como par que se anula.
+   */
+  porNotaConta?: { produzidas: Set<string>; puladas: Set<string> };
 }
 
 export async function balanceteFiscal(
@@ -283,6 +298,7 @@ export async function balanceteFiscal(
     estabs = [],
     semRegraConta,
     incompletas,
+    porNotaConta,
   } = opts;
   const c = LADO[tipo];
 
@@ -463,8 +479,10 @@ export async function balanceteFiscal(
             pulados += 1; // token de fase 2 (serviço/retenção) — não sei o valor ainda
             // A nota fica marcada: quem compara contas precisa saber que esta
             // reprodução está pela metade.
-            if (incompletas && !linha.contaVariavel && linha.conta != null) {
-              incompletas.add(`${tipo === "ent" ? "ME" : "MS"}:${n.chave}`);
+            if (!linha.contaVariavel && linha.conta != null) {
+              const o = tipo === "ent" ? "ME" : "MS";
+              incompletas?.add(`${o}:${n.chave}`);
+              porNotaConta?.puladas.add(`${o}:${n.chave}:${linha.natureza}:${linha.conta}`);
             }
             continue;
           }
@@ -534,6 +552,9 @@ export async function balanceteFiscal(
             if (produzidas) {
               produzidas.add(`${origem}:${n.chave}:${linha.natureza}`);
             }
+          }
+          if (porNotaConta && conta !== CONTA_CONTRAPARTIDA) {
+            porNotaConta.produzidas.add(`${origem}:${n.chave}:${linha.natureza}:${conta}`);
           }
           add(conta, linha.natureza, valor);
           // Drill-down do Fiscal: registra a contribuição desta nota à conta alvo.

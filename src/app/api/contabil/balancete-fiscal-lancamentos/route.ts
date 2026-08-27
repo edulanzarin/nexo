@@ -110,10 +110,14 @@ export const GET = apiRoute(async (req) => {
     const produzidas = new Set<string>();
     // Natureza de serviço sem regra de conta: espelha sempre, igual à célula.
     const semRegraConta = new Set<string>();
+    const porNotaConta = { produzidas: new Set<string>(), puladas: new Set<string>() };
     const detEnt: DetalheFiscal = { contas: contasSet, natureza, porNota: new Map(), regradas: new Set() };
     const detSai: DetalheFiscal = { contas: contasSet, natureza, porNota: new Map(), regradas: new Set() };
     const observadasPorNatureza = await calibrarPorNatureza(client, empresa, f.inicio, f.fim, f.estabs);
-    const comum = { observadas, observadasPorNatureza, produzidas, lancadas, estabs: f.estabs, semRegraConta };
+    const comum = {
+      observadas, observadasPorNatureza, produzidas, lancadas,
+      estabs: f.estabs, semRegraConta, porNotaConta,
+    };
     const movEnt = await balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", { ...comum, detalhe: detEnt });
     const movSai = await balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", { ...comum, detalhe: detSai });
     const regradas = new Set<number>([...detEnt.regradas, ...detSai.regradas]);
@@ -184,15 +188,15 @@ export const GET = apiRoute(async (req) => {
 
     const espelho: BalanceteLancamento[] = realRows
       .filter((r) => !consumidas.has(r))
-      .filter(
-        (r) =>
-          !(
-            ehNota(r.origem) &&
-            !(r.chave != null && semRegraConta.has(`${r.origem}:${r.chave}`)) &&
-            (regradas.has(r.conta) ||
-              (r.chave != null && produzidas.has(`${r.origem}:${r.chave}:${natureza}`)))
-          )
-      )
+      // Mesmo critério da célula: espelho por NOTA E CONTA.
+      .filter((r) => {
+        if (!ehNota(r.origem) || r.chave == null) return true;
+        if (semRegraConta.has(`${r.origem}:${r.chave}`)) return true;
+        const nc = `${r.origem}:${r.chave}:${natureza}:${r.conta}`;
+        if (porNotaConta.produzidas.has(nc)) return false;
+        if (porNotaConta.puladas.has(nc)) return true;
+        return !(regradas.has(r.conta) || produzidas.has(`${r.origem}:${r.chave}:${natureza}`));
+      })
       .map((r) => ({ ...r, tipo: "espelho" as const }));
 
     const todos = [...regra, ...apuracao, ...espelho].sort((a, b) => b.valor - a.valor);

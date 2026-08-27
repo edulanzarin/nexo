@@ -88,10 +88,12 @@ export const GET = apiRoute(async (req) => {
     // Nota que o motor só reproduziu pela metade (token de fase 2): não dá para
     // concluir nada comparando contas.
     const incompletas = new Set<string>();
+    // Mesmo critério de espelho da célula — por NOTA E CONTA.
+    const porNotaConta = { produzidas: new Set<string>(), puladas: new Set<string>() };
     const observadasPorNatureza = await calibrarPorNatureza(client, empresa, f.inicio, f.fim, f.estabs);
     const comum = {
       observadas, observadasPorNatureza, produzidas, lancadas, producao,
-      estabs: f.estabs, semRegraConta, contrapartidaVariavel, incompletas,
+      estabs: f.estabs, semRegraConta, contrapartidaVariavel, incompletas, porNotaConta,
     };
     const movEnt = await balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", { ...comum, detalhe: detEnt });
     const movSai = await balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", { ...comum, detalhe: detSai });
@@ -182,11 +184,15 @@ export const GET = apiRoute(async (req) => {
     }
     for (const r of realRows) {
       const a = pega(r.origem, r.chave, r.numero, r.especie, r.contraparte);
-      // Líquido pela MESMA regra do espelho da célula: conta regrada OU nota que
-      // o motor reproduziu nesta natureza (mantém a reconciliação exata)…
-      if (regradasSet.has(r.conta) || produzidas.has(`${r.origem}:${r.chave}:${r.nat}`)) {
-        a.real += r.net;
-      }
+      // Líquido pela MESMA regra do espelho da célula (por nota e conta): o que
+      // espelha não entra na comparação — espelhado é fiscal = real, diferença
+      // zero. Divergir daqui é a lista deixar de fechar com a coluna Diferença.
+      const nc = `${r.origem}:${r.chave}:${r.nat}:${r.conta}`;
+      const espelhado = porNotaConta.produzidas.has(nc)
+        ? false
+        : porNotaConta.puladas.has(nc) ||
+          !(regradasSet.has(r.conta) || produzidas.has(`${r.origem}:${r.chave}:${r.nat}`));
+      if (!espelhado) a.real += r.net;
       // …e a conta onde a nota mais bate vem de TODAS as contas alvo — menos a
       // contrapartida variável: o plano manda a nota cair na conta do
       // fornecedor/cliente, então ela ali é o certo, e apontá-la como "a conta

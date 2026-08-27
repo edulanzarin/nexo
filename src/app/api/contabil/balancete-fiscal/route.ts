@@ -84,8 +84,14 @@ export const GET = apiRoute(async (req) => {
     const produzidas = new Set<string>();
     // Notas de natureza de serviço sem regra de conta — espelham sempre.
     const semRegraConta = new Set<string>();
+    // Espelho por NOTA E CONTA: o que o motor reproduziu não espelha, o que ele
+    // não conseguiu reproduzir espelha, e o resto segue a regra por conta.
+    const porNotaConta = { produzidas: new Set<string>(), puladas: new Set<string>() };
     const observadasPorNatureza = await calibrarPorNatureza(client, empresa, f.inicio, f.fim, f.estabs);
-    const comum = { observadas, observadasPorNatureza, produzidas, lancadas, estabs: f.estabs, semRegraConta };
+    const comum = {
+      observadas, observadasPorNatureza, produzidas, lancadas,
+      estabs: f.estabs, semRegraConta, porNotaConta,
+    };
     const [ent, sai] = await Promise.all([
       balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", comum),
       balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", comum),
@@ -177,14 +183,22 @@ export const GET = apiRoute(async (req) => {
     }
     real.rows.forEach((r, i) => {
       const m = NOTA_RE.exec(r.chaveorigem);
-      // Nota que o motor reproduziu: a versão dele substitui o real dela.
-      if (
-        m &&
-        !semRegraConta.has(`${m[1]}:${m[2]}`) &&
-        (regrada.has(`${r.natureza}:${r.conta}`) ||
-          produzidas.has(`${m[1]}:${m[2]}:${r.natureza}`))
-      ) {
-        return;
+      if (m && !semRegraConta.has(`${m[1]}:${m[2]}`)) {
+        const nc = `${m[1]}:${m[2]}:${r.natureza}:${r.conta}`;
+        // O motor pôs a nota AQUI: a versão dele substitui o real.
+        if (porNotaConta.produzidas.has(nc)) return;
+        // O plano manda a nota aqui e o motor não soube reproduzir: espelha, ou
+        // a conta acusa uma falta que é do motor, não do lançamento.
+        if (!porNotaConta.puladas.has(nc)) {
+          // Nem uma coisa nem outra: vale a regra por conta — é ela que faz a
+          // conta errada aparecer como par (a certa a mais, a errada a menos).
+          if (
+            regrada.has(`${r.natureza}:${r.conta}`) ||
+            produzidas.has(`${m[1]}:${m[2]}:${r.natureza}`)
+          ) {
+            return;
+          }
+        }
       }
       // Lançamento de apuração que o motor sabe recompor: não espelha — quem
       // entra no lado fiscal é a soma do período, e a diferença entre as duas
