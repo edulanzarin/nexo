@@ -35,7 +35,19 @@ export interface ContaEfetiva {
  */
 export function contaDoPlano(p: PlanoCfop): number | null {
   const principal = p.componentes.find((c) => c.id === "vlrcontabil");
-  const fixas = principal?.linhas.filter((l) => !l.contaVariavel && l.conta != null) ?? [];
+  // Qual das pernas fixas é a principal? A do lado OPOSTO ao da contrapartida:
+  // se o fornecedor/cliente é o crédito, a despesa é o débito, e vice-versa.
+  //
+  // O lado não pode vir do número da natureza: serviço começa com 8 e seria lido
+  // como saída, quando serviço tomado é entrada. Nem pode ser "a primeira linha
+  // fixa": numa empresa cujo cliente é conta fixa ("Clientes Diversos"), a
+  // primeira linha da venda é o CLIENTE, e trocar a conta dele pela receita
+  // aprendida faz o motor lançar receita contra receita — R$ 43 mi de diferença
+  // falsa na empresa 105.
+  const variavel = principal?.linhas.find((l) => l.contaVariavel);
+  const lado = variavel ? ((variavel.natureza * -1) as 1 | -1) : p.lado === "ent" ? 1 : -1;
+  const fixas =
+    principal?.linhas.filter((l) => !l.contaVariavel && l.conta != null && l.natureza === lado) ?? [];
   const daFamilia = fixas.find((l) => (l.regraValor ?? "").startsWith("vlrCont"));
   return (daFamilia ?? fixas[0])?.conta ?? null;
 }
@@ -59,14 +71,7 @@ export function aplicarContaEfetiva(
 ): PlanoCfop[] {
   if (!mapa.size) return plano;
   return plano.map((p) => {
-    // Mercadoria fica de fora — não por falta de sinal (a perna principal já se
-    // identifica por valor), mas porque o espelho ainda tem um degrau POR CONTA:
-    // a conta que o motor passa a tocar vira "comparação" para TODAS as notas, e
-    // uma natureza de remessa aprendida na conta de compensação faz o real das
-    // outras notas ali deixar de espelhar — R$ 16,6 mi de diferença falsa na
-    // empresa 105. Enquanto esse degrau existir, ligar mercadoria é trocar um
-    // ruído pequeno por um enorme.
-    if (p.origem === "override" || p.cfop < CFOP_SERVICO_MIN) return p;
+    if (p.origem === "override") return p;
     const efetiva = mapa.get(`${p.estab}:${p.cfop}`);
     if (!efetiva) return p;
     const atual = contaDoPlano(p);
