@@ -1,7 +1,7 @@
 import { PoolClient } from "pg";
 import { appPool, appQuery, erroAppDb } from "./app-db";
 import type { PlanoCfop } from "./types";
-import { CFOP_SERVICO_MIN, contaDoPlano, type ContaEfetiva } from "./conta-efetiva-calculo";
+import { contaDoPlano, type ContaEfetiva } from "./conta-efetiva-calculo";
 
 /**
  * "Que conta esta natureza de SERVIÇO de fato recebe?" — aprendido do histórico,
@@ -39,12 +39,12 @@ interface ContagemRow {
  * lançamento PRINCIPAL de cada nota, e quantas vezes. Só nota de UMA natureza —
  * em nota multi-natureza não dá para atribuir a conta a uma delas.
  *
- * Só SERVIÇO. Em mercadoria a mesma medição existe (76% das notas marcadas são
- * natureza inteira caindo noutra conta), mas o sinal "conta do maior lançamento
- * da nota" não serve lá: a nota tem várias pernas fixas (estoque, tributo a
- * recuperar, compensação) e o maior valor às vezes é a compensação — aprender
- * por ele troca despesa por conta de compensação. Ali o aprendizado teria que
- * ser por LINHA do componente, não por nota.
+ * "Perna principal" é a de valor igual ao valor contábil da nota, e NÃO a de
+ * maior valor. Aprender pela maior funciona em serviço (uma perna fixa só) e
+ * erra feio em mercadoria, onde a nota tem estoque, tributo a recuperar e às
+ * vezes compensação — chegou a trocar despesa (4537) por conta de compensação
+ * (5068), inflando o balancete em milhões. Nota cuja perna principal não se
+ * identifica por valor fica de fora: melhor não aprender do que aprender errado.
  */
 async function contarContas(
   client: PoolClient,
@@ -52,21 +52,26 @@ async function contarContas(
   tipo: "ent" | "sai"
 ): Promise<ContagemRow[]> {
   const prod = tipo === "ent" ? "lctofisentproduto" : "lctofissaiproduto";
+  const nota = tipo === "ent" ? "lctofisent" : "lctofissai";
   const chaveCol = tipo === "ent" ? "chavelctofisent" : "chavelctofissai";
   const prefixo = tipo === "ent" ? "ME" : "MS";
-  // Entrada debita a despesa; saída credita a receita. O principal é o maior
-  // valor daquele lado — os tributos a recuperar ficam abaixo dele.
+  // Entrada debita a despesa/estoque; saída credita a receita.
   const contaCol = tipo === "ent" ? "contactbdeb" : "contactbcred";
   const { rows } = await client.query<ContagemRow>(
     `with prod as (
        select distinct codigoestab estab, codigocfop cfop, ${chaveCol} chave
          from ${prod}
         where codigoempresa = $1 and datalctofis >= current_date - interval '365 days'
-          and codigocfop >= ${CFOP_SERVICO_MIN}
      ),
      uma as (
        select chave, min(estab) estab, min(cfop) cfop
          from prod group by chave having count(*) = 1
+     ),
+     valor as (
+       select ${chaveCol} chave, valorcontabil vlr
+         from ${nota}
+        where codigoempresa = $1 and datalctofis >= current_date - interval '365 days'
+          and cancelada <> '1'
      ),
      real as (
        select substring(chaveorigem from 3)::bigint chave, ${contaCol} conta,
@@ -79,7 +84,10 @@ async function contarContas(
         group by 1, 2
      ),
      principal as (
-       select distinct on (chave) chave, conta from real order by chave, v desc
+       select distinct on (r.chave) r.chave, r.conta
+         from real r join valor n on n.chave = r.chave
+        where abs(r.v - n.vlr) < 0.02
+        order by r.chave, abs(r.v - n.vlr)
      )
      select u.estab, u.cfop, p.conta, count(*)::int n
        from uma u join principal p on p.chave = u.chave
@@ -88,7 +96,6 @@ async function contarContas(
   );
   return rows;
 }
-
 
 /**
  * Reaprende a conta efetiva das naturezas de serviço da empresa (12 meses) e

@@ -25,11 +25,19 @@ export interface ContaEfetiva {
   acertos: number;
 }
 
-/** A conta que o plano do Questor manda no componente principal da natureza. */
+/**
+ * A conta que o plano do Questor manda na perna PRINCIPAL da natureza: a linha
+ * fixa cuja fórmula é da família do valor contábil (`vlrContabil`,
+ * `vlrContICMS`, `vlrContISS`…). As outras linhas do mesmo componente são
+ * tributo (`vlrICMS`, `vlrPISOutros`) e não podem ser confundidas com ela —
+ * trocar a conta de uma linha de tributo pela conta habitual da nota é como o
+ * aprendizado passou a inventar erro em mercadoria.
+ */
 export function contaDoPlano(p: PlanoCfop): number | null {
   const principal = p.componentes.find((c) => c.id === "vlrcontabil");
-  const linha = principal?.linhas.find((l) => !l.contaVariavel && l.conta != null);
-  return linha?.conta ?? null;
+  const fixas = principal?.linhas.filter((l) => !l.contaVariavel && l.conta != null) ?? [];
+  const daFamilia = fixas.find((l) => (l.regraValor ?? "").startsWith("vlrCont"));
+  return (daFamilia ?? fixas[0])?.conta ?? null;
 }
 
 /**
@@ -51,12 +59,23 @@ export function aplicarContaEfetiva(
 ): PlanoCfop[] {
   if (!mapa.size) return plano;
   return plano.map((p) => {
+    // Mercadoria fica de fora — não por falta de sinal (a perna principal já se
+    // identifica por valor), mas porque o espelho ainda tem um degrau POR CONTA:
+    // a conta que o motor passa a tocar vira "comparação" para TODAS as notas, e
+    // uma natureza de remessa aprendida na conta de compensação faz o real das
+    // outras notas ali deixar de espelhar — R$ 16,6 mi de diferença falsa na
+    // empresa 105. Enquanto esse degrau existir, ligar mercadoria é trocar um
+    // ruído pequeno por um enorme.
     if (p.origem === "override" || p.cfop < CFOP_SERVICO_MIN) return p;
     const efetiva = mapa.get(`${p.estab}:${p.cfop}`);
     if (!efetiva) return p;
     const atual = contaDoPlano(p);
     if (atual == null) return p;
     if (efetiva.habitual && efetiva.contaEfetiva === atual) return p;
+    // Sem conta habitual, só o SERVIÇO vira "conta decidida no lançamento": ali a
+    // natureza genérica é de propósito. Em mercadoria, natureza dispersa pode ser
+    // erro espalhado — apagar a régua apagaria o erro junto.
+    if (!efetiva.habitual && p.cfop < CFOP_SERVICO_MIN) return p;
 
     const trocar = (l: LinhaPlano): LinhaPlano =>
       efetiva.habitual
