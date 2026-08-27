@@ -1,7 +1,7 @@
 import { pool } from "@/lib/db";
 import { apiRoute, assertEmpresaVisivel } from "@/lib/api-route";
 import { parseFilters, FilterError } from "@/lib/fiscal-filters";
-import { balanceteFiscal, CONTA_CONTRAPARTIDA } from "@/lib/balancete-fiscal";
+import { balanceteFiscal, calibrarPorNatureza, CONTA_CONTRAPARTIDA } from "@/lib/balancete-fiscal";
 import { pendentesNfse } from "@/lib/balancete-pendentes";
 import type { BalanceteFiscalResp, BalanceteLinha } from "@/lib/types";
 
@@ -71,9 +71,11 @@ export const GET = apiRoute(async (req) => {
     const produzidas = new Set<string>();
     // Notas de natureza de serviço sem regra de conta — espelham sempre.
     const semRegraConta = new Set<string>();
+    const observadasPorNatureza = await calibrarPorNatureza(client, empresa, f.inicio, f.fim, f.estabs);
+    const comum = { observadas, observadasPorNatureza, produzidas, lancadas, estabs: f.estabs, semRegraConta };
     const [ent, sai] = await Promise.all([
-      balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", undefined, observadas, undefined, produzidas, lancadas, undefined, f.estabs, semRegraConta),
-      balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", undefined, observadas, undefined, produzidas, lancadas, undefined, f.estabs, semRegraConta),
+      balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", comum),
+      balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", comum),
     ]);
     const fiscalPorConta = new Map<number, { deb: number; cred: number }>();
     for (const mov of [ent, sai]) {

@@ -1,7 +1,7 @@
 import { pool } from "@/lib/db";
 import { apiRoute, assertEmpresaVisivel } from "@/lib/api-route";
 import { parseFilters, FilterError } from "@/lib/fiscal-filters";
-import { balanceteFiscal, type DetalheFiscal } from "@/lib/balancete-fiscal";
+import { balanceteFiscal, calibrarPorNatureza, type DetalheFiscal } from "@/lib/balancete-fiscal";
 import { contasDoAlvo } from "@/lib/plano-contabil";
 import type { BalanceteCulpado, BalanceteCulpadosResp } from "@/lib/types";
 
@@ -82,8 +82,16 @@ export const GET = apiRoute(async (req) => {
     // não carregam diferença — e por isso não podem aparecer aqui, senão a soma
     // da lista deixa de fechar com a coluna Diferença.
     const semRegraConta = new Set<string>();
-    await balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", undefined, observadas, detEnt, produzidas, lancadas, producao, f.estabs, semRegraConta);
-    await balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", undefined, observadas, detSai, produzidas, lancadas, producao, f.estabs, semRegraConta);
+    // Contrapartida de fornecedor/cliente: conta que nasce no lançamento, então
+    // nota lançada ali não é "conta errada".
+    const contrapartidaVariavel = new Set<string>();
+    const observadasPorNatureza = await calibrarPorNatureza(client, empresa, f.inicio, f.fim, f.estabs);
+    const comum = {
+      observadas, observadasPorNatureza, produzidas, lancadas, producao,
+      estabs: f.estabs, semRegraConta, contrapartidaVariavel,
+    };
+    await balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", { ...comum, detalhe: detEnt });
+    await balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", { ...comum, detalhe: detSai });
 
     // Só as contas que o motor de fato REGRA entram na comparação: conta sem
     // regra espelha o real (fiscal = real), então não tem diferença — incluí-la
@@ -173,8 +181,12 @@ export const GET = apiRoute(async (req) => {
       if (regradasSet.has(r.conta) || produzidas.has(`${r.origem}:${r.chave}:${r.nat}`)) {
         a.real += r.net;
       }
-      // …e a conta onde a nota mais bate vem de TODAS as contas alvo.
-      if (Math.abs(r.net) > a.contaRealAbs) {
+      // …e a conta onde a nota mais bate vem de TODAS as contas alvo — menos a
+      // contrapartida variável: o plano manda a nota cair na conta do
+      // fornecedor/cliente, então ela ali é o certo, e apontá-la como "a conta
+      // onde foi parar" transformava o acerto em acusação.
+      const variavel = contrapartidaVariavel.has(`${r.origem}:${r.chave}:${r.nat}`);
+      if (!variavel && Math.abs(r.net) > a.contaRealAbs) {
         a.contaRealAbs = Math.abs(r.net);
         a.contaReal = r.conta;
       }

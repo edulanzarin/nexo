@@ -1,7 +1,7 @@
 import { pool } from "@/lib/db";
 import { apiRoute, assertEmpresaVisivel } from "@/lib/api-route";
 import { parseFilters, FilterError } from "@/lib/fiscal-filters";
-import { balanceteFiscal, type DetalheFiscal } from "@/lib/balancete-fiscal";
+import { balanceteFiscal, calibrarPorNatureza, type DetalheFiscal } from "@/lib/balancete-fiscal";
 import { contasDoAlvo } from "@/lib/plano-contabil";
 import type { BalanceteLancamento, BalanceteLancamentosResp } from "@/lib/types";
 
@@ -110,8 +110,10 @@ export const GET = apiRoute(async (req) => {
     const semRegraConta = new Set<string>();
     const detEnt: DetalheFiscal = { contas: contasSet, natureza, porNota: new Map(), regradas: new Set() };
     const detSai: DetalheFiscal = { contas: contasSet, natureza, porNota: new Map(), regradas: new Set() };
-    await balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", undefined, observadas, detEnt, produzidas, lancadas, undefined, f.estabs, semRegraConta);
-    await balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", undefined, observadas, detSai, produzidas, lancadas, undefined, f.estabs, semRegraConta);
+    const observadasPorNatureza = await calibrarPorNatureza(client, empresa, f.inicio, f.fim, f.estabs);
+    const comum = { observadas, observadasPorNatureza, produzidas, lancadas, estabs: f.estabs, semRegraConta };
+    await balanceteFiscal(client, empresa, f.inicio, f.fim, "ent", { ...comum, detalhe: detEnt });
+    await balanceteFiscal(client, empresa, f.inicio, f.fim, "sai", { ...comum, detalhe: detSai });
     const regradas = new Set<number>([...detEnt.regradas, ...detSai.regradas]);
 
     const regra: BalanceteLancamento[] = [...detEnt.porNota.values(), ...detSai.porNota.values()].map(

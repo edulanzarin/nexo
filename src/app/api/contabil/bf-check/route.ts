@@ -50,7 +50,10 @@ export const GET = apiRoute(async (req) => {
       if (r.cred > 0) observadas.add(`-1:${r.conta}`);
     }
 
-    const mov = await balanceteFiscal(client, emp, f.inicio, f.fim, tipo, chaves, observadas);
+    const mov = await balanceteFiscal(client, emp, f.inicio, f.fim, tipo, {
+      chavesFiltro: chaves,
+      observadas,
+    });
 
     let engineFixo = 0;
     let contrapartida = 0;

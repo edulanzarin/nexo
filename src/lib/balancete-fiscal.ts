@@ -93,23 +93,94 @@ const LADO = {
   sai: { tabela: "lctofissai", chave: "chavelctofissai", cfopTab: "lctofissaicfop", prod: "lctofissaiproduto", funrural: "0" },
 } as const;
 
-export async function balanceteFiscal(
+/**
+ * Calibra o motor por NATUREZA: quais (natureza, natureza contábil, conta) de
+ * fato recebem lançamento nota a nota no período, e quais naturezas têm
+ * lançamento por nota (a marca "cfop:*").
+ *
+ * Existe porque a calibração por conta erra por cima. A 382 (ICMS a Recuperar)
+ * recebe por nota das compras, então o gate por conta libera qualquer natureza
+ * a postar nela — e a devolução de venda, que credita o ICMS uma vez por mês na
+ * apuração, aparecia com o ICMS "faltando" em toda nota. O par (natureza, conta)
+ * é a granularidade em que a pergunta "isso é lançado por nota?" tem resposta.
+ */
+export async function calibrarPorNatureza(
   client: PoolClient,
   empresa: number,
   inicio: string,
   fim: string,
-  tipo: "ent" | "sai",
+  estabs: number[] = []
+): Promise<Set<string>> {
+  const params: unknown[] = [empresa, inicio, fim];
+  let filtroEstab = "";
+  if (estabs.length) {
+    params.push(estabs);
+    filtroEstab = ` and l.codigoestab = any($${params.length}::int[])`;
+  }
+  const { rows } = await client.query<{ cfop: number; nat: number; conta: number }>(
+    `with lct as (
+       select substring(l.chaveorigem for 2) origem,
+              substring(l.chaveorigem from 3)::bigint chave,
+              l.contactbdeb conta, 1 nat
+         from lctoctb l
+        where l.codigoempresa=$1 and l.codigooriglctoctb='FI'
+          and l.datalctoctb between $2 and $3 and l.chaveorigem ~ '^M[ES][0-9]+$'
+          and l.contactbdeb is not null${filtroEstab}
+       union all
+       select substring(l.chaveorigem for 2), substring(l.chaveorigem from 3)::bigint,
+              l.contactbcred, -1
+         from lctoctb l
+        where l.codigoempresa=$1 and l.codigooriglctoctb='FI'
+          and l.datalctoctb between $2 and $3 and l.chaveorigem ~ '^M[ES][0-9]+$'
+          and l.contactbcred is not null${filtroEstab}
+     ),
+     cf as (
+       select 'ME' origem, chavelctofisent chave, codigocfop cfop
+         from lctofisentproduto
+        where codigoempresa=$1 and datalctofis between $2 and $3
+       union
+       select 'MS', chavelctofissai, codigocfop
+         from lctofissaiproduto
+        where codigoempresa=$1 and datalctofis between $2 and $3
+     )
+     select cf.cfop, lct.nat, lct.conta
+       from lct join cf on cf.origem = lct.origem and cf.chave = lct.chave
+      group by cf.cfop, lct.nat, lct.conta`,
+    params
+  );
+  const set = new Set<string>();
+  for (const r of rows) {
+    set.add(`${r.cfop}:*`);
+    set.add(`${r.cfop}:${r.nat}:${r.conta}`);
+  }
+  return set;
+}
+
+/** Tudo que o chamador pode pedir ao motor. Objeto (e não posição) porque são
+ *  muitos coletores opcionais e trocar dois de lugar não daria erro de tipo. */
+export interface OpcoesBalanceteFiscal {
   /** Restringe a estas chaves (para validar reprodução só nas notas contabilizadas). */
-  chavesFiltro?: number[],
+  chavesFiltro?: number[];
   /**
    * Contas que de fato recebem lançamento nota a nota no ME ("natureza:conta").
    * Componente do plano cuja conta não está aqui NÃO é lançada por nota — vai na
    * apuração mensal (IM). Sem este filtro o motor super-gera imposto no ME.
    * A contrapartida variável (fornecedor/cliente) é sempre aceita.
    */
-  observadas?: Set<string>,
+  observadas?: Set<string>;
+  /**
+   * O mesmo, mas por NATUREZA: "cfop:natureza:conta" para o par observado e
+   * "cfop:*" para marcar que aquela natureza tem lançamento por nota no período.
+   *
+   * A calibração por conta é grossa demais e inventa erro: a 382 (ICMS a
+   * Recuperar) recebe por nota das COMPRAS, então passa no gate; mas a
+   * devolução de venda credita o ICMS uma vez por mês, na apuração, e cobrar
+   * dela por nota acusava toda devolução. Quando a natureza tem lançamento no
+   * período, quem manda é o par fino; sem isso, cai no gate por conta.
+   */
+  observadasPorNatureza?: Set<string>;
   /** Coletor do drill-down do lado Fiscal (opcional) — ver DetalheFiscal. */
-  detalhe?: DetalheFiscal,
+  detalhe?: DetalheFiscal;
   /**
    * Se presente, registra "origem:chave" de toda nota que o motor produziu em
    * ALGUMA conta fixa (não a contrapartida). Serve para distinguir, no detalhe da
@@ -122,7 +193,14 @@ export async function balanceteFiscal(
    * que faz conta errada aparecer no balancete (a conta certa fica com a nota a
    * mais, a errada com a nota a menos), sem dobrar o valor.
    */
-  produzidas?: Set<string>,
+  produzidas?: Set<string>;
+  /**
+   * Se presente, registra "origem:chave:natureza" quando o plano prevê
+   * CONTRAPARTIDA VARIÁVEL naquela natureza (fornecedor no crédito, cliente no
+   * débito). A conta dela nasce no lançamento, então lançamento da nota ali é
+   * o certo — e chamá-lo de "conta errada" é acusar o plano de seguir o plano.
+   */
+  contrapartidaVariavel?: Set<string>;
   /**
    * Chaves ("ME:chave"/"MS:chave") das notas que TÊM lançamento nota a nota no
    * real. Para elas o componente PRINCIPAL (valor contábil) fura o gate
@@ -131,17 +209,17 @@ export async function balanceteFiscal(
    * pra conta errada, e o motor precisa produzir a conta certa pra diferença
    * aparecer. Nota consolidada (MOV) ou pendente fica de fora (o espelho cuida).
    */
-  lancadas?: Set<string>,
+  lancadas?: Set<string>;
   /**
    * Se presente, registra por nota ("origem:chave") a conta FIXA que o plano
    * manda no componente principal — a "conta certa" segundo a regra, ANTES do
    * gate (mesmo quando o motor não a produz). Em multi-CFOP fica a de maior
    * valor. Serve pro detalhe da diferença dizer "deveria estar em X".
    */
-  producao?: Map<string, { conta: number; valor: number }>,
+  producao?: Map<string, { conta: number; valor: number }>;
   /** Filiais (codigoestab) a recortar; vazio = todas. O recorte entra só na
    *  scan das notas — os demais scans seguem as chaves já filtradas. */
-  estabs: number[] = [],
+  estabs?: number[];
   /**
    * Se presente, recebe "origem:chave" das notas cuja natureza de SERVIÇO não
    * tem regra de conta (genérica: a conta se decide na nota — ver conta-efetiva).
@@ -150,8 +228,29 @@ export async function balanceteFiscal(
    * aqui erraria, deixando a nota sem contrapartida no lado fiscal e inventando
    * uma diferença do tamanho dela.
    */
-  semRegraConta?: Set<string>
+  semRegraConta?: Set<string>;
+}
+
+export async function balanceteFiscal(
+  client: PoolClient,
+  empresa: number,
+  inicio: string,
+  fim: string,
+  tipo: "ent" | "sai",
+  opts: OpcoesBalanceteFiscal = {}
 ): Promise<BalanceteFiscalMov> {
+  const {
+    chavesFiltro,
+    observadas,
+    observadasPorNatureza,
+    detalhe,
+    produzidas,
+    contrapartidaVariavel,
+    lancadas,
+    producao,
+    estabs = [],
+    semRegraConta,
+  } = opts;
   const c = LADO[tipo];
 
   // Notas do período, com os valores que alimentam as fórmulas.
@@ -334,6 +433,11 @@ export async function balanceteFiscal(
           const conta = linha.contaVariavel ? CONTA_CONTRAPARTIDA : linha.conta;
           if (conta == null) continue;
           const origem = tipo === "ent" ? "ME" : "MS";
+          // O plano prevê conta variável nesta natureza: qualquer conta que a
+          // nota tenha ali é legítima (é o fornecedor/cliente dela).
+          if (contrapartidaVariavel && linha.contaVariavel) {
+            contrapartidaVariavel.add(`${origem}:${n.chave}:${linha.natureza}`);
+          }
           // Registra ANTES do gate `observadas`: a nota tem plano que gera esta
           // conta fixa, mesmo que essa conta não receba lançamento por nota (aí o
           // motor não a soma, mas ela É reproduzível — é o que separa conta errada
@@ -354,7 +458,13 @@ export async function balanceteFiscal(
           // Exceção: o componente PRINCIPAL de nota lançada por nota fura o gate —
           // a despesa/receita dela existe no contábil; se a conta do plano nunca é
           // usada, foi pra conta errada, e produzir a certa expõe a diferença.
-          if (observadas && conta !== CONTA_CONTRAPARTIDA && !observadas.has(`${linha.natureza}:${conta}`)) {
+          // Quem responde "isso é lançado por nota?" é o par (natureza, conta)
+          // quando a natureza tem lançamento no período; senão o gate por conta.
+          const lancaPorNota =
+            observadasPorNatureza?.has(`${cf}:*`)
+              ? observadasPorNatureza.has(`${cf}:${linha.natureza}:${conta}`)
+              : (observadas?.has(`${linha.natureza}:${conta}`) ?? true);
+          if (observadas && conta !== CONTA_CONTRAPARTIDA && !lancaPorNota) {
             const notaLancada = lancadas?.has(`${origem}:${n.chave}`) ?? false;
             if (!(comp.id === "vlrcontabil" && notaLancada)) continue;
             // Bypass disparou: a nota foi lançada, mas a conta do plano nunca
