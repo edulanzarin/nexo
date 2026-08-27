@@ -85,9 +85,46 @@ describe("aplicarContaEfetiva", () => {
     expect(a).toBe(over);
   });
 
-  it("natureza de mercadoria fica intacta — lá o aprendizado por nota não serve", () => {
+  it("mercadoria também troca pela conta habitual", () => {
+    const [p] = aplicarContaEfetiva([natureza(1102, 3171)], new Map([["1:1102", aprendido()]]));
+    expect(principal(p).conta).toBe(4537);
+  });
+
+  it("mercadoria SEM conta habitual segue o plano — dispersão ali pode ser erro", () => {
     const merc = [natureza(1102, 3171)];
-    const [p] = aplicarContaEfetiva(merc, new Map([["1:1102", aprendido()]]));
+    const [p] = aplicarContaEfetiva(
+      merc,
+      new Map([["1:1102", aprendido({ habitual: false, contaEfetiva: null, descrEfetiva: null })]])
+    );
     expect(p).toBe(merc[0]);
+  });
+
+  it("na venda, a perna trocada é a receita — nunca a conta fixa do cliente", () => {
+    // Cliente como conta FIXA ("Clientes Diversos"): a primeira linha da venda é
+    // ele, e trocá-lo faria o motor lançar receita contra receita.
+    const venda: PlanoCfop = {
+      ...natureza(5102, 0),
+      lado: "sai",
+      componentes: [
+        {
+          id: "vlrcontabil",
+          rotulo: "Valor contábil",
+          retido: false,
+          tabela: 1,
+          descrTabela: null,
+          linhas: [
+            { seq: 1, natureza: 1, conta: 142, contaVariavel: false, origemConta: 0, descrConta: "Clientes Diversos", regraValor: "vlrContabil", historico: null },
+            { seq: 2, natureza: -1, conta: 2606, contaVariavel: false, origemConta: 0, descrConta: "Vendas", regraValor: "vlrContabil", historico: null },
+          ],
+        },
+      ],
+    };
+    const [p] = aplicarContaEfetiva(
+      [venda],
+      new Map([["1:5102", aprendido({ contaPlano: 2606, contaEfetiva: 2655, descrEfetiva: "Vendas a Prazo" })]])
+    );
+    const linhas = p.componentes[0].linhas;
+    expect(linhas[0].conta).toBe(142); // cliente intacto
+    expect(linhas[1].conta).toBe(2655); // receita trocada
   });
 });
