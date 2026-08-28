@@ -248,6 +248,25 @@ export async function sincronizarObrigacoes(): Promise<ResumoSync> {
     await appQuery(`update obr_sync set total = $2 where id = $1`, [syncId, empresas.length]);
 
     const inicioIdx = retomadaDe != null && retomadaDe < empresas.length ? retomadaDe : 0;
+
+    // Parada pedida ENQUANTO ela listava empresas. A listagem leva minutos e não
+    // passa pelo laço abaixo, então sem esta checagem o botão ficava em
+    // "Parando…" até a listagem acabar — o usuário pede para parar e nada
+    // acontece, que é pior que não ter botão.
+    const [antesDoLaco] = await appQuery<{ cancelar: boolean }>(
+      `select cancelar from obr_sync where id = $1`,
+      [syncId]
+    );
+    if (antesDoLaco?.cancelar) {
+      await appQuery(
+        `update obr_sync set concluido_em = now(), total = $2, erro = $3 where id = $1`,
+        [syncId, empresas.length, "cancelada por pedido do usuário"]
+      );
+      return {
+        empresas: 0, entregas: 0, falhas: 0, duracaoMs: Date.now() - t0,
+        cancelada: true, retomadaDe,
+      };
+    }
     let entregas = 0;
     let falhas = 0;
 

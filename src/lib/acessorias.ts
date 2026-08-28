@@ -204,10 +204,23 @@ async function tentarGet<T>(url: string, caminho: string): Promise<T | null | "4
  * aqui". O limite não sobe como erro na primeira recusa: esperar é mais barato
  * que perder a empresa.
  */
-async function get<T>(caminho: string, params?: Record<string, string>): Promise<T | null> {
-  const qs = params ? `?${new URLSearchParams(params)}` : "";
+async function get<T>(
+  caminho: string,
+  params?: Record<string, string>,
+  /**
+   * Parâmetros de PRESENÇA (`?config`, `?attachments`). Vão sem `=`, e isso não
+   * é preciosismo: MEDIDO em ago/2026, `config=1` faz o endpoint de entregas
+   * devolver VAZIO, enquanto `config` devolve a lista completa com o bloco
+   * Config. Nenhum erro, nenhum aviso — a mesma falha silenciosa das outras
+   * armadilhas desta API, aqui disparada pela própria forma do parâmetro.
+   */
+  flags?: string[]
+): Promise<T | null> {
+  const qs = params ? new URLSearchParams(params).toString() : "";
+  const nuas = (flags ?? []).map(encodeURIComponent).join("&");
+  const query = [qs, nuas].filter(Boolean).join("&");
   // O caminho já vem montado com o CNPJ cru; só a query é encodada.
-  const url = `${BASE}${caminho}${qs}`;
+  const url = `${BASE}${caminho}${query ? `?${query}` : ""}`;
 
   for (let tentativa = 1; ; tentativa++) {
     const r = await tentarGet<T>(url, caminho);
@@ -337,13 +350,13 @@ export async function entregasPendentes(
   let vaziasSeguidas = 0;
 
   for (let pagina = 1; pagina <= MAX_PAGINAS; pagina++) {
-    const r = await get<RespostaEntregas>(`/deliveries/${cnpj}`, {
-      DtInitial: inicio,
-      DtFinal: fim,
-      situation: "pending",
-      config: "1",
-      Pagina: String(pagina),
-    });
+    const r = await get<RespostaEntregas>(
+      `/deliveries/${cnpj}`,
+      { DtInitial: inicio, DtFinal: fim, situation: "pending", Pagina: String(pagina) },
+      // `config` traz setor e responsável. Como FLAG NUA — com valor, a API
+      // devolve vazio (ver `get`).
+      ["config"]
+    );
     const lote = r?.Entregas ?? [];
 
     // Mesma armadilha 4, e aqui ela é mais traiçoeira que na lista de empresas:
