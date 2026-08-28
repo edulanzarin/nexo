@@ -1,4 +1,5 @@
 import { getSessaoOpcional, empresasPermitidas } from "./sessao";
+import { empresasDeGrupos } from "./grupos-empresa";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -18,6 +19,12 @@ export interface FiscalFilters {
    * nesse caso.
    */
   estabs: number[];
+  /**
+   * Grupos de empresa (`grupo_empresarial`, cadastrados em Configurações). O
+   * cliente manda os IDs; quem os traduz em empresas é o servidor — grupo é
+   * outro jeito de dizer "estas empresas", não um escopo paralelo.
+   */
+  grupos: number[];
   especies: string[];
 }
 
@@ -51,12 +58,46 @@ export function parseFilters(searchParams: URLSearchParams): FiscalFilters {
       return n;
     });
 
+  const grupos = (searchParams.get("grupos") ?? "")
+    .split(",")
+    .filter(Boolean)
+    .map((v) => {
+      const n = Number(v);
+      if (!Number.isInteger(n) || n <= 0) throw new FilterError(`Grupo inválido: ${v}`);
+      return n;
+    });
+
   const especies = (searchParams.get("especies") ?? "")
     .split(",")
     .filter(Boolean)
     .map((e) => e.toUpperCase().slice(0, 10));
 
-  return { inicio, fim, empresas, estabs, especies };
+  return { inicio, fim, empresas, estabs, grupos, especies };
+}
+
+/**
+ * Empresas que o CLIENTE pediu: a união do que ele marcou à mão com o que os
+ * grupos escolhidos contêm. "todas" só quando não pediu nada — e note que um
+ * grupo vazio devolve lista vazia, que restringe a nada (pedir um grupo sem
+ * empresa não pode virar "o escritório inteiro").
+ */
+async function escopoPedido(f: FiscalFilters): Promise<number[] | "todas"> {
+  if (f.grupos.length === 0) return f.empresas.length ? f.empresas : "todas";
+  const doGrupo = await empresasDeGrupos(f.grupos);
+  return [...new Set([...f.empresas, ...doGrupo])];
+}
+
+/**
+ * O FUNIL: o pedido do cliente cruzado com o que a sessão alcança. É por aqui
+ * que toda consulta fiscal/contábil passa — `buildWhere` e o `condEscopo` das
+ * abas de produtividade —, para nenhuma esquecer o clamp de permissão.
+ */
+export async function escopoEfetivo(f: FiscalFilters): Promise<number[] | "todas"> {
+  const pedido = await escopoPedido(f);
+  const sessao = await getSessaoOpcional();
+  const permitido: number[] | "todas" = sessao ? empresasPermitidas(sessao) : [];
+  if (permitido === "todas") return pedido;
+  return pedido === "todas" ? permitido : pedido.filter((e) => permitido.includes(e));
 }
 
 /**
@@ -76,19 +117,12 @@ export async function buildWhere(
   const params: unknown[] = [f.inicio, f.fim];
   const conds = [`${a}datalctofis between $1 and $2`];
 
-  // Escopo de empresa: "todas" não restringe (só o filtro que o cliente pediu);
-  // caso contrário, SEMPRE limita ao permitido — interseção com o pedido, e
-  // lista vazia (any('{}')) não casa nada (usuário sem empresa não vê nada).
-  const sessao = await getSessaoOpcional();
-  const escopo: number[] | "todas" = sessao ? empresasPermitidas(sessao) : [];
-  if (escopo === "todas") {
-    if (f.empresas.length > 0) {
-      params.push(f.empresas);
-      conds.push(`${a}codigoempresa = any($${params.length}::int[])`);
-    }
-  } else {
-    const efetivas = f.empresas.length > 0 ? f.empresas.filter((e) => escopo.includes(e)) : escopo;
-    params.push(efetivas);
+  // Escopo de empresa: "todas" não restringe; qualquer outra coisa vira lista
+  // explícita — e lista vazia (any('{}')) não casa nada, que é o certo para
+  // usuário sem empresa e para grupo sem empresa.
+  const escopo = await escopoEfetivo(f);
+  if (escopo !== "todas") {
+    params.push(escopo);
     conds.push(`${a}codigoempresa = any($${params.length}::int[])`);
   }
 

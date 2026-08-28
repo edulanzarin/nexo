@@ -1,7 +1,6 @@
 import "server-only";
 import { query } from "./db";
-import { parseFilters, type FiscalFilters } from "./fiscal-filters";
-import { empresasPermitidas, getSessaoOpcional } from "./sessao";
+import { escopoEfetivo, parseFilters, type FiscalFilters } from "./fiscal-filters";
 
 /**
  * PEÇAS COMUNS DAS ABAS DE PRODUTIVIDADE DO CONTÁBIL.
@@ -21,12 +20,14 @@ export function parseProdFiltros(sp: URLSearchParams): ProdFiltros {
   return parseFilters(sp);
 }
 
-/** Escopo efetivo: "todas" (sem restrição) ou a interseção sessão × pedido. */
+/**
+ * Escopo efetivo: "todas" (sem restrição) ou a interseção sessão × pedido
+ * (empresas marcadas ∪ empresas dos grupos). Um delegate de propósito — o funil
+ * mora em `fiscal-filters`, e escopo com duas implementações é escopo que um dia
+ * diverge.
+ */
 export async function escopoEmpresas(f: ProdFiltros): Promise<number[] | "todas"> {
-  const sessao = await getSessaoOpcional();
-  const escopo: number[] | "todas" = sessao ? empresasPermitidas(sessao) : [];
-  if (escopo === "todas") return f.empresas.length ? f.empresas : "todas";
-  return f.empresas.length ? f.empresas.filter((e) => escopo.includes(e)) : escopo;
+  return escopoEfetivo(f);
 }
 
 /**

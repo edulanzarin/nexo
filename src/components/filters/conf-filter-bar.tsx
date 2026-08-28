@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Building2, Check, Search } from "lucide-react";
 import { Dropdown, ItemLista } from "@/components/ui/dropdown";
 import { FilialDropdown } from "@/components/filters/filial-dropdown";
+import { GrupoDropdown } from "@/components/filters/grupo-dropdown";
 import { PeriodoDropdown } from "@/components/filters/periodo-dropdown";
 import { PeriodoMensalDropdown } from "@/components/filters/periodo-mensal-dropdown";
 import { BotaoExecutar } from "@/components/filters/botao-executar";
@@ -26,6 +27,7 @@ export function ConfFilterBar({
   periodoMensal = false,
   mostrarFilial = true,
   empresaOpcional = false,
+  mostrarGrupo = false,
   execucao = { imediata: false, rotulo: "Executar" },
   extras,
 }: {
@@ -38,6 +40,14 @@ export function ConfFilterBar({
   /** Empresa vira filtro, não obrigação: "Todas as empresas" é o padrão e o
    *  Executar não exige seleção (Produtividade do DP varre todo o escopo). */
   empresaOpcional?: boolean;
+  /**
+   * Filtro por grupo de empresa (Configurações). Só nas telas que varrem o
+   * escritório inteiro — numa bancada de uma empresa por vez ele não teria o
+   * que recortar. Exige que a consulta da tela passe pelo funil de escopo
+   * (`buildWhere`/`condEscopo`), senão o dropdown mentiria: mudaria a URL sem
+   * mudar o resultado.
+   */
+  mostrarGrupo?: boolean;
   execucao?: { imediata: boolean; rotulo: string };
   /** Controles que a aba põe NA LINHA da barra, ao lado da empresa (ex.: conta
    *  e extrato na Conciliação). Compartilham estado com a página via seção. */
@@ -63,12 +73,18 @@ export function ConfFilterBar({
   const [busca, setBusca] = useState("");
 
   const empresaSel = rascunho.empresas[0];
+  // Empresa e grupo são o MESMO campo — o escopo —, escritos de dois jeitos.
+  // Escolher um limpa o outro: somar "empresa X" com "grupo Y" daria uma união
+  // que ninguém pediu e que o rótulo não teria como contar honestamente.
+  const grupos = rascunho.grupos;
   const rotuloEmpresa =
     empresaSel != null
       ? (empresas?.find((e) => e.codigo === empresaSel)?.nome ?? `Empresa ${empresaSel}`)
-      : empresaOpcional
-        ? "Todas as empresas"
-        : "Selecione a empresa";
+      : grupos.length > 0
+        ? "Empresas do grupo"
+        : empresaOpcional
+          ? "Todas as empresas"
+          : "Selecione a empresa";
 
   const empresasFiltradas = useMemo(() => {
     if (!empresas) return [];
@@ -106,7 +122,7 @@ export function ConfFilterBar({
                 <ItemLista
                   selecionado={empresaSel == null}
                   onClick={() => {
-                    editar({ empresas: [], estabs: [] });
+                    editar({ empresas: [], estabs: [], grupos: [] });
                     fechar();
                   }}
                 >
@@ -121,8 +137,9 @@ export function ConfFilterBar({
                   key={e.codigo}
                   selecionado={e.codigo === empresaSel}
                   onClick={() => {
-                    // Troca de empresa zera as filiais (são de outra empresa).
-                    editar({ empresas: [e.codigo], estabs: [] });
+                    // Troca de empresa zera as filiais (são de outra empresa)
+                    // e o grupo (o escopo passa a ser esta empresa, só ela).
+                    editar({ empresas: [e.codigo], estabs: [], grupos: [] });
                     fechar();
                   }}
                 >
@@ -142,6 +159,14 @@ export function ConfFilterBar({
           </div>
         )}
       </Dropdown>
+
+      {/* Grupo: o outro jeito de escrever o escopo (ver rotuloEmpresa) */}
+      {mostrarGrupo && (
+        <GrupoDropdown
+          grupos={grupos}
+          onChange={(g) => editar({ grupos: g, empresas: [], estabs: [] })}
+        />
+      )}
 
       {/* Filial (só quando a empresa tem mais de uma) */}
       {mostrarFilial && (

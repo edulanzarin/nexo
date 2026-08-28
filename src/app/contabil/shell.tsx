@@ -174,6 +174,11 @@ function ConteudoComFiltro({
         periodoMensal={periodoMensal}
         mostrarFilial={usaPeriodo}
         empresaOpcional={empresaOpcional}
+        // Grupo anda junto com "empresa é filtro, não obrigação": é exatamente
+        // nas telas que varrem o escritório inteiro (a Produtividade) que faz
+        // sentido perguntar "só este grupo" — e são elas que passam pelo
+        // `condEscopo`, que sabe resolver grupo em empresas.
+        mostrarGrupo={empresaOpcional}
         execucao={execucao}
         extras={(() => {
           const Controles = aba ? CONTROLES_BARRA[aba.id] : undefined;

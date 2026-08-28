@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { mutar } from "./mutar";
 import type {
   Empresa,
+  GrupoEmpresa,
   Filial,
   Metrica,
   Overview,
@@ -113,6 +114,10 @@ function useApiQuery<T>(chave: unknown[], url: string, enabled = true) {
 
 export const useEmpresas = () =>
   useApiQuery<Empresa[]>(["empresas"], "/api/empresas");
+
+/** Grupos de empresa cadastrados em Configurações — o filtro "por grupo". */
+export const useGruposEmpresa = () =>
+  useApiQuery<GrupoEmpresa[]>(["grupos-empresa"], "/api/grupos-empresa");
 
 /** Filiais de uma empresa — para o seletor de filial (só quando há 1 empresa). */
 export const useFiliais = (empresa: number | null) =>

@@ -19,7 +19,7 @@ import { FilialDropdown } from "@/components/filters/filial-dropdown";
 import { PeriodoDropdown } from "@/components/filters/periodo-dropdown";
 import { BotaoExecutar } from "@/components/filters/botao-executar";
 import { GruposModal } from "@/components/grupos-modal";
-import { useEmpresas } from "@/hooks/use-api";
+import { useEmpresas, useGruposEmpresa } from "@/hooks/use-api";
 import { useGruposLocais } from "@/hooks/use-grupos-locais";
 import { useRascunhoFiltros } from "@/hooks/use-filters";
 import { hojeISO, inicioDoMesISO } from "@/lib/format";
@@ -61,6 +61,7 @@ export function FilterBar({ mostrarMetrica = true }: { mostrarMetrica?: boolean 
   const { rascunho, editar, dirty, executar } = useRascunhoFiltros();
   const { data: empresas } = useEmpresas();
   const { grupos } = useGruposLocais();
+  const { data: gruposConfig } = useGruposEmpresa();
   const [buscaEmpresa, setBuscaEmpresa] = useState("");
   const [buscaGrupo, setBuscaGrupo] = useState("");
   const [modalGrupos, setModalGrupos] = useState(false);
@@ -89,6 +90,30 @@ export function FilterBar({ mostrarMetrica = true }: { mostrarMetrica?: boolean 
     return grupos.filter((g) => g.nome.toLowerCase().includes(q));
   }, [grupos, buscaGrupo]);
 
+  // Grupos do escritório (Configurações): ao contrário dos locais, NÃO viram
+  // lista de empresas aqui — só o id vai na URL e o servidor resolve. Por isso
+  // vivem num estado próprio (`rascunho.grupos`) em vez de somar em `empresas`.
+  const configFiltrados = useMemo(() => {
+    if (!gruposConfig) return [];
+    const q = buscaGrupo.trim().toLowerCase();
+    return q ? gruposConfig.filter((g) => g.nome.toLowerCase().includes(q)) : gruposConfig;
+  }, [gruposConfig, buscaGrupo]);
+
+  const toggleGrupoConfig = (id: number) => {
+    const s = new Set(rascunho.grupos);
+    if (s.has(id)) s.delete(id);
+    else s.add(id);
+    editar({ grupos: [...s].sort((a, b) => a - b) });
+  };
+
+  const nGrupos = gruposAtivos.length + rascunho.grupos.length;
+  const nomeUnico =
+    nGrupos !== 1
+      ? null
+      : (gruposAtivos[0]?.nome ??
+        gruposConfig?.find((g) => g.id === rascunho.grupos[0])?.nome ??
+        "1 grupo");
+
   const rotuloEmpresas =
     rascunho.empresas.length === 0
       ? "Todas as empresas"
@@ -97,7 +122,8 @@ export function FilterBar({ mostrarMetrica = true }: { mostrarMetrica?: boolean 
           `Empresa ${rascunho.empresas[0]}`)
         : `${rascunho.empresas.length} empresas`;
 
-  const temFiltro = rascunho.empresas.length > 0 || rascunho.especies.length > 0;
+  const temFiltro =
+    rascunho.empresas.length > 0 || rascunho.especies.length > 0 || rascunho.grupos.length > 0;
 
   const toggleEmpresa = (codigo: number) => {
     const set = new Set(rascunho.empresas);
@@ -210,14 +236,8 @@ export function FilterBar({ mostrarMetrica = true }: { mostrarMetrica?: boolean 
 
       <Dropdown
         icone={<FolderKanban className="size-4" />}
-        rotulo={
-          gruposAtivos.length === 0
-            ? "Grupos"
-            : gruposAtivos.length === 1
-              ? gruposAtivos[0].nome
-              : `${gruposAtivos.length} grupos`
-        }
-        ativo={gruposAtivos.length > 0}
+        rotulo={nGrupos === 0 ? "Grupos" : (nomeUnico ?? `${nGrupos} grupos`)}
+        ativo={nGrupos > 0}
         largura="w-72"
       >
         {() => (
@@ -231,13 +251,13 @@ export function FilterBar({ mostrarMetrica = true }: { mostrarMetrica?: boolean 
                 placeholder="Buscar grupo…"
                 className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted"
               />
-              {gruposAtivos.length > 0 && (
+              {nGrupos > 0 && (
                 <Button
                   variant="link"
                   onClick={() => {
                     const set = new Set(rascunho.empresas);
                     gruposAtivos.forEach((g) => g.empresas.forEach((c) => set.delete(c)));
-                    editar({ empresas: [...set], estabs: [] });
+                    editar({ empresas: [...set], estabs: [], grupos: [] });
                   }}
                   className="shrink-0 text-xs"
                 >
@@ -246,7 +266,38 @@ export function FilterBar({ mostrarMetrica = true }: { mostrarMetrica?: boolean 
               )}
             </div>
             <div className="max-h-64 overflow-y-auto py-1">
-              {grupos.length === 0 && (
+              {configFiltrados.length > 0 && (
+                <p className="px-3 pb-1 pt-2 text-[11px] uppercase tracking-wide text-muted">
+                  Do escritório
+                </p>
+              )}
+              {configFiltrados.map((g) => {
+                const marcado = rascunho.grupos.includes(g.id);
+                return (
+                  <ItemLista
+                    key={`cfg-${g.id}`}
+                    selecionado={marcado}
+                    onClick={() => toggleGrupoConfig(g.id)}
+                  >
+                    <span
+                      className={clsx(
+                        "grid size-4 shrink-0 place-items-center rounded border",
+                        marcado ? "border-accent bg-accent text-white" : "border-baseline"
+                      )}
+                    >
+                      {marcado && <Check className="size-3 stroke-[3]" />}
+                    </span>
+                    <span className="flex-1 truncate">{g.nome}</span>
+                    <span className="tnum text-xs text-muted">{g.empresas} emp.</span>
+                  </ItemLista>
+                );
+              })}
+              {grupos.length > 0 && (
+                <p className="px-3 pb-1 pt-2 text-[11px] uppercase tracking-wide text-muted">
+                  Meus atalhos
+                </p>
+              )}
+              {grupos.length === 0 && configFiltrados.length === 0 && (
                 <p className="px-3 py-3 text-sm text-muted">Nenhum grupo criado ainda</p>
               )}
               {grupos.length > 0 && gruposFiltrados.length === 0 && (
@@ -326,7 +377,7 @@ export function FilterBar({ mostrarMetrica = true }: { mostrarMetrica?: boolean 
       </Dropdown>
 
       {temFiltro && (
-        <Button variant="ghost" onClick={() => editar({ empresas: [], especies: [] })}>
+        <Button variant="ghost" onClick={() => editar({ empresas: [], especies: [], grupos: [] })}>
           <X className="size-4" />
           Limpar filtros
         </Button>

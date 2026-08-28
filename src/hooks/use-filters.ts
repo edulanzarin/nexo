@@ -11,6 +11,8 @@ export interface FiltrosState {
   empresas: number[];
   /** Filiais (codigoestab) dentro da empresa; vazio = todas (consolidado). */
   estabs: number[];
+  /** Grupos de empresa (Configurações) — o servidor os resolve em empresas. */
+  grupos: number[];
   especies: string[];
   metrica: Metrica;
 }
@@ -22,6 +24,7 @@ function assinatura(f: FiltrosState): string {
     f.fim,
     [...f.empresas].sort((a, b) => a - b).join(","),
     [...f.estabs].sort((a, b) => a - b).join(","),
+    [...f.grupos].sort((a, b) => a - b).join(","),
     [...f.especies].sort().join(","),
     f.metrica,
   ].join("|");
@@ -37,6 +40,7 @@ export function useFiltros() {
       fim: sp.get("fim") ?? hojeISO(),
       empresas: (sp.get("empresas") ?? "").split(",").filter(Boolean).map(Number),
       estabs: (sp.get("estabs") ?? "").split(",").filter(Boolean).map(Number),
+      grupos: (sp.get("grupos") ?? "").split(",").filter(Boolean).map(Number),
       especies: (sp.get("especies") ?? "").split(",").filter(Boolean),
       metrica: sp.get("metrica") === "qtd" ? "qtd" : "valor",
     }),
@@ -55,6 +59,7 @@ export function useFiltros() {
       params.set("fim", novo.fim);
       if (novo.empresas.length) params.set("empresas", novo.empresas.join(","));
       if (novo.estabs.length) params.set("estabs", novo.estabs.join(","));
+      if (novo.grupos.length) params.set("grupos", novo.grupos.join(","));
       if (novo.especies.length) params.set("especies", novo.especies.join(","));
       if (novo.metrica !== "valor") params.set("metrica", novo.metrica);
       params.set("ap", "1");
@@ -69,6 +74,7 @@ export function useFiltros() {
     const params = new URLSearchParams({ inicio: filtros.inicio, fim: filtros.fim });
     if (filtros.empresas.length) params.set("empresas", filtros.empresas.join(","));
     if (filtros.estabs.length) params.set("estabs", filtros.estabs.join(","));
+    if (filtros.grupos.length) params.set("grupos", filtros.grupos.join(","));
     if (filtros.especies.length) params.set("especies", filtros.especies.join(","));
     return params.toString();
   }, [filtros]);

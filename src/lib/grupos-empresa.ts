@@ -90,3 +90,18 @@ export async function excluirGrupoEmpresa(id: number): Promise<void> {
 export async function gruposParaSelecao(): Promise<GrupoOpcao[]> {
   return appQuery<GrupoOpcao>(`select id, nome from grupo_empresarial order by nome`);
 }
+
+/**
+ * Empresas de um ou mais grupos, sem repetição. É o que transforma "grupo" em
+ * filtro de consulta: o cliente manda os IDs do grupo e o funil de escopo os
+ * resolve AQUI, no servidor — a lista de empresas nunca vem do navegador.
+ * Grupo sem empresa devolve nada, e é o chamador que decide o que isso significa.
+ */
+export async function empresasDeGrupos(ids: number[]): Promise<number[]> {
+  if (ids.length === 0) return [];
+  const rows = await appQuery<{ codigoempresa: number }>(
+    `select distinct codigoempresa from grupo_empresarial_item where grupo_id = any($1::int[])`,
+    [ids]
+  );
+  return rows.map((r) => r.codigoempresa);
+}

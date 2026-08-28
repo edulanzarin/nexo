@@ -10,6 +10,18 @@ export interface Filial {
 }
 
 /** Grupo de empresas criado pelo usuário, salvo no navegador. */
+/**
+ * Grupo de empresa cadastrado em Configurações (`grupo_empresarial`) — o grupo
+ * COMPARTILHADO do escritório, que vira filtro nas telas. Não confundir com o
+ * `GrupoLocal` abaixo, que é atalho pessoal guardado no navegador.
+ */
+export interface GrupoEmpresa {
+  id: number;
+  nome: string;
+  /** Quantas empresas do grupo o usuário atual alcança. */
+  empresas: number;
+}
+
 export interface GrupoLocal {
   id: string;
   nome: string;
