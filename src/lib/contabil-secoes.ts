@@ -1,4 +1,4 @@
-import { ClipboardCheck, FileSpreadsheet, Gauge, Import, Landmark, LayoutDashboard, LayoutGrid, ListChecks, Scale, ScanSearch, Table2 } from "lucide-react";
+import { ClipboardCheck, FileSpreadsheet, Gauge, Import, Landmark, LayoutDashboard, LayoutGrid, ListChecks, Scale, ScanSearch, Table2, Users } from "lucide-react";
 import type { SecaoFiscal } from "./fiscal-secoes";
 
 /**
@@ -276,6 +276,29 @@ export const SECOES_CONTABIL: SecaoContabil[] = [
         descricao:
           "Notas não contabilizadas ou na conta errada + lançamentos anômalos, para resolver ou ignorar",
         execucao: "Executar",
+      },
+    ],
+  },
+  {
+    id: "funcionarios",
+    rotulo: "Funcionários",
+    icone: Users,
+    path: "/contabil/funcionarios",
+    metrica: false,
+    descricao: "Quem é funcionário da empresa — folha do Questor, sem remuneração",
+    // Cadastro, não apuração: a folha vigente da empresa não tem recorte de
+    // período, e "Carregar" (como a Configuração) diz que só se traz o que já
+    // existe. Serve à pergunta que o extrato levanta — se o favorecido é
+    // funcionário, a comissão não vai na mesma conta de quem não é —, e a
+    // Conciliação carimba a resposta sozinha na linha (ver folha-casamento).
+    abas: [
+      {
+        id: "funcionarios",
+        rotulo: "Funcionários",
+        path: "/contabil/funcionarios",
+        descricao: "Quadro da empresa com vínculo, cargo, setor e admissão",
+        semPeriodo: true,
+        execucao: "Carregar",
       },
     ],
   },

@@ -61,6 +61,7 @@ import type { ContabilExclusoesResp } from "@/lib/contabil-exclusoes-tipos";
 import type { ContabilAtrasoResp } from "@/lib/contabil-atraso-tipos";
 import type { ContabilCarteiraResp } from "@/lib/contabil-carteira-tipos";
 import type { ContabilTempoResp } from "@/lib/contabil-tempo-tipos";
+import type { FuncionariosContabilResp } from "@/lib/contabil-funcionarios-tipos";
 import type {
   RescisoesResumo,
   RescisoesConfig,
@@ -515,6 +516,18 @@ export const useContabilTempo = (qs: string, enabled = true) =>
     ["contabil-tempo", qs],
     `/api/contabil/produtividade-tempo?${qs}`,
     enabled
+  );
+
+/** Quadro de funcionários da empresa lido pelo Contábil (folha, sem salário). */
+export const useFuncionariosContabil = (
+  empresa: number | undefined,
+  desligados: boolean,
+  enabled = true
+) =>
+  useApiQuery<FuncionariosContabilResp>(
+    ["contabil-funcionarios", empresa, desligados],
+    `/api/contabil/funcionarios?empresa=${empresa}&desligados=${desligados ? "1" : "0"}`,
+    enabled && empresa != null
   );
 
 export const useConferencia = (qs: string, enabled = true) =>

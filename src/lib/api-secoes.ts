@@ -95,6 +95,8 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     "produtividade-atraso": ["produtividade"],
     "produtividade-carteira": ["produtividade"],
     "produtividade-tempo": ["produtividade"],
+    // Quadro de funcionários (folha do Questor lida pelo Contábil, sem salário)
+    funcionarios: ["funcionarios"],
     // Lookup de contas: usado na Configuração, na Conciliação e na Implantação
     contas: ["conferencia", "conciliacao", "implantacao"],
   },
