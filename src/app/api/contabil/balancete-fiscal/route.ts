@@ -182,12 +182,22 @@ export const GET = apiRoute(async (req) => {
     casar(true);
     casar(false);
 
+    const mirror = (r: { conta: number; natureza: number; valor: number }) => {
+      const a = fiscalPorConta.get(r.conta) ?? { deb: 0, cred: 0 };
+      if (r.natureza === 1) a.deb += r.valor;
+      else a.cred += r.valor;
+      fiscalPorConta.set(r.conta, a);
+    };
     real.rows.forEach((r, i) => {
       const m = NOTA_RE.exec(r.chaveorigem);
-      if (m && !semRegraConta.has(`${m[1]}:${m[2]}`)) {
+      if (m) {
         const nc = `${m[1]}:${m[2]}:${r.natureza}:${r.conta}`;
-        // O motor pôs a nota AQUI: a versão dele substitui o real.
+        // O motor pôs a nota AQUI: a versão dele substitui o real. Vale mesmo em
+        // nota "sem regra de conta" — a natureza não tem regra para a DESPESA,
+        // mas as pernas de imposto que ele reproduziu continuam valendo, e
+        // espelhá-las junto contava o mesmo lançamento duas vezes.
         if (porNotaConta.produzidas.has(nc)) return;
+        if (semRegraConta.has(`${m[1]}:${m[2]}`)) return void mirror(r);
         // O plano manda a nota aqui e o motor não soube reproduzir: espelha, ou
         // a conta acusa uma falta que é do motor, não do lançamento.
         // A perna principal desta nota foi reproduzida e caiu em OUTRA conta:
@@ -203,10 +213,7 @@ export const GET = apiRoute(async (req) => {
       // entra no lado fiscal é a soma do período, e a diferença entre as duas
       // é justamente o que a apuração deixou de lançar.
       if (consumidas.has(i)) return;
-      const a = fiscalPorConta.get(r.conta) ?? { deb: 0, cred: 0 };
-      if (r.natureza === 1) a.deb += r.valor;
-      else a.cred += r.valor;
-      fiscalPorConta.set(r.conta, a);
+      mirror(r);
     });
 
     // A soma do período entra no lado fiscal no lugar do que foi espelhado —

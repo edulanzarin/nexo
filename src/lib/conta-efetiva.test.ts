@@ -64,7 +64,7 @@ describe("aplicarContaEfetiva", () => {
     expect(p).toBe(plano[0]);
   });
 
-  it("natureza genérica vira conta decidida no lançamento, sem conta a cobrar", () => {
+  it("serviço sem conta habitual vira conta decidida no lançamento", () => {
     const [p] = aplicarContaEfetiva(
       [natureza(8001015, 4537)],
       new Map([["1:8001015", aprendido({ habitual: false, contaEfetiva: null, descrEfetiva: null })]])
@@ -90,7 +90,7 @@ describe("aplicarContaEfetiva", () => {
     expect(principal(p).conta).toBe(4537);
   });
 
-  it("mercadoria SEM conta habitual segue o plano — dispersão ali pode ser erro", () => {
+  it("mercadoria sem conta habitual segue o plano — dispersão ali pode ser o erro", () => {
     const merc = [natureza(1102, 3171)];
     const [p] = aplicarContaEfetiva(
       merc,

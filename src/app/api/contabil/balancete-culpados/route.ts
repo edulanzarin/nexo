@@ -191,7 +191,9 @@ export const GET = apiRoute(async (req) => {
       const ehPerna = pr != null && Math.abs(Math.abs(r.net) - pr) < 0.02;
       const espelhado = porNotaConta.produzidas.has(nc)
         ? false
-        : porNotaConta.puladas.has(nc) || !ehPerna;
+        : semRegraConta.has(`${r.origem}:${r.chave}`) ||
+          porNotaConta.puladas.has(nc) ||
+          !ehPerna;
       if (!espelhado) a.real += r.net;
       // …e a conta onde a nota mais bate vem de TODAS as contas alvo — menos a
       // contrapartida variável: o plano manda a nota cair na conta do

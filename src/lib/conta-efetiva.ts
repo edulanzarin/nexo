@@ -113,13 +113,18 @@ export async function aprenderContaEfetiva(
   ]);
 
   // Moda por natureza: a conta mais frequente, e o quanto ela domina.
-  const agrupado = new Map<string, { estab: number; cfop: number; total: number; melhor: ContagemRow }>();
+  const agrupado = new Map<
+    string,
+    { estab: number; cfop: number; total: number; melhor: ContagemRow; contas: Map<number, number> }
+  >();
   for (const r of [...ent, ...sai]) {
     const k = `${r.estab}:${r.cfop}`;
     const a = agrupado.get(k);
-    if (!a) agrupado.set(k, { estab: r.estab, cfop: r.cfop, total: r.n, melhor: r });
-    else {
+    if (!a) {
+      agrupado.set(k, { estab: r.estab, cfop: r.cfop, total: r.n, melhor: r, contas: new Map([[r.conta, r.n]]) });
+    } else {
       a.total += r.n;
+      a.contas.set(r.conta, (a.contas.get(r.conta) ?? 0) + r.n);
       if (r.n > a.melhor.n) a.melhor = r;
     }
   }

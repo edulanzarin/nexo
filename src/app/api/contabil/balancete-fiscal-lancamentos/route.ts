@@ -194,9 +194,9 @@ export const GET = apiRoute(async (req) => {
       // Mesmo critério da célula: espelho por NOTA E CONTA.
       .filter((r) => {
         if (!ehNota(r.origem) || r.chave == null) return true;
-        if (semRegraConta.has(`${r.origem}:${r.chave}`)) return true;
         const nc = `${r.origem}:${r.chave}:${natureza}:${r.conta}`;
         if (porNotaConta.produzidas.has(nc)) return false;
+        if (semRegraConta.has(`${r.origem}:${r.chave}`)) return true;
         if (porNotaConta.puladas.has(nc)) return true;
         const pr = porNotaConta.principal.get(`${r.origem}:${r.chave}:${natureza}`);
         return !(pr != null && Math.abs(Math.abs(r.valor) - pr) < 0.02);

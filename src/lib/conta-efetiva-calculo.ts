@@ -80,6 +80,14 @@ export function aplicarContaEfetiva(
     // Sem conta habitual, só o SERVIÇO vira "conta decidida no lançamento": ali a
     // natureza genérica é de propósito. Em mercadoria, natureza dispersa pode ser
     // erro espalhado — apagar a régua apagaria o erro junto.
+    //
+    // Tentei também usar "a conta do plano não recebe nada" como sinal de config
+    // morta, para cobrir a natureza empatada logo abaixo do corte (a 6116002 da
+    // empresa 603: 157 notas na 2606, 40 na 2605, ZERO na 2655 do plano). Medido
+    // em 10 empresas: melhorou UMA (603, -R$ 189 mil) e piorou cinco (a 1200
+    // saltou de R$ 10,9 mil para R$ 170,9 mil). O sinal é verdadeiro mas a
+    // consequência não se justifica — fica registrado para não ser retentado às
+    // cegas.
     if (!efetiva.habitual && p.cfop < CFOP_SERVICO_MIN) return p;
 
     const trocar = (l: LinhaPlano): LinhaPlano =>
