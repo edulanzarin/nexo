@@ -51,6 +51,14 @@ const CONFIRMACOES_DE_VAZIO = 2;
  */
 const MAX_PAGINAS = 400;
 
+/**
+ * 429 não é erro do pedido, é "agora não" — e desistir na primeira faria a
+ * empresa sumir da fila em silêncio, o mesmo mal do vazio disfarçado. Recua e
+ * repete, dobrando a espera a cada vez.
+ */
+const TENTATIVAS_429 = 4;
+const ESPERA_429_MS = 20_000;
+
 export class AcessoriasErro extends Error {
   constructor(
     message: string,
@@ -91,13 +99,10 @@ function enfileirar<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 /**
- * GET cru. Devolve `null` quando a API responde 204 (vazio) — que ela usa tanto
- * para "não tem nada" quanto para "esse identificador não serve aqui".
+ * Uma tentativa de GET. Devolve `null` no 204 (vazio) e o marcador `"429"` quando
+ * o servidor recusa por limite — quem decide esperar e repetir é o `get`.
  */
-async function get<T>(caminho: string, params?: Record<string, string>): Promise<T | null> {
-  const qs = params ? `?${new URLSearchParams(params)}` : "";
-  // O caminho já vem montado com o CNPJ cru; só a query é encodada.
-  const url = `${BASE}${caminho}${qs}`;
+async function tentarGet<T>(url: string, caminho: string): Promise<T | null | "429"> {
   const auth = token();
 
   return enfileirar(async () => {
@@ -109,9 +114,7 @@ async function get<T>(caminho: string, params?: Record<string, string>): Promise
     }
 
     if (r.status === 204) return null;
-    if (r.status === 429) {
-      throw new AcessoriasErro("Limite de requisições excedido (429)", caminho, 429);
-    }
+    if (r.status === 429) return "429" as const;
     if (!r.ok) {
       throw new AcessoriasErro(`HTTP ${r.status}`, caminho, r.status);
     }
@@ -135,6 +138,35 @@ async function get<T>(caminho: string, params?: Record<string, string>): Promise
     }
     return corpo as T;
   });
+}
+
+/**
+ * GET com recuo no 429. Devolve `null` quando a API responde 204 (vazio) — que
+ * ela usa tanto para "não tem nada" quanto para "esse identificador não serve
+ * aqui". O limite não sobe como erro na primeira recusa: esperar é mais barato
+ * que perder a empresa.
+ */
+async function get<T>(caminho: string, params?: Record<string, string>): Promise<T | null> {
+  const qs = params ? `?${new URLSearchParams(params)}` : "";
+  // O caminho já vem montado com o CNPJ cru; só a query é encodada.
+  const url = `${BASE}${caminho}${qs}`;
+
+  for (let tentativa = 1; ; tentativa++) {
+    const r = await tentarGet<T>(url, caminho);
+    if (r !== "429") return r;
+    if (tentativa >= TENTATIVAS_429) {
+      throw new AcessoriasErro(
+        `Limite de requisições excedido (429) após ${TENTATIVAS_429} tentativas`,
+        caminho,
+        429
+      );
+    }
+    const espera = ESPERA_429_MS * 2 ** (tentativa - 1);
+    console.warn(
+      `[acessorias] 429 em ${caminho} — aguardando ${espera / 1000}s (tentativa ${tentativa})`
+    );
+    await new Promise((res) => setTimeout(res, espera));
+  }
 }
 
 // ── Empresas ─────────────────────────────────────────────────────────────────
