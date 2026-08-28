@@ -23,13 +23,11 @@ import { dataBR } from "@/lib/format";
 import type { EnvioRegra } from "@/lib/envio-regras";
 
 type Destinatario = "gestores" | "colaboradores";
-type Escopo = "generico" | "sobre_colaborador";
 type AlvoTipo = "todos" | "setores" | "colaboradores";
 type FreqTipo = "dias" | "mensal";
 
 function rotuloDestino(r: EnvioRegra): string {
-  if (r.destinatarioTipo === "colaboradores") return "Colaboradores";
-  return r.escopo === "sobre_colaborador" ? "Gestores · sobre colaborador" : "Gestores";
+  return r.destinatarioTipo === "colaboradores" ? "Colaboradores" : "Gestores";
 }
 
 function rotuloAlvo(r: EnvioRegra): string {
@@ -158,7 +156,6 @@ function RegraModal({ regra, onFechar }: { regra: EnvioRegra | null; onFechar: (
 
   const [formularioId, setFormularioId] = useState<number | "">(regra?.formularioId ?? "");
   const [destinatario, setDestinatario] = useState<Destinatario>(regra?.destinatarioTipo ?? "gestores");
-  const [escopo, setEscopo] = useState<Escopo>(regra?.escopo ?? "generico");
   const [alvoTipo, setAlvoTipo] = useState<AlvoTipo>(regra?.alvoTipo ?? "todos");
   const [selecSetores, setSelecSetores] = useState<Set<string>>(
     () => new Set(regra?.alvoTipo === "setores" ? (regra.alvo as string[]) : [])
@@ -179,7 +176,6 @@ function RegraModal({ regra, onFechar }: { regra: EnvioRegra | null; onFechar: (
   const [ativo, setAtivo] = useState(regra?.ativo ?? true);
   const [salvando, setSalvando] = useState(false);
 
-  const sobreColaborador = destinatario === "gestores" && escopo === "sobre_colaborador";
   const { data: funcionarios } = useRhFuncionarios(alvoTipo === "colaboradores");
   const formsAtivos = useMemo(
     () => (formularios ?? []).filter((f) => f.status === "ativo"),
@@ -234,7 +230,6 @@ function RegraModal({ regra, onFechar }: { regra: EnvioRegra | null; onFechar: (
       titulo: titulo || null,
       mensagem: mensagem || null,
       destinatarioTipo: destinatario,
-      escopo,
       alvoTipo,
       alvo,
       freqTipo,
@@ -312,37 +307,10 @@ function RegraModal({ regra, onFechar }: { regra: EnvioRegra | null; onFechar: (
           </div>
         </div>
 
-        {destinatario === "gestores" && (
-          <div>
-            <span className="mb-1.5 block text-xs font-medium text-ink-2">Sobre quem é</span>
-            <div className="grid grid-cols-2 gap-1 rounded-lg border border-hairline p-1">
-              {(
-                [
-                  { v: "generico", rot: "Genérico" },
-                  { v: "sobre_colaborador", rot: "Um colaborador" },
-                ] as const
-              ).map(({ v, rot }) => (
-                <button
-                  key={v}
-                  onClick={() => setEscopo(v)}
-                  className={clsx(
-                    "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-                    escopo === v ? "bg-surface-2 text-ink" : "text-ink-2 hover:bg-surface-2"
-                  )}
-                >
-                  {rot}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Alvo */}
         <div>
           <span className="mb-1.5 block text-xs font-medium text-ink-2">
-            {sobreColaborador || destinatario === "colaboradores"
-              ? "Quais colaboradores"
-              : "Quais setores"}
+            {destinatario === "colaboradores" ? "Quais colaboradores" : "Quais setores"}
           </span>
           <div className="grid grid-cols-3 gap-1 rounded-lg border border-hairline p-1">
             {(

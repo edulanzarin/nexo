@@ -145,6 +145,8 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     "experiencia-reenviar": ["experiencia"],
     "experiencia-respostas": ["experiencia"], // ler as respostas de uma avaliação
     "experiencia-config": ["experiencia", "formularios"], // config da experiência
+    // Desempenho (avaliação sobre um colaborador, respondida pelos gestores)
+    desempenho: ["desempenho"],
     // Formulários (builder) e campanhas de envio
     formularios: ["formularios"],
     envios: ["formularios"],

@@ -3,6 +3,8 @@
  * hooks/telas (client). Sem imports de servidor, para poder entrar no bundle.
  */
 import type { Marco, StatusExperiencia } from "./rh-experiencia";
+import type { EscopoRodada, StatusDesempenho } from "./rh-desempenho";
+import type { Formulario } from "./formularios-tipos";
 
 /** Linha do Diretório: funcionário ativo de uma das empresas do RH. */
 export interface FuncionarioDiretorio {
@@ -81,4 +83,69 @@ export interface ExperienciaItem {
     respondidoEm: string;
     comentarios: string | null;
   } | null;
+}
+
+/**
+ * Linha da tela de Desempenho: uma avaliação (um colaborador dentro de uma
+ * rodada). `respostas` é a contagem — a avaliação aceita várias, uma por gestor
+ * — e `respondentes` traz quem já respondeu, que é o que a tela mostra sem
+ * precisar abrir o detalhe.
+ */
+export interface DesempenhoItem {
+  id: number;
+  rodadaId: number;
+  rodadaTitulo: string;
+  escopo: EscopoRodada;
+  formularioId: number;
+  formularioNome: string;
+  codigoempresa: number;
+  contrato: number;
+  nome: string;
+  cargo: string | null;
+  setor: string | null;
+  classiforgan: string | null;
+  status: StatusDesempenho;
+  /** Gestores ativos cadastrados no setor — quem recebe o link. 0 = ninguém recebe. */
+  gestores: number;
+  respostas: number;
+  respondentes: string[];
+  ultimaResposta: string | null;
+  criadoEm: string;
+  enviadoEm: string | null;
+  /** Preenchido = link fechado, não aceita mais resposta. */
+  encerradoEm: string | null;
+}
+
+/** Uma resposta de gestor dentro de uma avaliação de desempenho. */
+export interface DesempenhoResposta {
+  id: number;
+  nome: string;
+  email: string | null;
+  respondidoEm: string;
+  valores: Record<string, unknown>;
+}
+
+/** Detalhe de uma avaliação: o formulário usado + todas as respostas. */
+export interface DesempenhoDetalhe {
+  id: number;
+  titulo: string;
+  funcionarioNome: string;
+  codigoempresa: number;
+  cargo: string | null;
+  setor: string | null;
+  criadoEm: string;
+  encerradoEm: string | null;
+  formulario: Formulario;
+  respostas: DesempenhoResposta[];
+}
+
+/** Rodada listada no filtro da tela (para recortar "aquela avaliação de agosto"). */
+export interface DesempenhoRodada {
+  id: number;
+  titulo: string;
+  escopo: EscopoRodada;
+  formularioNome: string;
+  criadoEm: string;
+  avaliacoes: number;
+  respondidas: number;
 }

@@ -1,7 +1,7 @@
 import "server-only";
 import { appQuery } from "./app-db";
 import { FilterError } from "./fiscal-filters";
-import { criarEnvio, type ColaboradorEntrada, type DestinatarioEntrada } from "./envios";
+import { criarEnvio, type DestinatarioEntrada } from "./envios";
 import { listarDiretorio } from "./rh-diretorio";
 import type { FuncionarioDiretorio } from "./rh-tipos";
 
@@ -13,7 +13,6 @@ import type { FuncionarioDiretorio } from "./rh-tipos";
  */
 
 export type DestinatarioTipo = "gestores" | "colaboradores";
-export type Escopo = "generico" | "sobre_colaborador";
 export type AlvoTipo = "todos" | "setores" | "colaboradores";
 export type FreqTipo = "dias" | "mensal";
 
@@ -30,7 +29,6 @@ export interface EnvioRegra {
   titulo: string | null;
   mensagem: string | null;
   destinatarioTipo: DestinatarioTipo;
-  escopo: Escopo;
   alvoTipo: AlvoTipo;
   alvo: string[] | AlvoColaborador[];
   freqTipo: FreqTipo;
@@ -45,7 +43,6 @@ export interface EnvioRegraEntrada {
   titulo?: string | null;
   mensagem?: string | null;
   destinatarioTipo: DestinatarioTipo;
-  escopo?: Escopo;
   alvoTipo: AlvoTipo;
   alvo?: string[] | AlvoColaborador[];
   freqTipo: FreqTipo;
@@ -81,11 +78,6 @@ function normalizar(e: EnvioRegraEntrada): Required<Omit<EnvioRegraEntrada, "tit
   if (destinatarioTipo !== "gestores" && destinatarioTipo !== "colaboradores") {
     throw new FilterError("Destinatário inválido");
   }
-  // Escopo 'sobre_colaborador' só faz sentido com o gestor respondendo.
-  const escopo: Escopo =
-    destinatarioTipo === "gestores" && e.escopo === "sobre_colaborador"
-      ? "sobre_colaborador"
-      : "generico";
   const alvoTipo = e.alvoTipo;
   if (!["todos", "setores", "colaboradores"].includes(alvoTipo)) {
     throw new FilterError("Alvo inválido");
@@ -116,7 +108,6 @@ function normalizar(e: EnvioRegraEntrada): Required<Omit<EnvioRegraEntrada, "tit
     titulo: e.titulo?.trim() || null,
     mensagem: e.mensagem?.trim() || null,
     destinatarioTipo,
-    escopo,
     alvoTipo,
     alvo,
     freqTipo,
@@ -134,7 +125,6 @@ interface RegraRow {
   titulo: string | null;
   mensagem: string | null;
   destinatario_tipo: DestinatarioTipo;
-  escopo: Escopo;
   alvo_tipo: AlvoTipo;
   alvo: string[] | AlvoColaborador[];
   freq_tipo: FreqTipo;
@@ -145,7 +135,7 @@ interface RegraRow {
 }
 
 const SELECT = `select r.id, r.formulario_id, f.nome as formulario_nome, r.titulo, r.mensagem,
-        r.destinatario_tipo, r.escopo, r.alvo_tipo, r.alvo, r.freq_tipo, r.freq_valor, r.ativo,
+        r.destinatario_tipo, r.alvo_tipo, r.alvo, r.freq_tipo, r.freq_valor, r.ativo,
         to_char(r.ultimo_disparo, 'YYYY-MM-DD"T"HH24:MI:SS') as ultimo_disparo,
         to_char(r.proximo_disparo, 'YYYY-MM-DD"T"HH24:MI:SS') as proximo_disparo
    from envio_regra r join formulario f on f.id = r.formulario_id`;
@@ -158,7 +148,6 @@ function daRow(r: RegraRow): EnvioRegra {
     titulo: r.titulo,
     mensagem: r.mensagem,
     destinatarioTipo: r.destinatario_tipo,
-    escopo: r.escopo,
     alvoTipo: r.alvo_tipo,
     alvo: r.alvo ?? [],
     freqTipo: r.freq_tipo,
@@ -183,14 +172,14 @@ export async function criarRegra(
   const [row] = await appQuery<RegraRow>(
     `with novo as (
        insert into envio_regra
-         (formulario_id, titulo, mensagem, destinatario_tipo, escopo, alvo_tipo, alvo,
+         (formulario_id, titulo, mensagem, destinatario_tipo, alvo_tipo, alvo,
           freq_tipo, freq_valor, ativo, proximo_disparo, criado_por)
        values ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, $10, $11, $12)
        returning *
      )
      ${SELECT.replace("from envio_regra r", "from novo r")} where true`,
     [
-      n.formularioId, n.titulo, n.mensagem, n.destinatarioTipo, n.escopo, n.alvoTipo,
+      n.formularioId, n.titulo, n.mensagem, n.destinatarioTipo, n.alvoTipo,
       JSON.stringify(n.alvo), n.freqTipo, n.freqValor, n.ativo, prox.toISOString(), criadoPor ?? null,
     ]
   );
@@ -203,7 +192,7 @@ export async function atualizarRegra(id: number, entrada: EnvioRegraEntrada): Pr
   const [row] = await appQuery<RegraRow>(
     `with upd as (
        update envio_regra set
-         formulario_id = $2, titulo = $3, mensagem = $4, destinatario_tipo = $5, escopo = $6,
+         formulario_id = $2, titulo = $3, mensagem = $4, destinatario_tipo = $5,
          alvo_tipo = $7, alvo = $8::jsonb, freq_tipo = $9, freq_valor = $10, ativo = $11,
          proximo_disparo = $12
        where id = $1
@@ -211,7 +200,7 @@ export async function atualizarRegra(id: number, entrada: EnvioRegraEntrada): Pr
      )
      ${SELECT.replace("from envio_regra r", "from upd r")} where true`,
     [
-      id, n.formularioId, n.titulo, n.mensagem, n.destinatarioTipo, n.escopo, n.alvoTipo,
+      id, n.formularioId, n.titulo, n.mensagem, n.destinatarioTipo, n.alvoTipo,
       JSON.stringify(n.alvo), n.freqTipo, n.freqValor, n.ativo, prox.toISOString(),
     ]
   );
@@ -249,24 +238,12 @@ function filtrarColaboradores(
 
 interface ParamsDisparo {
   destinatarios?: DestinatarioEntrada[];
-  colaboradores?: ColaboradorEntrada[];
 }
 
 /** Traduz uma regra nos parâmetros do `criarEnvio` (resolvendo o público hoje). */
 async function resolverDisparo(regra: EnvioRegra): Promise<ParamsDisparo> {
   const diretorio = await listarDiretorio();
   const colaboradoresAlvo = filtrarColaboradores(diretorio, regra.alvoTipo, regra.alvo);
-
-  if (regra.destinatarioTipo === "gestores" && regra.escopo === "sobre_colaborador") {
-    return {
-      colaboradores: colaboradoresAlvo.map((f) => ({
-        codigoempresa: f.codigoempresa,
-        codigofunccontr: f.contrato,
-        nome: f.nome,
-        classiforgan: f.classiforgan,
-      })),
-    };
-  }
 
   if (regra.destinatarioTipo === "gestores") {
     // Genérico: e-mails dos gestores do público. 'todos' = todos os gestores;
@@ -312,7 +289,7 @@ export async function processarRegrasRecorrentes(): Promise<ResumoRegras> {
     const prox = proximoDisparo(regra.freqTipo, regra.freqValor, new Date());
     try {
       const params = await resolverDisparo(regra);
-      const temAlvo = (params.destinatarios?.length ?? 0) + (params.colaboradores?.length ?? 0) > 0;
+      const temAlvo = (params.destinatarios?.length ?? 0) > 0;
       if (!temAlvo) {
         resumo.semAlvo++;
       } else {
@@ -321,7 +298,6 @@ export async function processarRegrasRecorrentes(): Promise<ResumoRegras> {
           titulo: regra.titulo,
           mensagem: regra.mensagem,
           destinatarios: params.destinatarios,
-          colaboradores: params.colaboradores,
         });
         resumo.disparadas++;
         resumo.enviados += r.enviados;

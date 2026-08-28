@@ -23,8 +23,8 @@ export default async function Page({ params }: { params: Promise<{ token: string
           />
         ) : dados.jaRespondido ? (
           <Aviso
-            titulo="Formulário já respondido"
-            texto="Este formulário já foi enviado. Obrigado!"
+            titulo={dados.avisoFechado?.titulo ?? "Formulário já respondido"}
+            texto={dados.avisoFechado?.texto ?? "Este formulário já foi enviado. Obrigado!"}
           />
         ) : (
           <FormularioPublicoView token={token} dados={dados} />

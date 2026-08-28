@@ -4,7 +4,6 @@ import {
   carregarEnvio,
   criarEnvio,
   listarEnvios,
-  type ColaboradorEntrada,
   type DestinatarioEntrada,
 } from "@/lib/envios";
 import { getSessaoOpcional } from "@/lib/sessao";
@@ -29,17 +28,12 @@ export const POST = apiRoute(async (req) => {
   const destinatarios = Array.isArray(body.destinatarios)
     ? (body.destinatarios as DestinatarioEntrada[])
     : [];
-  const colaboradores = Array.isArray(body.colaboradores)
-    ? (body.colaboradores as ColaboradorEntrada[])
-    : [];
-
   const sessao = await getSessaoOpcional();
   return criarEnvio({
     formularioId,
     titulo: (body.titulo as string) ?? null,
     mensagem: (body.mensagem as string) ?? null,
     destinatarios,
-    colaboradores,
     agendarPara: (body.agendarPara as string) ?? null,
     criadoPor: sessao?.usuario.id ?? null,
   });

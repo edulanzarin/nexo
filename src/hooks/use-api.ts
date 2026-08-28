@@ -53,6 +53,9 @@ import type {
   SetorRh,
   GestorRh,
   ExperienciaItem,
+  DesempenhoItem,
+  DesempenhoDetalhe,
+  DesempenhoRodada,
 } from "@/lib/rh-tipos";
 import type { Formulario, FormularioResumo } from "@/lib/formularios-tipos";
 import type { DpResumo, DpLinha, DpQuebra, DpTipo } from "@/lib/dp-tipos";
@@ -749,6 +752,19 @@ export const useExperienciaResposta = (id: number | null) =>
     `/api/rh/experiencia-respostas?id=${id}`,
     id != null
   );
+
+/** Avaliações de desempenho: lista filtrada, detalhe (com todas as respostas)
+ *  e as rodadas já disparadas (para o filtro da tela). */
+export const useDesempenho = (qs = "") =>
+  useApiQuery<DesempenhoItem[]>(["rh-desempenho", qs], `/api/rh/desempenho${qs ? `?${qs}` : ""}`);
+export const useDesempenhoDetalhe = (id: number | null) =>
+  useApiQuery<DesempenhoDetalhe>(
+    ["rh-desempenho-detalhe", id],
+    `/api/rh/desempenho?id=${id}`,
+    id != null
+  );
+export const useDesempenhoRodadas = () =>
+  useApiQuery<DesempenhoRodada[]>(["rh-desempenho-rodadas"], `/api/rh/desempenho?rodadas=1`);
 
 /** Campanhas de envio (lista) e detalhe de uma (com respostas). */
 export const useEnvios = () => useApiQuery<EnvioResumo[]>(["rh-envios"], `/api/rh/envios`);

@@ -24,10 +24,9 @@ import { useEnvio, useEnvios, useRhFuncionarios, useRhGestores } from "@/hooks/u
 import { dataBR } from "@/lib/format";
 import type { RespostaValores } from "@/lib/formularios-tipos";
 
-/** Quem recebe o link e responde. */
+/** Quem recebe o link e responde. Campanha é sempre genérica: avaliação SOBRE um
+ *  colaborador virou seção própria (RH → Desempenho). */
 type Destinatario = "gestores" | "colaboradores" | "avulsos";
-/** Sobre quem é o formulário (só faz sentido quando quem responde é o gestor). */
-type Escopo = "generico" | "sobre_colaborador";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const linhasEmail = (s: string) =>
@@ -50,9 +49,7 @@ export function EnviarModal({
   const { data: gestores } = useRhGestores();
   const queryClient = useQueryClient();
 
-  // Dois eixos independentes: quem responde × sobre quem.
   const [destinatario, setDestinatario] = useState<Destinatario>("gestores");
-  const [escopo, setEscopo] = useState<Escopo>("generico");
   const [titulo, setTitulo] = useState(formularioNome);
   const [mensagem, setMensagem] = useState("");
   const [selec, setSelec] = useState<Set<number>>(new Set());
@@ -63,19 +60,12 @@ export function EnviarModal({
   const [quando, setQuando] = useState("");
   const [enviando, setEnviando] = useState(false);
 
-  // "Sobre um colaborador" só existe quando quem responde é o gestor.
-  const sobreColaborador = destinatario === "gestores" && escopo === "sobre_colaborador";
-  // A lista de colaboradores aparece em dois casos: gestor avaliando um colaborador,
-  // ou o próprio colaborador respondendo.
-  const usaColaboradores = sobreColaborador || destinatario === "colaboradores";
+  // A lista de colaboradores só aparece quando são eles que respondem.
+  const usaColaboradores = destinatario === "colaboradores";
   const { data: funcionarios } = useRhFuncionarios(usaColaboradores);
 
   const lista = useMemo(() => (gestores ?? []).filter((g) => g.ativo), [gestores]);
   const todosMarcados = lista.length > 0 && selec.size === lista.length;
-
-  // Departamentos (classiforgan) com ao menos um gestor ativo — só sobre esses
-  // dá para o gestor avaliar um colaborador.
-  const deptComGestor = useMemo(() => new Set(lista.map((g) => g.classiforgan)), [lista]);
 
   const colabKey = (empresa: number, contrato: number) => `${empresa}:${contrato}`;
 
@@ -88,18 +78,15 @@ export function EnviarModal({
     );
   }, [funcionarios, buscaColab]);
 
-  // Um colaborador é "válido" conforme o modo: para o gestor avaliar precisa de
-  // gestor no depto; para responder direto precisa de e-mail cadastrado.
-  const colabInvalido = (f: { classiforgan: string | null; email: string | null }) =>
-    sobreColaborador ? f.classiforgan == null || !deptComGestor.has(f.classiforgan) : !f.email;
+  // Colaborador respondendo direto precisa de e-mail cadastrado.
+  const colabInvalido = (f: { email: string | null }) => !f.email;
 
   const colabValidos = useMemo(
     () =>
       (funcionarios ?? []).filter(
         (f) => selecColab.has(colabKey(f.codigoempresa, f.contrato)) && !colabInvalido(f)
       ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [funcionarios, selecColab, deptComGestor, sobreColaborador]
+    [funcionarios, selecColab]
   );
   const colabInvalidos = selecColab.size - colabValidos.length;
 
@@ -147,23 +134,18 @@ export function EnviarModal({
 
   const total =
     destinatario === "gestores"
-      ? sobreColaborador
-        ? colabValidos.length
-        : totalGestores
+      ? totalGestores
       : destinatario === "colaboradores"
         ? colabValidos.length
         : totalAvulsos;
 
-  // Rótulo do que se conta: avaliações (1 por colaborador aos gestores) vs. links.
-  const rotuloAlvo = sobreColaborador ? "avaliação(ões)" : "destinatário(s)";
+  const rotuloAlvo = "destinatário(s)";
 
   const enviar = async () => {
     if (total === 0) {
       return toast.error(
         destinatario === "gestores"
-          ? sobreColaborador
-            ? "Selecione ao menos um colaborador com gestor no depto"
-            : "Selecione ao menos um gestor"
+          ? "Selecione ao menos um gestor"
           : destinatario === "colaboradores"
             ? "Selecione ao menos um colaborador com e-mail"
             : "Informe ao menos um e-mail"
@@ -177,17 +159,10 @@ export function EnviarModal({
       mensagem,
       agendarPara: agendar && quando ? new Date(quando).toISOString() : null,
     };
-    if (destinatario === "gestores" && !sobreColaborador) {
+    if (destinatario === "gestores") {
       corpo.destinatarios = lista
         .filter((g) => selec.has(g.id))
         .map((g) => ({ email: g.email, nome: g.nome, gestorId: g.id }));
-    } else if (sobreColaborador) {
-      corpo.colaboradores = colabValidos.map((f) => ({
-        codigoempresa: f.codigoempresa,
-        codigofunccontr: f.contrato,
-        nome: f.nome,
-        classiforgan: f.classiforgan,
-      }));
     } else if (destinatario === "colaboradores") {
       corpo.destinatarios = colabValidos.map((f) => ({ email: f.email, nome: f.nome }));
     } else {
@@ -196,23 +171,17 @@ export function EnviarModal({
 
     setEnviando(true);
     try {
-      const r = await mutar<{
-        enviados: number;
-        total: number;
-        agendado: boolean;
-        semGestor: string[];
-      }>("/api/rh/envios", "POST", corpo);
+      const r = await mutar<{ enviados: number; total: number; agendado: boolean }>(
+        "/api/rh/envios",
+        "POST",
+        corpo
+      );
       queryClient.invalidateQueries({ queryKey: ["rh-envios"] });
       toast.success(
         r.agendado
           ? `Campanha agendada — ${r.total} ${rotuloAlvo}`
           : `Enviado — ${r.total} ${rotuloAlvo}`
       );
-      if (r.semGestor?.length) {
-        toast.warning(
-          `${r.semGestor.length} colaborador(es) sem gestor no depto foram ignorados`
-        );
-      }
       onFechar();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao enviar");
@@ -230,7 +199,6 @@ export function EnviarModal({
   return (
     <Modal aberto onFechar={onFechar} titulo="Enviar formulário" subtitulo={formularioNome} largura="max-w-xl">
       <div className="flex-1 space-y-4 overflow-y-auto px-6 py-5">
-        {/* Eixo 1 — quem responde */}
         <div>
           <span className="mb-1.5 block text-xs font-medium text-ink-2">Quem responde</span>
           <div className="grid grid-cols-3 gap-1 rounded-lg border border-hairline p-1">
@@ -250,40 +218,12 @@ export function EnviarModal({
           </div>
         </div>
 
-        {/* Eixo 2 — sobre quem (só quando o gestor responde) */}
-        {destinatario === "gestores" && (
-          <div>
-            <span className="mb-1.5 block text-xs font-medium text-ink-2">Sobre quem é</span>
-            <div className="grid grid-cols-2 gap-1 rounded-lg border border-hairline p-1">
-              {(
-                [
-                  { v: "generico", rot: "Genérico" },
-                  { v: "sobre_colaborador", rot: "Um colaborador" },
-                ] as const
-              ).map(({ v, rot }) => (
-                <button
-                  key={v}
-                  onClick={() => setEscopo(v)}
-                  className={clsx(
-                    "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-                    escopo === v ? "bg-surface-2 text-ink" : "text-ink-2 hover:bg-surface-2"
-                  )}
-                >
-                  {rot}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         <p className="text-xs text-muted">
           {destinatario === "avulsos"
             ? "Cada e-mail recebe um link próprio e responde uma vez."
-            : sobreColaborador
-              ? "Cada colaborador vira uma avaliação enviada ao gestor do departamento dele — uma resposta por colaborador."
-              : destinatario === "colaboradores"
-                ? "Cada colaborador recebe no próprio e-mail um link para responder uma vez."
-                : "Cada gestor recebe um link próprio e responde uma vez."}
+            : destinatario === "colaboradores"
+              ? "Cada colaborador recebe no próprio e-mail um link para responder uma vez."
+              : "Cada gestor recebe um link próprio e responde uma vez."}
         </p>
 
         <label className="block">
@@ -306,7 +246,7 @@ export function EnviarModal({
         </label>
 
         {/* Alvos conforme os eixos */}
-        {destinatario === "gestores" && !sobreColaborador && (
+        {destinatario === "gestores" && (
           <div>
             <div className="mb-1.5 flex items-center justify-between">
               <span className="text-xs font-medium text-ink-2">Gestores cadastrados</span>
@@ -404,13 +344,10 @@ export function EnviarModal({
                       )}
                       {invalido ? (
                         <span className="inline-flex shrink-0 items-center gap-1 text-[11px] text-warning">
-                          <AlertTriangle className="size-3" />
-                          {sobreColaborador ? "sem gestor" : "sem e-mail"}
+                          <AlertTriangle className="size-3" /> sem e-mail
                         </span>
                       ) : (
-                        <span className="shrink-0 truncate text-xs text-muted">
-                          {sobreColaborador ? f.setor ?? "—" : f.email}
-                        </span>
+                        <span className="shrink-0 truncate text-xs text-muted">{f.email}</span>
                       )}
                     </label>
                   );
@@ -420,8 +357,7 @@ export function EnviarModal({
             {colabInvalidos > 0 && (
               <p className="mt-1.5 flex items-center gap-1 text-[11px] text-warning">
                 <AlertTriangle className="size-3" />
-                {colabInvalidos} selecionado(s) {sobreColaborador ? "sem gestor no depto" : "sem e-mail"} — não
-                serão enviados.
+                {colabInvalidos} selecionado(s) sem e-mail — não serão enviados.
               </p>
             )}
           </div>
@@ -562,13 +498,11 @@ function RespostasModal({ envioId, onFechar }: { envioId: number; onFechar: () =
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-ink">
-                        {d.funcionarioNome || d.nome || d.email}
+                        {d.nome || d.email}
                       </p>
                       <p className="truncate text-xs text-muted">
-                        {d.funcionarioNome
-                          ? d.respondidoPorNome
-                            ? `Sobre colaborador · respondido por ${d.respondidoPorNome}`
-                            : "Sobre colaborador"
+                        {d.respondidoPorNome
+                          ? `${d.email} · respondido por ${d.respondidoPorNome}`
                           : d.email}
                       </p>
                     </div>

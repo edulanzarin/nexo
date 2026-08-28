@@ -62,7 +62,10 @@ async function blocoPanorama(inicioMes: string): Promise<RhPanorama> {
     `select
         (select count(*) from rh_experiencia where status = 'respondido' and atualizado_em >= $1)::int as exp_resp,
         (select count(*) from denuncia where criado_em >= $1)::int as den_mes,
-        (select count(*) from envio where coalesce(disparado_em, criado_em) >= $1)::int as campanhas,
+        -- "formulários disparados" no mês: campanha genérica + rodada de
+        -- desempenho (que saiu do envio na migration 033 e conta igual).
+        ((select count(*) from envio where coalesce(disparado_em, criado_em) >= $1)
+         + (select count(*) from rh_desempenho_rodada where criado_em >= $1))::int as campanhas,
         (select count(*) from clima_resposta where criado_em >= $1)::int as clima_resp`,
     [inicioMes]
   );

@@ -70,6 +70,12 @@ export function FormularioPublicoView({
         </div>
         {formulario.descricao && <p className="mt-1 text-sm text-muted">{formulario.descricao}</p>}
         {dados.mensagem && <p className="mt-2 text-sm text-ink-2">{dados.mensagem}</p>}
+        {dados.varias && (
+          <p className="mt-2 text-xs text-muted">
+            Cada gestor do setor responde a sua avaliação por este mesmo link — por isso o nome
+            abaixo é obrigatório.
+          </p>
+        )}
         {dados.contexto.length > 0 && (
           <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3">
             {dados.contexto.map((c) => (
