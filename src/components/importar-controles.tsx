@@ -121,7 +121,12 @@ export function ImportarControles() {
         valor: l.sentido === "recebimento" ? l.valor : -l.valor,
       }));
 
-      const lancamentos = gerarLancamentos(transacoes, previa.contaBanco.conta, regras);
+      // Reaplicar regras é trabalho de CONTA; quem é o favorecido na folha não
+      // mudou. O casamento vive no servidor, então o selo se preserva por
+      // índice — sem isso, cadastrar uma regra apagaria os selos da prévia.
+      const lancamentos = gerarLancamentos(transacoes, previa.contaBanco.conta, regras).map(
+        (l, i) => ({ ...l, pessoa: previa.lancamentos[i]?.pessoa ?? null })
+      );
       setPrevia({ ...previa, lancamentos, resumo: resumir(lancamentos, ajustes) });
       toast.success(`Regras reaplicadas · ${resumir(lancamentos, ajustes).prontos} prontas`);
     } catch (err) {

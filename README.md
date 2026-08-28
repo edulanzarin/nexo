@@ -83,6 +83,8 @@ mesmas migrations, sem instalar nada na máquina.
   - **Análises**: rankings de empresas, contrapartes, produtos, CFOPs, UF, municípios e modalidade de frete
   - **Devoluções** e **Cancelamentos** com KPIs, séries e rankings próprios
   - Alternância **Valor | Quantidade** onde faz sentido
+- **Módulo Contábil → Funcionários** (`/contabil/funcionarios`) — o quadro da empresa lido da folha do Questor (vínculo, cargo, setor, admissão, desligamento), **sem remuneração**: quem precisa de salário usa o módulo DP. Responde à pergunta que o extrato levanta: o favorecido deste pagamento é funcionário?
+  - A **Conciliação carimba a resposta sozinha** na linha do extrato — casa a descrição bancária com a folha por CPF (o mascarado do PIX serve) ou nome, marca ex-funcionário com a data do desligamento, aponta quando o vínculo é de outra empresa da carteira e avisa homônimo em vez de escolher em silêncio (`src/lib/folha-casamento.ts`). O selo é contexto: não muda conta nenhuma
 - Filtros por período (presets + personalizado), empresas (multi-seleção com busca) e espécies — tudo na URL, compartilhável
 - **Grupos de empresas criados no próprio app** (localStorage): criar/editar/excluir, e **multi-seleção** (somar vários grupos, desmarcar individualmente)
 - Tema claro/escuro, skeletons, toasts (sonner), animações

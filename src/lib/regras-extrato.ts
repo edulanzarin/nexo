@@ -1,3 +1,5 @@
+import type { SeloFolha } from "./folha-casamento";
+
 /**
  * Casamento das descrições do extrato bancário com as regras cadastradas.
  *
@@ -101,6 +103,14 @@ export interface LancamentoGerado {
   /** Por que não dá para lançar: sem regra, ou regra sem conta para o sentido. */
   pendencia: "sem_regra" | "sem_conta" | null;
   ambiguo: boolean;
+  /**
+   * Quem é o favorecido na folha, quando é gente da casa. NÃO decide conta
+   * nenhuma — é contexto para quem decide: comissão a funcionário e a
+   * não-funcionário não caem na mesma conta, e hoje isso se descobre caçando.
+   * Preenchido depois das regras, no servidor, por [[contabil-funcionarios]];
+   * ausente quando ninguém casou.
+   */
+  pessoa?: SeloFolha | null;
 }
 
 /**

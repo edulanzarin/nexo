@@ -16,6 +16,7 @@ import {
 import clsx from "clsx";
 import { toast } from "sonner";
 import { ContaDropdown } from "@/components/conta-dropdown";
+import { SeloFolha } from "@/components/selo-folha";
 import { Kpi } from "@/components/kpi-conf";
 import { Badge, Button, Card, EmptyState } from "@/components/ui";
 import { useEstadoSecao } from "@/hooks/use-estado-secao";
@@ -24,7 +25,7 @@ import { brl, dataBR, num } from "@/lib/format";
 import { resumir, type Ajustes, type Previa } from "@/lib/extrato-previa";
 import type { Sentido } from "@/lib/regras-extrato";
 
-type Filtro = "todos" | "prontos" | "pendentes";
+type Filtro = "todos" | "prontos" | "pendentes" | "pessoas";
 
 /**
  * Exibição da importação: KPIs, consistência de saldo e lançamentos gerados.
@@ -68,10 +69,18 @@ export default function ImportarPage() {
     return previa.lancamentos
       .map((l, i) => ({ l, i }))
       .filter(({ l, i }) => {
+        if (filtro === "pessoas") return !!l.pessoa;
         const resolvido = !l.pendencia || ajustes[i] != null;
         return filtro === "todos" ? true : filtro === "prontos" ? resolvido : !resolvido;
       });
   }, [previa, ajustes, filtro]);
+
+  // Quantas linhas o extrato pagou a gente da casa. Zero = a aba nem aparece:
+  // empresa sem comissão por fora não precisa do ruído.
+  const comPessoa = useMemo(
+    () => previa?.lancamentos.filter((l) => l.pessoa).length ?? 0,
+    [previa]
+  );
 
   // Lançamentos prontos para o arquivo: sem pendência, ou com a conta escolhida
   // à mão, e com os dois lados da partida resolvidos.
@@ -236,7 +245,9 @@ export default function ImportarPage() {
             </p>
           </div>
           <div className="flex items-center gap-1">
-            {(["todos", "prontos", "pendentes"] as const).map((f) => (
+            {(
+              ["todos", "prontos", "pendentes", ...(comPessoa ? (["pessoas"] as const) : [])] as const
+            ).map((f) => (
               <button
                 key={f}
                 onClick={() => setFiltro(f)}
@@ -247,7 +258,13 @@ export default function ImportarPage() {
                     : "text-muted hover:bg-surface-2 hover:text-ink"
                 )}
               >
-                {f === "todos" ? "Todos" : f === "prontos" ? "Prontos" : "Pendentes"}
+                {f === "todos"
+                  ? "Todos"
+                  : f === "prontos"
+                    ? "Prontos"
+                    : f === "pendentes"
+                      ? "Pendentes"
+                      : `Funcionários ${num(comPessoa)}`}
               </button>
             ))}
           </div>
@@ -293,6 +310,9 @@ export default function ImportarPage() {
                             : `Regra não define conta para ${l.sentido}`}
                         </Badge>
                       )}
+                      {/* Quem é o favorecido na folha. Não muda conta nenhuma —
+                          só evita ter de ir caçar na folha para decidir. */}
+                      {l.pessoa && <SeloFolha selo={l.pessoa} />}
                       {ajuste != null && (
                         <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
                           <Badge tone="ent" size="xs">

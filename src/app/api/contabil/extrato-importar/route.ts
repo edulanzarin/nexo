@@ -4,6 +4,7 @@ import { textoDoPdf } from "@/lib/pdf-texto";
 import { lerOfx } from "@/lib/extrato-ofx";
 import { lerPdf, PdfNaoReconhecido, type PdfLido } from "@/lib/extrato-pdf";
 import { regrasDaConta } from "@/lib/extrato-store";
+import { anotarPessoas } from "@/lib/contabil-funcionarios";
 import { gerarLancamentos, type RegraExtrato } from "@/lib/regras-extrato";
 
 const MAX_BYTES = 15 * 1024 * 1024;
@@ -62,6 +63,17 @@ export const POST = apiRoute(async (req) => {
   }));
 
   const lancamentos = gerarLancamentos(extrato.transacoes, banco.conta, regras);
+
+  // Quem é gente da casa: o extrato não diz, mas a folha mora no mesmo banco.
+  // Roda DEPOIS das regras e não interfere nelas — a conta continua sendo
+  // escolha do contábil; o selo só o poupa de ir caçar na folha.
+  const pessoas = await anotarPessoas(
+    empresa,
+    lancamentos.map((l) => l.descricao)
+  );
+  lancamentos.forEach((l, i) => {
+    l.pessoa = pessoas[i];
+  });
 
   const resumo = {
     total: lancamentos.length,
