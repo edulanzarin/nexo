@@ -29,6 +29,12 @@ import {
  * O grão é (usuário, empresa, dia) — o suficiente para ranking, empresas e
  * série, e pequeno o bastante para caber na memória: ~300 linhas por varredura
  * num mês, porque o fiscal escritura em lote.
+ *
+ * CUSTO MEDIDO (escritório inteiro, sem filtro de empresa, jul/2026): ~14 s no
+ * mês — três vezes a aba Lançamentos, porque são sete varreduras em vez de uma.
+ * O ANO NÃO PASSA: estoura o `statement_timeout` de 60 s e a rota devolve o
+ * recado de restringir período ou empresa. É o limite honesto desta aba; quem
+ * precisa do ano tem de filtrar empresa (aí cai para frações de segundo).
  */
 
 interface TribRow {

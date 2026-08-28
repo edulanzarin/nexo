@@ -43,10 +43,11 @@ import {
  *    colunas do mesmo total. São o mesmo trabalho para quem lança, e separá-las
  *    em duas telas obrigaria a somar de cabeça.
  *
- * Custo medido (escritório inteiro, sem filtro de empresa, jul/2026): ~4,5 s no
- * mês. As duas tabelas são varridas inteiras (não há índice em
- * `datahoralctofis`), então o período quase não muda o custo — o que muda é o
- * filtro de empresa, que derruba para frações de segundo.
+ * Custo medido (escritório inteiro, sem filtro de empresa): ~4 s no mês, ~47 s
+ * no ano (14,5 milhões de notas) — dentro do `statement_timeout` de 60 s, e a
+ * tela roda no botão "Executar". As duas tabelas são varridas inteiras (não há
+ * índice em `datahoralctofis`), então quem manda no custo não é o período e sim
+ * o volume agregado; filtrar empresa derruba tudo para frações de segundo.
  */
 
 interface GraoRow {
