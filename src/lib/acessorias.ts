@@ -252,7 +252,15 @@ export interface EmpresaAcessorias {
  * filtra aqui e não na API: o parâmetro `ativa` existe, mas a lista completa
  * custa o mesmo e o status é útil no diagnóstico.
  */
-export async function listarEmpresas(apenasAtivas = true): Promise<EmpresaAcessorias[]> {
+export async function listarEmpresas(
+  apenasAtivas = true,
+  /**
+   * Chamado a cada página. A listagem leva minutos e não produz nada
+   * observável; sem este sinal, quem monitora não distingue "listando" de
+   * "morta".
+   */
+  aoProgredir?: () => Promise<void>
+): Promise<EmpresaAcessorias[]> {
   // Deduplicado por identificador: a confirmação de vazio repete páginas, e
   // repetir não pode inflar a carteira.
   const porId = new Map<string, EmpresaAcessorias>();
@@ -260,6 +268,8 @@ export async function listarEmpresas(apenasAtivas = true): Promise<EmpresaAcesso
 
   for (let pagina = 1; pagina <= MAX_PAGINAS; pagina++) {
     const lote = await get<EmpresaAcessorias[]>("/companies/ListAll", { Pagina: String(pagina) });
+
+    await aoProgredir?.();
 
     const antes = porId.size;
     for (const e of lote ?? []) porId.set(e.Identificador, e);

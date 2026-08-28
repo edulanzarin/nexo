@@ -75,15 +75,6 @@ async function mapaCnpjQuestor(): Promise<Map<string, number>> {
 }
 
 /**
- * Depois disso, uma varredura sem conclusão é considerada ABANDONADA, não em
- * andamento. Um processo morto no meio (deploy, restart, kill) deixa a linha
- * aberta para sempre, e a tela passaria a dizer "sincronizando agora" eternamente
- * — foi o que aconteceu na primeira execução real. A janela é generosa porque a
- * varredura legitimamente leva horas.
- */
-const HORAS_ATE_ABANDONADA = 8;
-
-/**
  * Guarda a carteira para o seletor. Upsert por CNPJ: empresa que sai da lista do
  * Acessórias não é apagada — ela pode ter entregas antigas ainda referenciadas, e
  * sumir do seletor faria a fila mostrar um CNPJ sem nome.
@@ -181,6 +172,14 @@ export interface EstadoVarredura {
 }
 
 /**
+ * Sem batimento neste prazo, a execução é dada por MORTA — não por lenta. O
+ * maior silêncio legítimo é uma página da listagem ou uma empresa sob recuo de
+ * 429 (poucos segundos cada), então dois minutos é folga larga sobre o pior caso
+ * honesto e ainda destrava um deploy quase de imediato.
+ */
+const MINUTOS_SEM_BATIMENTO = 2;
+
+/**
  * A varredura só é retomável enquanto a lista de empresas ainda descreve a mesma
  * carteira. Depois disso, começar do zero é mais honesto que continuar de um
  * índice que aponta para outra empresa.
@@ -199,14 +198,14 @@ const HORAS_RETOMAVEL = 24;
 export async function sincronizarObrigacoes(): Promise<ResumoSync> {
   const t0 = Date.now();
 
-  // Fecha o que ficou aberto de execuções mortas antes de abrir a nossa: sem
-  // isso a linha órfã segue contando como "rodando".
+  // Fecha execuções sem batimento antes de abrir a nossa. É o que impede um
+  // deploy no meio da varredura de deixar o sistema travado dizendo "rodando".
   await appQuery(
     `update obr_sync
-        set concluido_em = now(), erro = 'abandonada: processo encerrado antes de concluir'
+        set concluido_em = now(), erro = 'interrompida: processo encerrado (sem batimento)'
       where concluido_em is null
-        and iniciado_em < now() - ($1 || ' hours')::interval`,
-    [String(HORAS_ATE_ABANDONADA)]
+        and atualizado_em < now() - ($1 || ' minutes')::interval`,
+    [String(MINUTOS_SEM_BATIMENTO)]
   );
 
   // Retomada: uma execução interrompida nas últimas horas deixa por onde
@@ -235,7 +234,10 @@ export async function sincronizarObrigacoes(): Promise<ResumoSync> {
   try {
     // A lista completa (ativas e inativas) alimenta o seletor; a varredura de
     // entregas percorre só as ativas. Buscar as duas é a MESMA chamada.
-    const todasEmpresas = await listarEmpresas(false);
+    const bater = async () => {
+      await appQuery(`update obr_sync set atualizado_em = now() where id = $1`, [syncId]);
+    };
+    const todasEmpresas = await listarEmpresas(false, bater);
     const mapa = await mapaCnpjQuestor();
     const empresas = todasEmpresas.filter((e) => e.Status === "Ativa");
     const visto = new Date();
@@ -277,7 +279,8 @@ export async function sincronizarObrigacoes(): Promise<ResumoSync> {
       // Grava o progresso e LÊ o pedido de parada na mesma ida ao banco: é o que
       // permite checar cancelamento a cada empresa sem um round-trip extra.
       const [estado] = await appQuery<{ cancelar: boolean }>(
-        `update obr_sync set progresso = $2, entregas = $3, falhas = $4
+        `update obr_sync set progresso = $2, entregas = $3, falhas = $4,
+                atualizado_em = now()
           where id = $1 returning cancelar`,
         [syncId, processadas, entregas, falhas]
       );
@@ -510,11 +513,11 @@ export async function estadoVarredura(): Promise<EstadoVarredura> {
             to_char(concluido_em, 'YYYY-MM-DD"T"HH24:MI:SS') as concluido_em,
             erro,
             extract(epoch from (coalesce(concluido_em, now()) - iniciado_em))::int as segundos,
-            (concluido_em is null and iniciado_em > now() - ($1 || ' hours')::interval) as aberta
+            (concluido_em is null and atualizado_em > now() - ($1 || ' minutes')::interval) as aberta
        from obr_sync
       order by iniciado_em desc
       limit 1`,
-    [String(HORAS_ATE_ABANDONADA)]
+    [String(MINUTOS_SEM_BATIMENTO)]
   );
 
   if (!r) {
@@ -557,12 +560,29 @@ export async function estadoVarredura(): Promise<EstadoVarredura> {
  * linha órfã e o ponto de retomada perdido.
  */
 export async function pedirParadaVarredura(): Promise<boolean> {
-  const linhas = await appQuery<{ id: string }>(
-    `update obr_sync set cancelar = true where concluido_em is null returning id`
+  // Execução MORTA (sem batimento) se fecha na hora: pedir educadamente a um
+  // processo que não existe é o que produzia o "Parando…" eterno. Só quem está
+  // viva recebe a flag e encerra sozinha no fim do ciclo corrente.
+  const fechadas = await appQuery<{ id: string }>(
+    `update obr_sync
+        set concluido_em = now(), erro = 'interrompida: processo encerrado (sem batimento)'
+      where concluido_em is null
+        and atualizado_em < now() - ($1 || ' minutes')::interval
+      returning id`,
+    [String(MINUTOS_SEM_BATIMENTO)]
   );
-  // Nenhuma linha aberta = não havia o que parar; a tela diz isso em vez de
-  // fingir que parou algo.
-  return linhas.length > 0;
+
+  const pedidas = await appQuery<{ id: string }>(
+    `update obr_sync set cancelar = true
+      where concluido_em is null
+        and atualizado_em >= now() - ($1 || ' minutes')::interval
+      returning id`,
+    [String(MINUTOS_SEM_BATIMENTO)]
+  );
+
+  // Nenhuma das duas = não havia o que parar; a tela diz isso em vez de fingir
+  // que parou algo.
+  return fechadas.length + pedidas.length > 0;
 }
 
 /** Já existe uma varredura em andamento (e não abandonada)? */
@@ -571,9 +591,9 @@ export async function sincronizacaoEmAndamento(): Promise<boolean> {
     `select exists (
        select 1 from obr_sync
         where concluido_em is null
-          and iniciado_em > now() - ($1 || ' hours')::interval
+          and atualizado_em > now() - ($1 || ' minutes')::interval
      ) as rodando`,
-    [String(HORAS_ATE_ABANDONADA)]
+    [String(MINUTOS_SEM_BATIMENTO)]
   );
   return row?.rodando ?? false;
 }
@@ -604,7 +624,7 @@ async function blocoSync(): Promise<SincronizacaoInfo> {
             exists (
               select 1 from obr_sync
                where concluido_em is null
-                 and iniciado_em > now() - interval '8 hours'
+                 and atualizado_em > now() - interval '2 minutes'
             ) as rodando,
             coalesce(u.empresas, 0) as empresas,
             coalesce(u.entregas, 0) as entregas,
