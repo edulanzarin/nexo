@@ -31,17 +31,47 @@ import "server-only";
 const BASE = "https://api.acessorias.com";
 
 /**
- * Ritmo alvo. O teto é 100/min; 80/min deixa folga para a janela deslizante do
- * lado deles, que é o que dispara a resposta vazia silenciosa quando se encosta
- * no limite.
+ * Ritmo. A doc promete 100 req/min; MEDIDO em ago/2026, não é o que se aplica —
+ * calibrando com 20 chamadas por taxa: a 80/min, 12 de 20 voltaram 429; a
+ * 60/min, 10 de 20; a 45/min, ZERO. O teto real de trabalho é ~45/min, e é dele
+ * que se parte.
  *
  * O intervalo conta de INÍCIO a INÍCIO de chamada, descontando o tempo que a
  * própria chamada levou. Dormir o intervalo cheio DEPOIS da resposta somava a
- * latência (~600ms) ao espaçamento e derrubava a taxa real para ~40/min — metade
- * do pretendido, e a varredura para o dobro do tempo, sem que nada no código
- * dissesse isso.
+ * latência (~600ms) ao espaçamento e derrubava a taxa real pela metade, sem que
+ * nada no código dissesse isso.
  */
-const INTERVALO_MS = 60_000 / 80;
+const INTERVALO_BASE_MS = 60_000 / 45;
+
+/**
+ * Ritmo ADAPTATIVO. Um teto medido hoje não é promessa para amanhã: a janela é
+ * do lado deles e pode variar com o que mais estiver usando o mesmo token. Então
+ * o intervalo não é fixo — cada 429 o alarga, e uma sequência de sucessos o
+ * devolve devagar em direção à base. Assim a varredura se acomoda sozinha em vez
+ * de queimar 20s de espera a cada tropeço.
+ */
+const INTERVALO_TETO_MS = 60_000 / 12;
+const ALARGA_NO_429 = 1.5;
+const ENCOLHE_APOS_SUCESSOS = 25;
+const FATOR_ENCOLHE = 0.9;
+
+let intervaloAtual = INTERVALO_BASE_MS;
+let sucessosSeguidos = 0;
+
+function penalizar() {
+  intervaloAtual = Math.min(INTERVALO_TETO_MS, intervaloAtual * ALARGA_NO_429);
+  sucessosSeguidos = 0;
+  console.warn(
+    `[acessorias] 429 — ritmo agora ${(60_000 / intervaloAtual).toFixed(0)} req/min`
+  );
+}
+
+function premiar() {
+  if (intervaloAtual <= INTERVALO_BASE_MS) return;
+  if (++sucessosSeguidos < ENCOLHE_APOS_SUCESSOS) return;
+  sucessosSeguidos = 0;
+  intervaloAtual = Math.max(INTERVALO_BASE_MS, intervaloAtual * FATOR_ENCOLHE);
+}
 
 /**
  * Uma resposta vazia pode ser fim de lista OU throttle disfarçado. Confirma-se
@@ -67,11 +97,15 @@ const PAGINAS_SEM_NOVIDADE = 3;
 
 /**
  * 429 não é erro do pedido, é "agora não" — e desistir na primeira faria a
- * empresa sumir da fila em silêncio, o mesmo mal do vazio disfarçado. Recua e
- * repete, dobrando a espera a cada vez.
+ * empresa sumir da fila em silêncio, o mesmo mal do vazio disfarçado.
+ *
+ * A espera aqui é CURTA de propósito: quem evita o próximo 429 é o ritmo
+ * adaptativo, não uma soneca longa. Antes eram 20s fixos, e com a taxa mal
+ * calibrada isso virava o custo dominante da varredura — dezenas de minutos
+ * dormindo em vez de corrigir o passo.
  */
-const TENTATIVAS_429 = 4;
-const ESPERA_429_MS = 20_000;
+const TENTATIVAS_429 = 5;
+const ESPERA_429_MS = 3_000;
 
 export class AcessoriasErro extends Error {
   constructor(
@@ -106,7 +140,7 @@ function enfileirar<T>(fn: () => Promise<T>): Promise<T> {
     const inicio = Date.now();
     const r = await fn();
     // Só o que FALTA para completar o intervalo: o tempo de rede já contou.
-    const resta = INTERVALO_MS - (Date.now() - inicio);
+    const resta = intervaloAtual - (Date.now() - inicio);
     if (resta > 0) await new Promise((res) => setTimeout(res, resta));
     return r;
   });
@@ -130,8 +164,14 @@ async function tentarGet<T>(url: string, caminho: string): Promise<T | null | "4
       throw new AcessoriasErro(`Falha de rede: ${(err as Error).message}`, caminho);
     }
 
-    if (r.status === 204) return null;
-    if (r.status === 429) return "429" as const;
+    if (r.status === 204) {
+      premiar();
+      return null;
+    }
+    if (r.status === 429) {
+      penalizar();
+      return "429" as const;
+    }
     if (!r.ok) {
       throw new AcessoriasErro(`HTTP ${r.status}`, caminho, r.status);
     }
@@ -153,6 +193,7 @@ async function tentarGet<T>(url: string, caminho: string): Promise<T | null | "4
         throw new AcessoriasErro(erro, caminho, r.status);
       }
     }
+    premiar();
     return corpo as T;
   });
 }
@@ -179,9 +220,6 @@ async function get<T>(caminho: string, params?: Record<string, string>): Promise
       );
     }
     const espera = ESPERA_429_MS * 2 ** (tentativa - 1);
-    console.warn(
-      `[acessorias] 429 em ${caminho} — aguardando ${espera / 1000}s (tentativa ${tentativa})`
-    );
     await new Promise((res) => setTimeout(res, espera));
   }
 }

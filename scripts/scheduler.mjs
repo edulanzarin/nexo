@@ -15,7 +15,7 @@
 //                      (0-23, default 8).
 //   SCHEDULER_OBRIGACOES_HORA  hora local da varredura do Acessórias (0-23,
 //                      default 5). Cedo de propósito: é uma chamada por
-//                      empresa a 80/min, ~20 minutos de varredura, que deve
+//                      empresa a ~45/min, ~30 minutos de varredura, que deve
 //                      terminar antes do expediente — a fila do dia é o que o
 //                      time abre de manhã.
 import { readFileSync } from "node:fs";

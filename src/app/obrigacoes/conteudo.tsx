@@ -144,8 +144,8 @@ export default function Conteudo({ secao }: { secao: string }) {
           }
           descricao={
             sync.rodando
-              ? "Ela varre a carteira empresa a empresa e leva cerca de 20 minutos. Esta tela se atualiza sozinha quando terminar."
-              : "O job diário preenche esta tela às 5h. Para adiantar, dispare a varredura agora — leva cerca de 20 minutos e roda em segundo plano."
+              ? "Ela varre a carteira empresa a empresa e leva cerca de 30 minutos. Esta tela se atualiza sozinha quando terminar."
+              : "O job diário preenche esta tela às 5h. Para adiantar, dispare a varredura agora — leva cerca de 30 minutos e roda em segundo plano."
           }
         />
         {podeSincronizar && (

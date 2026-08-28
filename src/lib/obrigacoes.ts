@@ -19,7 +19,7 @@ import type {
  *
  *  - `sincronizarObrigacoes`: o job. Varre a carteira na API (uma chamada por
  *    empresa, ver `acessorias.ts`), resolve o par no Questor e materializa a
- *    fila em `obr_entrega`. ~20 min; roda pelo cron, nunca dentro de um request.
+ *    fila em `obr_entrega`. ~30 min; roda pelo cron, nunca dentro de um request.
  *  - `montarPainelObrigacoes`: a leitura. Só banco do app + o escopo da sessão;
  *    abre instantânea porque não toca a API.
  *
