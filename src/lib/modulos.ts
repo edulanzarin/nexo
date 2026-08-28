@@ -63,7 +63,7 @@ export const MODULOS: Modulo[] = [
     id: "obrigacoes",
     titulo: "Obrigações",
     descricao: "Fila de entregas do Acessórias, por setor e responsável",
-    icone: "/images/compliance.png",
+    icone: "/images/acessorias.png",
     // Home = o índice, que redireciona pra 1ª seção visível. Quem só tem a
     // seção do seu setor cai nela; quem tem tudo, na Visão geral.
     home: "/obrigacoes",

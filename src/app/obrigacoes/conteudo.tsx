@@ -1,9 +1,12 @@
 "use client";
 
-import { AlertTriangle, CalendarClock, CircleAlert, ListChecks, Receipt } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { AlertTriangle, CalendarClock, CircleAlert, ListChecks, Receipt, RefreshCw } from "lucide-react";
 import { Kpi } from "@/components/kpi-conf";
-import { Badge, Card, EmptyState, Table, Td, Th, Thead, Tr } from "@/components/ui";
+import { Badge, Button, Card, EmptyState, Table, Td, Th, Thead, Tr } from "@/components/ui";
 import { useFilaObrigacoes } from "@/hooks/use-api";
+import { mutar } from "@/hooks/mutar";
 import { dataBR, dataHoraBR, num } from "@/lib/format";
 import type { EntregaFila } from "@/lib/obrigacoes-tipos";
 
@@ -50,9 +53,59 @@ function LinhaFila({ e }: { e: EntregaFila }) {
   );
 }
 
+/**
+ * Botão de varredura manual. Não espera a varredura terminar — ela leva horas;
+ * o que ele faz é INICIAR e devolver a tela ao estado "sincronizando", que se
+ * resolve sozinho pelo polling.
+ */
+function BotaoSincronizar({ rodando }: { rodando: boolean }) {
+  const qc = useQueryClient();
+  const [enviando, setEnviando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  async function disparar() {
+    setEnviando(true);
+    setErro(null);
+    try {
+      const r = await mutar<{ iniciada: boolean; motivo?: string }>(
+        "/api/obrigacoes/sincronizar",
+        "POST"
+      );
+      if (!r.iniciada && r.motivo) setErro(r.motivo);
+      await qc.invalidateQueries({ queryKey: ["obrigacoes-fila"] });
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível iniciar.");
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <Button onClick={disparar} disabled={enviando || rodando} variant="secondary">
+        <RefreshCw className={`size-4 ${rodando ? "animate-spin" : ""}`} />
+        {rodando ? "Sincronizando…" : enviando ? "Iniciando…" : "Sincronizar agora"}
+      </Button>
+      {erro && <span className="text-[11px] text-critical">{erro}</span>}
+    </div>
+  );
+}
+
 export default function Conteudo({ secao }: { secao: string }) {
   const res = useFilaObrigacoes(secao);
   const dados = res.data;
+  const qc = useQueryClient();
+  const rodando = dados?.sync.rodando ?? false;
+
+  // Enquanto a varredura roda, a tela se refaz sozinha — senão o usuário fica
+  // olhando um "sincronizando" que nunca vira número sem apertar F5.
+  useEffect(() => {
+    if (!rodando) return;
+    const t = setInterval(() => {
+      qc.invalidateQueries({ queryKey: ["obrigacoes-fila"] });
+    }, 30_000);
+    return () => clearInterval(t);
+  }, [rodando, qc]);
 
   if (res.isError) {
     return (
@@ -75,35 +128,50 @@ export default function Conteudo({ secao }: { secao: string }) {
   }
 
   const { sync, setores, responsaveis, obrigacoes, fila } = dados;
+  // A varredura é do escritório inteiro; quem cuida de um setor não a dispara
+  // (a rota também só libera `geral`, isto aqui é a conveniência da tela).
+  const podeSincronizar = secao === "geral";
 
   // Nunca sincronizou: a tela está vazia por falta de job, não por falta de
   // trabalho. Dizer isso evita a leitura de que o escritório está em dia.
   if (!sync.concluidoEm) {
     return (
-      <EmptyState
-        icon={<CalendarClock className="size-6" />}
-        titulo="A fila ainda não foi sincronizada"
-        descricao={
-          sync.rodando
-            ? "A primeira varredura está rodando agora. Ela leva algumas dezenas de minutos — volte em breve."
-            : "Nenhuma varredura concluída até agora. O job diário preenche esta tela; para adiantar, dispare a sincronização manualmente."
-        }
-      />
+      <div className="space-y-4">
+        <EmptyState
+          icon={<CalendarClock className="size-6" />}
+          titulo={
+            sync.rodando ? "A primeira varredura está rodando" : "A fila ainda não foi sincronizada"
+          }
+          descricao={
+            sync.rodando
+              ? "Ela varre a carteira empresa a empresa e leva horas. Esta tela se atualiza sozinha quando terminar."
+              : "O job diário preenche esta tela às 5h. Para adiantar, dispare a varredura agora — ela roda em segundo plano."
+          }
+        />
+        {podeSincronizar && (
+          <div className="flex justify-center">
+            <BotaoSincronizar rodando={sync.rodando} />
+          </div>
+        )}
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
       {/* De quando é o dado — antes dos números, não num rodapé */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
-        <span>Retrato de {dataHoraBR(sync.concluidoEm)}</span>
-        <span>· {num(sync.empresas)} empresas varridas</span>
-        {sync.rodando && <Badge tone="accent">sincronizando agora</Badge>}
-        {sync.falhas > 0 && (
-          <Badge tone="warning">
-            {num(sync.falhas)} empresas falharam — a fila está incompleta
-          </Badge>
-        )}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+          <span>Retrato de {dataHoraBR(sync.concluidoEm)}</span>
+          <span>· {num(sync.empresas)} empresas varridas</span>
+          {sync.rodando && <Badge tone="accent">sincronizando agora</Badge>}
+          {sync.falhas > 0 && (
+            <Badge tone="warning">
+              {num(sync.falhas)} empresas falharam — a fila está incompleta
+            </Badge>
+          )}
+        </div>
+        {podeSincronizar && <BotaoSincronizar rodando={sync.rodando} />}
       </div>
 
       <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">

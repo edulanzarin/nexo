@@ -73,6 +73,15 @@ async function mapaCnpjQuestor(): Promise<Map<string, number>> {
   return mapa;
 }
 
+/**
+ * Depois disso, uma varredura sem conclusão é considerada ABANDONADA, não em
+ * andamento. Um processo morto no meio (deploy, restart, kill) deixa a linha
+ * aberta para sempre, e a tela passaria a dizer "sincronizando agora" eternamente
+ * — foi o que aconteceu na primeira execução real. A janela é generosa porque a
+ * varredura legitimamente leva horas.
+ */
+const HORAS_ATE_ABANDONADA = 8;
+
 export interface ResumoSync {
   empresas: number;
   entregas: number;
@@ -91,6 +100,17 @@ export interface ResumoSync {
  */
 export async function sincronizarObrigacoes(): Promise<ResumoSync> {
   const t0 = Date.now();
+
+  // Fecha o que ficou aberto de execuções mortas antes de abrir a nossa: sem
+  // isso a linha órfã segue contando como "rodando".
+  await appQuery(
+    `update obr_sync
+        set concluido_em = now(), erro = 'abandonada: processo encerrado antes de concluir'
+      where concluido_em is null
+        and iniciado_em < now() - ($1 || ' hours')::interval`,
+    [String(HORAS_ATE_ABANDONADA)]
+  );
+
   const [{ id: syncId }] = await appQuery<{ id: string }>(
     `insert into obr_sync default values returning id`
   );
@@ -187,6 +207,19 @@ export async function sincronizarObrigacoes(): Promise<ResumoSync> {
   }
 }
 
+/** Já existe uma varredura em andamento (e não abandonada)? */
+export async function sincronizacaoEmAndamento(): Promise<boolean> {
+  const [row] = await appQuery<{ rodando: boolean }>(
+    `select exists (
+       select 1 from obr_sync
+        where concluido_em is null
+          and iniciado_em > now() - ($1 || ' hours')::interval
+     ) as rodando`,
+    [String(HORAS_ATE_ABANDONADA)]
+  );
+  return row?.rodando ?? false;
+}
+
 // ── Leitura ──────────────────────────────────────────────────────────────────
 
 /**
@@ -210,7 +243,11 @@ async function blocoSync(): Promise<SincronizacaoInfo> {
     falhas: number;
   }>(
     `select to_char(u.concluido_em, 'YYYY-MM-DD"T"HH24:MI:SS') as concluido_em,
-            exists (select 1 from obr_sync where concluido_em is null) as rodando,
+            exists (
+              select 1 from obr_sync
+               where concluido_em is null
+                 and iniciado_em > now() - interval '8 hours'
+            ) as rodando,
             coalesce(u.empresas, 0) as empresas,
             coalesce(u.entregas, 0) as entregas,
             coalesce(u.falhas, 0) as falhas
