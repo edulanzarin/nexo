@@ -69,7 +69,7 @@ import type {
 import type { PainelColaborador, PainelGestao } from "@/lib/painel-dp-tipos";
 import type { PainelContabilColaborador, PainelContabilGestao } from "@/lib/painel-contabil-tipos";
 import type { PainelObrigacoes } from "@/lib/obrigacoes-tipos";
-import type { EmpresaCarteira } from "@/lib/obrigacoes";
+import type { EmpresaCarteira, EstadoVarredura } from "@/lib/obrigacoes";
 import type { PainelRh } from "@/lib/painel-rh-tipos";
 import type { EnvioDetalhe, EnvioResumo } from "@/lib/envios";
 import type { EnvioRegra } from "@/lib/envio-regras";
@@ -385,6 +385,10 @@ export const useFilaObrigacoes = (secao: string, filtros: string, enabled = true
     `/api/obrigacoes/fila?secao=${encodeURIComponent(secao)}${filtros}`,
     enabled
   );
+
+/** Estado ao vivo da varredura (seção Configurações do módulo). */
+export const useVarreduraObrigacoes = (enabled = true) =>
+  useApiQuery<EstadoVarredura>(["obrigacoes-varredura"], `/api/obrigacoes/varredura`, enabled);
 
 /** Carteira do Acessórias para o seletor de empresa (vem do banco, não da API). */
 export const useCarteiraObrigacoes = (enabled = true) =>

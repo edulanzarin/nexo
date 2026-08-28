@@ -157,7 +157,35 @@ export interface ResumoSync {
   entregas: number;
   falhas: number;
   duracaoMs: number;
+  /** Encerrou por pedido de parada, não por ter terminado a carteira. */
+  cancelada: boolean;
+  /** Índice de onde partiu, quando retomou uma execução interrompida. */
+  retomadaDe: number | null;
 }
+
+/** Estado ao vivo da varredura, para a tela de Configurações. */
+export interface EstadoVarredura {
+  id: string | null;
+  rodando: boolean;
+  progresso: number;
+  total: number;
+  entregas: number;
+  falhas: number;
+  iniciadoEm: string | null;
+  concluidoEm: string | null;
+  erro: string | null;
+  cancelamentoPedido: boolean;
+  retomadaDe: number | null;
+  /** Segundos estimados para o fim, pela média já observada. Null sem base. */
+  restanteSegundos: number | null;
+}
+
+/**
+ * A varredura só é retomável enquanto a lista de empresas ainda descreve a mesma
+ * carteira. Depois disso, começar do zero é mais honesto que continuar de um
+ * índice que aponta para outra empresa.
+ */
+const HORAS_RETOMAVEL = 24;
 
 /**
  * Varre a carteira e materializa a fila. Idempotente: `ent_id` é a chave, então
@@ -181,8 +209,24 @@ export async function sincronizarObrigacoes(): Promise<ResumoSync> {
     [String(HORAS_ATE_ABANDONADA)]
   );
 
+  // Retomada: uma execução interrompida nas últimas horas deixa por onde
+  // continuar. É o que torna um restart de container um atraso, e não a perda de
+  // meia hora de varredura.
+  const [anterior] = await appQuery<{ progresso: number; total: number }>(
+    `select progresso, total from obr_sync
+      where concluido_em is not null
+        and progresso > 0
+        and progresso < total
+        and iniciado_em > now() - ($1 || ' hours')::interval
+      order by iniciado_em desc
+      limit 1`,
+    [String(HORAS_RETOMAVEL)]
+  );
+  const retomadaDe = anterior?.progresso ?? null;
+
   const [{ id: syncId }] = await appQuery<{ id: string }>(
-    `insert into obr_sync default values returning id`
+    `insert into obr_sync (retomada_de) values ($1) returning id`,
+    [retomadaDe]
   );
 
   const fim = hojeISO();
@@ -197,10 +241,33 @@ export async function sincronizarObrigacoes(): Promise<ResumoSync> {
     const visto = new Date();
 
     await guardarCarteira(todasEmpresas, mapa);
+
+    // Ordem ESTÁVEL: o índice de retomada só significa alguma coisa se a mesma
+    // carteira produzir sempre a mesma sequência.
+    empresas.sort((a, b) => a.Identificador.localeCompare(b.Identificador));
+    await appQuery(`update obr_sync set total = $2 where id = $1`, [syncId, empresas.length]);
+
+    const inicioIdx = retomadaDe != null && retomadaDe < empresas.length ? retomadaDe : 0;
     let entregas = 0;
     let falhas = 0;
 
-    for (const emp of empresas) {
+    let processadas = inicioIdx;
+    let cancelada = false;
+
+    for (const emp of empresas.slice(inicioIdx)) {
+      // Grava o progresso e LÊ o pedido de parada na mesma ida ao banco: é o que
+      // permite checar cancelamento a cada empresa sem um round-trip extra.
+      const [estado] = await appQuery<{ cancelar: boolean }>(
+        `update obr_sync set progresso = $2, entregas = $3, falhas = $4
+          where id = $1 returning cancelar`,
+        [syncId, processadas, entregas, falhas]
+      );
+      if (estado?.cancelar) {
+        cancelada = true;
+        break;
+      }
+      processadas++;
+
       let lote;
       try {
         lote = await entregasPendentes(emp.Identificador, inicio, fim);
@@ -260,19 +327,37 @@ export async function sincronizarObrigacoes(): Promise<ResumoSync> {
       entregas += lote.length;
     }
 
-    // O que não foi visto saiu da fila. Só apaga se a varredura foi íntegra o
-    // bastante: com muitas falhas, "não visto" pode ser "não perguntado", e
-    // apagar viraria uma fila falsamente limpa.
-    if (falhas === 0) {
+    // O que não foi visto saiu da fila — mas só se a varredura percorreu a
+    // carteira INTEIRA e sem falhas. Numa execução parcial (cancelada, retomada
+    // pela metade, ou com empresas que erraram) "não visto" quer dizer "não
+    // perguntado", e apagar produziria uma fila falsamente limpa.
+    const completa = !cancelada && falhas === 0 && inicioIdx === 0;
+    if (completa) {
       await appQuery(`delete from obr_entrega where visto_em < $1`, [visto]);
     }
 
     await appQuery(
-      `update obr_sync set concluido_em = now(), empresas = $2, entregas = $3, falhas = $4
+      `update obr_sync
+          set concluido_em = now(), empresas = $2, entregas = $3, falhas = $4,
+              progresso = $5, erro = $6
         where id = $1`,
-      [syncId, empresas.length, entregas, falhas]
+      [
+        syncId,
+        processadas,
+        entregas,
+        falhas,
+        processadas,
+        cancelada ? "cancelada por pedido do usuário" : null,
+      ]
     );
-    return { empresas: empresas.length, entregas, falhas, duracaoMs: Date.now() - t0 };
+    return {
+      empresas: processadas,
+      entregas,
+      falhas,
+      duracaoMs: Date.now() - t0,
+      cancelada,
+      retomadaDe,
+    };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     await appQuery(`update obr_sync set concluido_em = now(), erro = $2 where id = $1`, [
@@ -375,6 +460,90 @@ export async function empresaQuestorPorCnpj(cnpj: string): Promise<number | null
     [soDigitos(cnpj)]
   );
   return par?.codigoempresa ?? null;
+}
+
+/**
+ * Estado ao vivo da varredura, para a tela de Configurações do módulo.
+ *
+ * A estimativa sai do RITMO OBSERVADO nesta execução (tempo decorrido dividido
+ * pelas empresas já feitas), não de uma constante no código. Uma média que a
+ * própria execução produziu acompanha o adaptativo do cliente da API — quando
+ * ele desacelera por 429, a estimativa desacelera junto, em vez de prometer um
+ * fim que não vem.
+ */
+export async function estadoVarredura(): Promise<EstadoVarredura> {
+  const [r] = await appQuery<{
+    id: string;
+    progresso: number;
+    total: number;
+    entregas: number;
+    falhas: number;
+    cancelar: boolean;
+    retomada_de: number | null;
+    iniciado_em: string;
+    concluido_em: string | null;
+    erro: string | null;
+    segundos: number;
+    aberta: boolean;
+  }>(
+    `select id, progresso, total, entregas, falhas, cancelar, retomada_de,
+            to_char(iniciado_em, 'YYYY-MM-DD"T"HH24:MI:SS') as iniciado_em,
+            to_char(concluido_em, 'YYYY-MM-DD"T"HH24:MI:SS') as concluido_em,
+            erro,
+            extract(epoch from (coalesce(concluido_em, now()) - iniciado_em))::int as segundos,
+            (concluido_em is null and iniciado_em > now() - ($1 || ' hours')::interval) as aberta
+       from obr_sync
+      order by iniciado_em desc
+      limit 1`,
+    [String(HORAS_ATE_ABANDONADA)]
+  );
+
+  if (!r) {
+    return {
+      id: null, rodando: false, progresso: 0, total: 0, entregas: 0, falhas: 0,
+      iniciadoEm: null, concluidoEm: null, erro: null, cancelamentoPedido: false,
+      retomadaDe: null, restanteSegundos: null,
+    };
+  }
+
+  // Só conta o que ESTA execução andou: numa retomada, o progresso já começa
+  // alto e dividir por ele daria um ritmo fantasma.
+  const feitasAgora = r.progresso - (r.retomada_de ?? 0);
+  const faltam = Math.max(0, r.total - r.progresso);
+  const restanteSegundos =
+    r.aberta && feitasAgora > 5 && r.segundos > 0
+      ? Math.round((r.segundos / feitasAgora) * faltam)
+      : null;
+
+  return {
+    id: r.id,
+    rodando: r.aberta,
+    progresso: r.progresso,
+    total: r.total,
+    entregas: r.entregas,
+    falhas: r.falhas,
+    iniciadoEm: r.iniciado_em,
+    concluidoEm: r.concluido_em,
+    erro: r.erro,
+    cancelamentoPedido: r.cancelar,
+    retomadaDe: r.retomada_de,
+    restanteSegundos,
+  };
+}
+
+/**
+ * Pede parada. Não mata nada: marca a flag que a varredura relê a cada empresa,
+ * então ela encerra no fim do ciclo corrente, com a linha fechada e o progresso
+ * preservado para a retomada. Matar o processo também pararia — e deixaria a
+ * linha órfã e o ponto de retomada perdido.
+ */
+export async function pedirParadaVarredura(): Promise<boolean> {
+  const linhas = await appQuery<{ id: string }>(
+    `update obr_sync set cancelar = true where concluido_em is null returning id`
+  );
+  // Nenhuma linha aberta = não havia o que parar; a tela diz isso em vez de
+  // fingir que parou algo.
+  return linhas.length > 0;
 }
 
 /** Já existe uma varredura em andamento (e não abandonada)? */

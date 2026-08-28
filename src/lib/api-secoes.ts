@@ -165,8 +165,11 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     // seções; qual ela pediu, quem confere é o handler (como no Post Mortem do
     // DP, que também compartilha endpoint entre analista e gestão).
     fila: ["geral", "contabil", "fiscal", "dp"],
-    // Disparo manual da varredura: só a Visão geral (é ação de escritório).
-    sincronizar: ["geral"],
+    // Operar a varredura (disparar, parar, ver progresso) é da seção
+    // Configurações, não das telas de fila — quem consulta obrigação não
+    // administra a integração.
+    sincronizar: ["configuracoes"],
+    varredura: ["configuracoes"],
     // Consulta ao vivo de UMA empresa: qualquer seção, porque é barata e o
     // recorte de setor sai da própria seção. O handler ainda checa a seção
     // pedida e o escopo de empresa.

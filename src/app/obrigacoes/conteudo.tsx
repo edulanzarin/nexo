@@ -9,7 +9,6 @@ import {
   CircleAlert,
   ListChecks,
   Receipt,
-  RefreshCw,
   Search,
   UserRound,
 } from "lucide-react";
@@ -88,44 +87,6 @@ function LinhaFila({ e }: { e: EntregaFila }) {
       <Td>{e.multa ? <Badge tone="critical">multa</Badge> : <span className="text-muted">—</span>}</Td>
       <Td>{e.respNome ?? <span className="text-muted">(sem responsável)</span>}</Td>
     </Tr>
-  );
-}
-
-/**
- * Botão de varredura manual. Não espera a varredura terminar — ela leva horas;
- * o que ele faz é INICIAR e devolver a tela ao estado "sincronizando", que se
- * resolve sozinho pelo polling.
- */
-function BotaoSincronizar({ rodando }: { rodando: boolean }) {
-  const qc = useQueryClient();
-  const [enviando, setEnviando] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
-
-  async function disparar() {
-    setEnviando(true);
-    setErro(null);
-    try {
-      const r = await mutar<{ iniciada: boolean; motivo?: string }>(
-        "/api/obrigacoes/sincronizar",
-        "POST"
-      );
-      if (!r.iniciada && r.motivo) setErro(r.motivo);
-      await qc.invalidateQueries({ queryKey: ["obrigacoes-fila"] });
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não foi possível iniciar.");
-    } finally {
-      setEnviando(false);
-    }
-  }
-
-  return (
-    <div className="flex flex-col items-end gap-1">
-      <Button onClick={disparar} disabled={enviando || rodando} variant="secondary">
-        <RefreshCw className={`size-4 ${rodando ? "animate-spin" : ""}`} />
-        {rodando ? "Sincronizando…" : enviando ? "Iniciando…" : "Sincronizar agora"}
-      </Button>
-      {erro && <span className="text-[11px] text-critical">{erro}</span>}
-    </div>
   );
 }
 
@@ -482,9 +443,6 @@ export default function Conteudo({ secao }: { secao: string }) {
   }
 
   const { sync, setores, responsaveis, obrigacoes, fila } = dados;
-  // A varredura é do escritório inteiro; quem cuida de um setor não a dispara
-  // (a rota também só libera `geral`, isto aqui é a conveniência da tela).
-  const podeSincronizar = secao === "geral";
 
   // Nunca sincronizou: a tela está vazia por falta de job, não por falta de
   // trabalho. Dizer isso evita a leitura de que o escritório está em dia.
@@ -499,14 +457,9 @@ export default function Conteudo({ secao }: { secao: string }) {
           descricao={
             sync.rodando
               ? "Ela varre a carteira empresa a empresa e leva cerca de 30 minutos. Esta tela se atualiza sozinha quando terminar."
-              : "O job diário preenche esta tela às 5h. Para adiantar, dispare a varredura agora — leva cerca de 30 minutos e roda em segundo plano."
+              : "O job diário preenche esta tela às 5h. Para adiantar, use Configurações — ou consulte uma empresa ao vivo aqui embaixo, que não depende da varredura."
           }
         />
-        {podeSincronizar && (
-          <div className="flex justify-center">
-            <BotaoSincronizar rodando={sync.rodando} />
-          </div>
-        )}
         {/* Não depende da varredura: uma empresa se consulta a qualquer momento. */}
         <Card as="section" padding="md" className="space-y-3">
           <BarraFiltros
@@ -536,7 +489,6 @@ export default function Conteudo({ secao }: { secao: string }) {
             </Badge>
           )}
         </div>
-        {podeSincronizar && <BotaoSincronizar rodando={sync.rodando} />}
       </div>
 
       <Card as="section" padding="md">

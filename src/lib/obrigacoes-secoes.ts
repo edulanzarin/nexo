@@ -1,4 +1,4 @@
-import { Calculator, LayoutGrid, Receipt, Users } from "lucide-react";
+import { Calculator, LayoutGrid, Receipt, Settings, Users } from "lucide-react";
 import type { SecaoFiscal } from "./fiscal-secoes";
 
 /**
@@ -61,6 +61,20 @@ export const SECOES_OBRIGACOES: SecaoObrigacoes[] = [
     metrica: false,
     descricao: "Folha, encargos e obrigações de pessoal pendentes",
     setores: [3],
+  },
+  // Última, e de propósito à parte das áreas: aqui não se lê fila, se OPERA a
+  // varredura. Seção própria porque a doutrina de permissão é binária —
+  // restringir o que se faz numa tela é separar em outra seção e não concedê-la
+  // (ver [[Posse numa permissão binária é duas seções e recorte por linha]]).
+  // Nenhum cargo a recebe por padrão: quem opera a varredura é quem administra.
+  {
+    id: "configuracoes",
+    icone: Settings,
+    rotulo: "Configurações",
+    path: "/obrigacoes/configuracoes",
+    metrica: false,
+    descricao: "Varredura do Acessórias: estado, progresso e disparo manual",
+    setores: [],
   },
 ];
 
