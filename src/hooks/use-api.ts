@@ -24,9 +24,6 @@ import type {
   DevolucoesResumo,
   CancelamentosResumo,
   PontoValorSerie,
-  ColaboradorProd,
-  ProdutividadeSerie,
-  ProdutividadeCalendario,
   ConformidadeResumo,
   ConformidadeEmpresa,
   TributosCargaEmpresa,
@@ -61,6 +58,11 @@ import type {
 import type { Formulario, FormularioResumo } from "@/lib/formularios-tipos";
 import type { DpResumo, DpLinha, DpQuebra, DpTipo } from "@/lib/dp-tipos";
 import type { ContabilProdutividadeResp } from "@/lib/contabil-produtividade-tipos";
+import type { FiscalProdutividadeResp } from "@/lib/fiscal-produtividade-tipos";
+import type { FiscalImpostosResp } from "@/lib/fiscal-impostos-tipos";
+import type { FiscalAtrasoResp } from "@/lib/fiscal-atraso-tipos";
+import type { FiscalCarteiraResp } from "@/lib/fiscal-carteira-tipos";
+import type { FiscalTempoResp } from "@/lib/fiscal-tempo-tipos";
 import type { ContabilExclusoesResp } from "@/lib/contabil-exclusoes-tipos";
 import type { ContabilAtrasoResp } from "@/lib/contabil-atraso-tipos";
 import type { ContabilCarteiraResp } from "@/lib/contabil-carteira-tipos";
@@ -334,24 +336,47 @@ export const useCancelamentosSerie = (qs: string, tipo: "ent" | "sai", enabled =
     enabled
   );
 
-export const useProdutividade = (qs: string, enabled = true) =>
-  useApiQuery<ColaboradorProd[]>(
-    ["produtividade", qs],
+// ── Produtividade do Fiscal ─────────────────────────────────────────────────
+// Uma consulta por ABA, cada uma trazendo a tela inteira: o payload já vem com
+// ranking, série e calendário, então isolar uma pessoa não volta ao banco.
+
+/** Aba Lançamentos: o que o time escriturou, por pessoa, espécie e empresa. */
+export const useFiscalProdutividade = (qs: string, enabled = true) =>
+  useApiQuery<FiscalProdutividadeResp>(
+    ["fiscal-produtividade", qs],
     `/api/fiscal/produtividade?${qs}`,
     enabled
   );
 
-export const useProdutividadeSerie = (qs: string, enabled = true) =>
-  useApiQuery<ProdutividadeSerie>(
-    ["produtividade-serie", qs],
-    `/api/fiscal/produtividade-serie?${qs}`,
+/** Aba Impostos: quanto de tributo passou pelas mãos de cada pessoa. */
+export const useFiscalImpostos = (qs: string, enabled = true) =>
+  useApiQuery<FiscalImpostosResp>(
+    ["fiscal-prod-impostos", qs],
+    `/api/fiscal/produtividade-impostos?${qs}`,
     enabled
   );
 
-export const useProdutividadeCalendario = (qs: string, enabled = true) =>
-  useApiQuery<ProdutividadeCalendario>(
-    ["produtividade-calendario", qs],
-    `/api/fiscal/produtividade-calendario?${qs}`,
+/** Aba Atraso: distância entre a data do documento e a da escrituração. */
+export const useFiscalAtraso = (qs: string, enabled = true) =>
+  useApiQuery<FiscalAtrasoResp>(
+    ["fiscal-prod-atraso", qs],
+    `/api/fiscal/produtividade-atraso?${qs}`,
+    enabled
+  );
+
+/** Aba Carteira: cobertura das empresas no período e tempo parado de cada uma. */
+export const useFiscalCarteira = (qs: string, enabled = true) =>
+  useApiQuery<FiscalCarteiraResp>(
+    ["fiscal-prod-carteira", qs],
+    `/api/fiscal/produtividade-carteira?${qs}`,
+    enabled
+  );
+
+/** Aba Tempo: horas no Questor por pessoa e por empresa do time fiscal. */
+export const useFiscalTempo = (qs: string, enabled = true) =>
+  useApiQuery<FiscalTempoResp>(
+    ["fiscal-prod-tempo", qs],
+    `/api/fiscal/produtividade-tempo?${qs}`,
     enabled
   );
 

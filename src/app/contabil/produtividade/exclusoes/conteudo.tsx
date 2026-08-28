@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Building2, CalendarClock, Eraser, RotateCcw, UserMinus } from "lucide-react";
 import { StatTile, Delta } from "@/components/ui";
-import { CtbPessoaFiltro } from "@/components/ctb-pessoa-filtro";
+import { ProdPessoaFiltro } from "@/components/prod-pessoa-filtro";
 import { ExportarMenu, type CorteExport } from "@/components/exportar-menu";
 import { CtbRankingTabela, type ColunaRanking } from "@/components/ctb-ranking-tabela";
 import { CtbProdBarras, type BarraItem } from "@/components/ctb-prod-barras";
@@ -17,7 +17,7 @@ import { decimalBR } from "@/lib/csv";
 import { FAIXAS_IDADE } from "@/lib/contabil-exclusoes-tipos";
 import type { CtbExclPessoa } from "@/lib/contabil-exclusoes-tipos";
 import { CLASSES } from "@/lib/contabil-produtividade-tipos";
-import { emDias, pctBR, pctDe, pico, slug } from "@/lib/contabil-prod-formato";
+import { emDias, pctBR, pctDe, pico, slug } from "@/lib/prod-formato";
 
 const COLUNAS: ColunaRanking<CtbExclPessoa>[] = [
   { key: "excluidos", rotulo: "Exclusões", valor: (p) => p.excluidos },
@@ -240,7 +240,7 @@ export default function ExclusoesContabilPage() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center gap-2">
-        <CtbPessoaFiltro
+        <ProdPessoaFiltro
           dados={opcoesPessoa}
           valor={pessoaSel}
           onMudar={setPessoaSel}

@@ -7,8 +7,8 @@ import { IconButton } from "@/components/ui";
 import { num } from "@/lib/format";
 
 /** O mínimo que o filtro precisa saber de alguém: quem é e quanto fez. Cada aba
- *  da Produtividade conta uma coisa diferente (lançamentos, exclusões, horas) e
- *  traduz para cá — assim o filtro serve as cinco sem conhecer nenhuma. */
+ *  da Produtividade conta uma coisa diferente (lançamentos, notas, exclusões,
+ *  horas) e traduz para cá — assim o filtro serve todas sem conhecer nenhuma. */
 export interface PessoaOpcao {
   codigo: number;
   nome: string;
@@ -16,10 +16,11 @@ export interface PessoaOpcao {
 }
 
 /**
- * Escolhe uma pessoa do Contábil para recortar a tela. A lista sai do ranking já
- * carregado — sem ida ao banco, como no filtro de funcionário do DP.
+ * Escolhe uma pessoa do time para recortar a tela — serve as abas do Contábil e
+ * as do Fiscal. A lista sai do ranking já carregado, sem ida ao banco, como no
+ * filtro de funcionário do DP.
  */
-export function CtbPessoaFiltro({
+export function ProdPessoaFiltro({
   dados,
   valor,
   onMudar,

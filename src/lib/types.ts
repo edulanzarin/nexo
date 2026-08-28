@@ -199,31 +199,6 @@ export interface NotasListaResp {
   pageSize: number;
 }
 
-/** Produtividade: um colaborador (usuário do Questor) e o que ele lançou no período. */
-export interface ColaboradorProd {
-  codigo: number;
-  nome: string;
-  /** codigousuario 0 = ADMINISTRADOR/sistema (importações automáticas). */
-  auto: boolean;
-  /** Usuário com data de baixa (desligado/inativo no Questor). */
-  inativo: boolean;
-  notasEnt: number;
-  notasSai: number;
-  notas: number;
-  valorEnt: number;
-  valorSai: number;
-  valor: number;
-  /** Notas canceladas lançadas por ele (indicador de qualidade). */
-  canceladas: number;
-  /** Empresas distintas atendidas. */
-  empresas: number;
-}
-
-export interface ProdutividadeSerie {
-  granularidade: "dia" | "mes";
-  pontos: { bucket: string; ent: number; sai: number }[];
-}
-
 /**
  * Calendário de atividade (estilo GitHub): notas lançadas por dia no período.
  * Sempre diário — o filtro é limitado a no máximo 1 ano, então a grade nunca

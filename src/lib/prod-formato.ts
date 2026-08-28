@@ -1,9 +1,9 @@
-import type { CtbDia } from "./contabil-produtividade-tipos";
+import type { ProdDia } from "./prod-tipos";
 
 /**
- * Formatadores das abas de Produtividade do Contábil. Cinco telas mostram as
- * mesmas grandezas — percentual, dias, horas — e um formatador por tela é como
- * a mesma porcentagem sai com uma casa numa aba e três na outra.
+ * Formatadores das abas de Produtividade (Contábil e Fiscal). Dez telas mostram
+ * as mesmas grandezas — percentual, dias, horas — e um formatador por tela é
+ * como a mesma porcentagem sai com uma casa numa aba e três na outra.
  *
  * Tudo em pt-BR e por `toLocaleString`: `toFixed` devolve PONTO, e em português
  * ponto é separador de milhar — ver [[Ponto decimal em interface pt-BR afirma
@@ -36,8 +36,8 @@ export function slug(nome: string): string {
 }
 
 /** O dia de maior movimento de uma série esparsa (o pico do calendário). */
-export function pico(celulas: CtbDia[]): CtbDia | null {
-  let melhor: CtbDia | null = null;
+export function pico(celulas: ProdDia[]): ProdDia | null {
+  let melhor: ProdDia | null = null;
   for (const c of celulas) if (!melhor || c.n > melhor.n) melhor = c;
   return melhor;
 }

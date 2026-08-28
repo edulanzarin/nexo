@@ -13,7 +13,7 @@ import { useContabilCarteira } from "@/hooks/use-api";
 import { brl, brlCompact, dataBR, num, numCompact } from "@/lib/format";
 import { decimalBR } from "@/lib/csv";
 import { FAIXAS_PARADA } from "@/lib/contabil-carteira-tipos";
-import { pctBR } from "@/lib/contabil-prod-formato";
+import { pctBR } from "@/lib/prod-formato";
 
 /** Quantas empresas foram tocadas por 1, 2, 3, 4 e 5+ pessoas. */
 const ROTULOS_PESSOAS = ["1 pessoa", "2 pessoas", "3 pessoas", "4 pessoas", "5 ou mais"];

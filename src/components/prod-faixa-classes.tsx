@@ -2,7 +2,7 @@
 
 import { StatTile } from "@/components/ui";
 import { num, numCompact } from "@/lib/format";
-import type { ClasseInfo, PorClasseGen } from "@/lib/prod-classes";
+import type { ClasseInfo, PorClasseGen } from "@/lib/prod-tipos";
 
 /**
  * A composição do período em poucos números, com o peso de cada um — a natureza

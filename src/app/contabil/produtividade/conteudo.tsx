@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Building2, Clock, FileText, Layers, Users } from "lucide-react";
 import { StatTile, Delta } from "@/components/ui";
-import { CtbPessoaFiltro } from "@/components/ctb-pessoa-filtro";
+import { ProdPessoaFiltro } from "@/components/prod-pessoa-filtro";
 import { ExportarMenu, type CorteExport } from "@/components/exportar-menu";
 import { CtbProdTabela } from "@/components/ctb-prod-tabela";
 import { CtbProdBarras, type BarraItem } from "@/components/ctb-prod-barras";
@@ -15,7 +15,7 @@ import { useFiltros } from "@/hooks/use-filters";
 import { useContabilProdutividade } from "@/hooks/use-api";
 import { brl, brlCompact, dataBR, deltaPct, num, numCompact } from "@/lib/format";
 import { decimalBR } from "@/lib/csv";
-import { pico, slug } from "@/lib/contabil-prod-formato";
+import { pico, slug } from "@/lib/prod-formato";
 import {
   CLASSES,
   zeroClasses,
@@ -278,7 +278,7 @@ export default function ProdutividadeContabilPage() {
     <div className="flex flex-col gap-5">
       {/* Recorte por pessoa: vale para todos os blocos, menos o ranking */}
       <div className="flex flex-wrap items-center gap-2">
-        <CtbPessoaFiltro dados={opcoesPessoa} valor={pessoaSel} onMudar={setPessoaSel} />
+        <ProdPessoaFiltro dados={opcoesPessoa} valor={pessoaSel} onMudar={setPessoaSel} />
         <span className="text-xs text-muted">
           {pessoa
             ? "Mostrando só o trabalho desta pessoa · o ranking segue com o time todo"

@@ -43,10 +43,12 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     "tributos-cst": ["tributos"],
     "tributos-carga-empresas": ["tributos"],
     "impostos-empresas": ["tributos"],
-    // Produtividade
+    // Produtividade — uma rota por aba, todas da mesma seção
     produtividade: ["produtividade"],
-    "produtividade-serie": ["produtividade"],
-    "produtividade-calendario": ["produtividade"],
+    "produtividade-impostos": ["produtividade"],
+    "produtividade-atraso": ["produtividade"],
+    "produtividade-carteira": ["produtividade"],
+    "produtividade-tempo": ["produtividade"],
     // Conformidade
     conformidade: ["conformidade"],
     "conformidade-empresas": ["conformidade"],

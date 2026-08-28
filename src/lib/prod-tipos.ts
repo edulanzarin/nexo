@@ -1,5 +1,5 @@
 /**
- * VOCABULÁRIO DE CLASSE das seções de Produtividade.
+ * VOCABULÁRIO COMPARTILHADO das seções de Produtividade (Contábil e Fiscal).
  *
  * Os dois módulos quebram o período por uma dimensão categórica de poucos
  * valores — no Contábil é a NATUREZA do lançamento (digitado, importado,
@@ -36,3 +36,26 @@ export type SeriePontoGen = {
 /** Zera um acumulador com exatamente os ids do catálogo. */
 export const zeroDe = (classes: ClasseInfo[]): PorClasseGen =>
   Object.fromEntries(classes.map((c) => [c.id, 0]));
+
+/** Um item de ranking (empresa, espécie, origem…) — quantidade e valor. */
+export interface ProdItem {
+  chave: string;
+  nome: string;
+  qtd: number;
+  valor: number;
+}
+
+/** Um dia com movimento (série ESPARSA: só o dia que teve trabalho). */
+export interface ProdDia {
+  d: string;
+  n: number;
+}
+
+/** Grade diária estilo GitHub — a forma que o `CalendarioAtividade` consome. */
+export interface ProdCalendario {
+  inicio: string;
+  fim: string;
+  celulas: ProdDia[];
+  total: number;
+  pico: ProdDia | null;
+}

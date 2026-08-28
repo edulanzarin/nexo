@@ -10,7 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import { CLASSES } from "@/lib/contabil-produtividade-tipos";
-import type { ClasseInfo, SeriePontoGen } from "@/lib/prod-classes";
+import type { ClasseInfo, SeriePontoGen } from "@/lib/prod-tipos";
 import { dataBR, mesBR, num, numCompact } from "@/lib/format";
 import { ChartCard, LegendaSeries, TooltipContainer, TooltipLinha } from "@/components/ui/chart-card";
 

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { CalendarClock, CalendarRange, Gauge, History, Layers } from "lucide-react";
 import { StatTile } from "@/components/ui";
-import { CtbPessoaFiltro } from "@/components/ctb-pessoa-filtro";
+import { ProdPessoaFiltro } from "@/components/prod-pessoa-filtro";
 import { ExportarMenu, type CorteExport } from "@/components/exportar-menu";
 import { CtbRankingTabela, type ColunaRanking } from "@/components/ctb-ranking-tabela";
 import { CtbProdBarras, type BarraItem } from "@/components/ctb-prod-barras";
@@ -15,7 +15,7 @@ import { useContabilAtraso } from "@/hooks/use-api";
 import { dataBR, mesBR, num, numCompact } from "@/lib/format";
 import { FAIXAS_ATRASO, type CtbAtrasoPessoa } from "@/lib/contabil-atraso-tipos";
 import { faixaDe } from "@/lib/prod-escala";
-import { emDias, pctBR, pctDe, slug } from "@/lib/contabil-prod-formato";
+import { emDias, pctBR, pctDe, slug } from "@/lib/prod-formato";
 
 const compet = (v: string | null) => (v ? mesBR(v + "-01") : "—");
 
@@ -183,7 +183,7 @@ export default function AtrasoContabilPage() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center gap-2">
-        <CtbPessoaFiltro dados={opcoesPessoa} valor={pessoaSel} onMudar={setPessoaSel} />
+        <ProdPessoaFiltro dados={opcoesPessoa} valor={pessoaSel} onMudar={setPessoaSel} />
         <span className="text-xs text-muted">
           {pessoa
             ? "Mostrando só os números desta pessoa · o ranking segue com o time todo"

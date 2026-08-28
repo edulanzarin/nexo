@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Building2, CalendarDays, Clock, Timer, Users } from "lucide-react";
 import { StatTile } from "@/components/ui";
-import { CtbPessoaFiltro } from "@/components/ctb-pessoa-filtro";
+import { ProdPessoaFiltro } from "@/components/prod-pessoa-filtro";
 import { ExportarMenu, type CorteExport } from "@/components/exportar-menu";
 import { CtbRankingTabela, type ColunaRanking } from "@/components/ctb-ranking-tabela";
 import { CtbProdBarras, type BarraItem } from "@/components/ctb-prod-barras";
@@ -14,7 +14,7 @@ import { useContabilTempo } from "@/hooks/use-api";
 import { dataBR, num, numCompact } from "@/lib/format";
 import { decimalBR } from "@/lib/csv";
 import type { CtbTempoPessoa } from "@/lib/contabil-tempo-tipos";
-import { emHoras, slug } from "@/lib/contabil-prod-formato";
+import { emHoras, slug } from "@/lib/prod-formato";
 
 const DIAS_SEMANA = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
@@ -174,7 +174,7 @@ export default function TempoContabilPage() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center gap-2">
-        <CtbPessoaFiltro dados={opcoesPessoa} valor={pessoaSel} onMudar={setPessoaSel} />
+        <ProdPessoaFiltro dados={opcoesPessoa} valor={pessoaSel} onMudar={setPessoaSel} />
         <span className="text-xs text-muted">
           Tempo medido pelo Questor inteiro, não só pelo módulo contábil · a filial não recorta aqui
         </span>
