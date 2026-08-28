@@ -159,7 +159,7 @@ export default function Conteudo() {
           <h3 className="text-sm font-medium">Como ela se comporta</h3>
         </div>
         <p>
-          Leva cerca de 30 minutos. O ritmo se ajusta sozinho: a API recusa acima de ~45
+          Leva cerca de 45 minutos (medido: 1.575 empresas em 46 min). O ritmo se ajusta sozinho: a API recusa acima de ~45
           chamadas por minuto, e a cada recusa a varredura desacelera e volta devagar.
         </p>
         <p>

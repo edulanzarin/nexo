@@ -8,8 +8,9 @@ import { sincronizarObrigacoes } from "@/lib/obrigacoes";
  * SCHEDULER_OBRIGACOES_HORA. Também dá para disparar à mão:
  *   curl -H "x-cron-secret: ..." http://<host>/api/obrigacoes/cron/sincronizar
  *
- * Demora: uma chamada por empresa, a ~45/min (teto MEDIDO, não o 100/min da
- * doc) — cerca de 30 minutos para a carteira. É o piso que a API impõe: não há
+ * Demora: ~46 min para 1.575 empresas ativas, medido em ago/2026. Quem manda no
+ * ritmo é a LATÊNCIA (~1,4s por chamada), maior que o intervalo de 45/min — o
+ * espaçamento quase não entra na conta. É o piso que a API impõe: não há
  * endpoint em lote para entregas, e uma empresa só se consulta pelo CNPJ. É por isso que ela existe como job e não como rota de
  * tela — nenhum request espera por isso.
  */

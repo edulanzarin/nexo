@@ -14,10 +14,9 @@
 //   SCHEDULER_RESCISOES_HORA  hora local do disparo diário das rescisões
 //                      (0-23, default 8).
 //   SCHEDULER_OBRIGACOES_HORA  hora local da varredura do Acessórias (0-23,
-//                      default 5). Cedo de propósito: é uma chamada por
-//                      empresa a ~45/min, ~30 minutos de varredura, que deve
-//                      terminar antes do expediente — a fila do dia é o que o
-//                      time abre de manhã.
+//                      default 5). Cedo de propósito: ~46 min de varredura
+//                      (medido), que deve terminar antes do expediente — a
+//                      fila do dia é o que o time abre de manhã.
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
