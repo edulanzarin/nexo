@@ -207,6 +207,100 @@ export async function sincronizarObrigacoes(): Promise<ResumoSync> {
   }
 }
 
+/**
+ * Consulta UMA empresa ao vivo e atualiza o retrato dela.
+ *
+ * É o avesso da varredura, e existe porque a API é rápida exatamente onde a
+ * varredura é lenta: uma empresa custa UMA chamada (~1s), porque o CNPJ é a
+ * única chave que `deliveries` aceita. O que não dá para ter ao vivo é o
+ * ranking do escritório — esse só existe varrendo tudo.
+ *
+ * Grava o resultado em `obr_entrega`: consultar ao vivo faz o retrato daquela
+ * empresa CONVERGIR para a realidade, em vez de deixar tela e painel contando
+ * histórias diferentes. Só as linhas daquela empresa são tocadas.
+ */
+export async function sincronizarEmpresa(cnpj: string): Promise<EntregaFila[]> {
+  const fim = hojeISO();
+  const inicio = mesesAtras(fim, MESES_ATRAS);
+
+  const lote = await entregasPendentes(cnpj, inicio, fim);
+  const visto = new Date();
+
+  // Par no Questor para UMA empresa: consulta pontual, não o mapa inteiro.
+  const [par] = await query<{ codigoempresa: number }>(
+    `select codigoempresa from estab
+      where regexp_replace(coalesce(inscrfederal, ''), '[^0-9]', '', 'g') = $1
+      limit 1`,
+    [soDigitos(cnpj)]
+  );
+  const codigoempresa = par?.codigoempresa ?? null;
+
+  if (lote.length) {
+    const valores = lote.map((e) => [
+      e.entId,
+      e.cnpj,
+      codigoempresa,
+      e.empresa,
+      e.obrigacao,
+      e.competencia,
+      e.prazo,
+      e.status,
+      e.multa,
+      e.dptoId,
+      e.dptoNome,
+      e.respId,
+      e.respNome,
+      visto,
+    ]);
+    const placeholders = valores
+      .map((_, i) => `(${Array.from({ length: 14 }, (_, j) => `$${i * 14 + j + 1}`).join(",")})`)
+      .join(",");
+    await appQuery(
+      `insert into obr_entrega
+         (ent_id, cnpj, codigoempresa, empresa, obrigacao, competencia, prazo,
+          status, multa, dpto_id, dpto_nome, resp_id, resp_nome, visto_em)
+       values ${placeholders}
+       on conflict (ent_id) do update set
+         cnpj = excluded.cnpj, codigoempresa = excluded.codigoempresa,
+         empresa = excluded.empresa, obrigacao = excluded.obrigacao,
+         competencia = excluded.competencia, prazo = excluded.prazo,
+         status = excluded.status, multa = excluded.multa,
+         dpto_id = excluded.dpto_id, dpto_nome = excluded.dpto_nome,
+         resp_id = excluded.resp_id, resp_nome = excluded.resp_nome,
+         visto_em = excluded.visto_em`,
+      valores.flat()
+    );
+  }
+
+  // O que esta empresa tinha e não tem mais saiu da fila (entregue, dispensado).
+  // Recorte por CNPJ: nenhuma outra empresa é afetada.
+  await appQuery(`delete from obr_entrega where cnpj = $1 and visto_em < $2`, [cnpj, visto]);
+
+  return appQuery<EntregaFila>(
+    `select ent_id as "entId", cnpj, codigoempresa, empresa, obrigacao,
+            to_char(competencia, 'YYYY-MM-DD') as competencia,
+            to_char(prazo, 'YYYY-MM-DD') as prazo,
+            status, multa, dpto_id as "dptoId", dpto_nome as "dptoNome",
+            resp_nome as "respNome",
+            case when prazo is null then null else (current_date - prazo)::int end as "diasAtraso"
+       from obr_entrega
+      where cnpj = $1
+      order by prazo asc nulls last`,
+    [cnpj]
+  );
+}
+
+/** O par no Questor de um CNPJ, para checar escopo antes de consultar. */
+export async function empresaQuestorPorCnpj(cnpj: string): Promise<number | null> {
+  const [par] = await query<{ codigoempresa: number }>(
+    `select codigoempresa from estab
+      where regexp_replace(coalesce(inscrfederal, ''), '[^0-9]', '', 'g') = $1
+      limit 1`,
+    [soDigitos(cnpj)]
+  );
+  return par?.codigoempresa ?? null;
+}
+
 /** Já existe uma varredura em andamento (e não abandonada)? */
 export async function sincronizacaoEmAndamento(): Promise<boolean> {
   const [row] = await appQuery<{ rodando: boolean }>(

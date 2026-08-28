@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CalendarClock, CircleAlert, ListChecks, Receipt, RefreshCw } from "lucide-react";
+import { AlertTriangle, CalendarClock, CircleAlert, ListChecks, Receipt, RefreshCw, Search } from "lucide-react";
 import { Kpi } from "@/components/kpi-conf";
 import { Badge, Button, Card, EmptyState, Table, Td, Th, Thead, Tr } from "@/components/ui";
 import { useFilaObrigacoes } from "@/hooks/use-api";
@@ -91,6 +91,113 @@ function BotaoSincronizar({ rodando }: { rodando: boolean }) {
   );
 }
 
+/**
+ * Consulta AO VIVO de uma empresa. Existe porque a API é rápida exatamente onde
+ * a varredura é lenta: uma empresa é uma chamada, ~1s. O ranking do escritório
+ * continua vindo do retrato diário — esse só existe varrendo tudo.
+ *
+ * O resultado também atualiza o retrato daquela empresa no banco, então a fila
+ * abaixo passa a concordar com o que se acabou de ver.
+ */
+function ConsultaAoVivo({ secao }: { secao: string }) {
+  const qc = useQueryClient();
+  const [cnpj, setCnpj] = useState("");
+  const [buscando, setBuscando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [res, setRes] = useState<{ empresa: string | null; fila: EntregaFila[] } | null>(null);
+
+  const digitos = cnpj.replace(/\D/g, "");
+  const valido = digitos.length === 14 || digitos.length === 11;
+
+  async function consultar() {
+    if (!valido) return;
+    setBuscando(true);
+    setErro(null);
+    setRes(null);
+    try {
+      const r = await mutar<{ empresa: string | null; fila: EntregaFila[] }>(
+        `/api/obrigacoes/empresa?secao=${encodeURIComponent(secao)}&cnpj=${digitos}`,
+        "POST"
+      );
+      setRes(r);
+      // O retrato daquela empresa mudou no banco; a fila abaixo tem que refletir.
+      await qc.invalidateQueries({ queryKey: ["obrigacoes-fila"] });
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível consultar.");
+    } finally {
+      setBuscando(false);
+    }
+  }
+
+  return (
+    <Card as="section" padding="md" className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-medium text-ink">Consultar uma empresa agora</h3>
+          <p className="text-[11px] text-muted">
+            Vai no Acessórias na hora — não espera a varredura das 5h
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 rounded-lg border border-hairline bg-surface-2 px-2.5 py-1.5">
+            <Search className="size-4 text-muted" />
+            <input
+              value={cnpj}
+              onChange={(e) => setCnpj(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && consultar()}
+              placeholder="CNPJ da empresa"
+              className="w-44 bg-transparent text-xs text-ink outline-none placeholder:text-muted"
+            />
+          </div>
+          <Button onClick={consultar} disabled={!valido || buscando} variant="secondary">
+            {buscando ? "Consultando…" : "Consultar"}
+          </Button>
+        </div>
+      </div>
+
+      {erro && <p className="text-xs text-critical">{erro}</p>}
+
+      {res && (
+        <div className="space-y-2">
+          <p className="text-xs text-muted">
+            {res.empresa ?? "Empresa"} · consultado agora
+            {res.fila.length === 0 && " · nada pendente nesta seção"}
+          </p>
+          {res.fila.length > 0 && (
+            <Table minWidth="min-w-[720px]">
+              <Thead>
+                <Th>Obrigação</Th>
+                <Th>Competência</Th>
+                <Th>Prazo</Th>
+                <Th numeric>Atraso</Th>
+                <Th>Responsável</Th>
+              </Thead>
+              <tbody>
+                {res.fila.map((e) => (
+                  <Tr key={e.entId}>
+                    <Td>
+                      <span className="block truncate" title={e.obrigacao}>
+                        {e.obrigacao}
+                      </span>
+                      <span className="text-[11px] text-muted">{e.dptoNome}</span>
+                    </Td>
+                    <Td>{e.competencia ? dataBR(e.competencia) : "—"}</Td>
+                    <Td>{e.prazo ? dataBR(e.prazo) : "—"}</Td>
+                    <Td numeric>
+                      <TomAtraso dias={e.diasAtraso} />
+                    </Td>
+                    <Td>{e.respNome ?? <span className="text-muted">(sem responsável)</span>}</Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 export default function Conteudo({ secao }: { secao: string }) {
   const res = useFilaObrigacoes(secao);
   const dados = res.data;
@@ -153,6 +260,8 @@ export default function Conteudo({ secao }: { secao: string }) {
             <BotaoSincronizar rodando={sync.rodando} />
           </div>
         )}
+        {/* Não depende da varredura: uma empresa se consulta a qualquer momento. */}
+        <ConsultaAoVivo secao={secao} />
       </div>
     );
   }
@@ -173,6 +282,8 @@ export default function Conteudo({ secao }: { secao: string }) {
         </div>
         {podeSincronizar && <BotaoSincronizar rodando={sync.rodando} />}
       </div>
+
+      <ConsultaAoVivo secao={secao} />
 
       <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <Kpi

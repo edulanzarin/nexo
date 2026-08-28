@@ -167,6 +167,10 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     fila: ["geral", "contabil", "fiscal", "dp"],
     // Disparo manual da varredura: só a Visão geral (é ação de escritório).
     sincronizar: ["geral"],
+    // Consulta ao vivo de UMA empresa: qualquer seção, porque é barata e o
+    // recorte de setor sai da própria seção. O handler ainda checa a seção
+    // pedida e o escopo de empresa.
+    empresa: ["geral", "contabil", "fiscal", "dp"],
   },
   // Configurações não tem rotas de API: o CRUD roda por Server Action (gateada
   // por assertSecao). Mapa vazio; nenhum endpoint /api/config existe.
