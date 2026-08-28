@@ -1,7 +1,16 @@
 import "server-only";
 import { query } from "./db";
-import { FilterError, parseFilters, periodoAnterior, type FiscalFilters } from "./fiscal-filters";
-import { empresasPermitidas, getSessaoOpcional } from "./sessao";
+import { FilterError, periodoAnterior } from "./fiscal-filters";
+import {
+  bucketDe,
+  buckets,
+  carregarCadastros,
+  condEscopo,
+  granularidadeDe,
+  parseProdFiltros,
+  somarMapa,
+  type ProdFiltros,
+} from "./contabil-prod-comum";
 import {
   classeDaOrigem,
   zeroClasses,
@@ -41,37 +50,16 @@ import {
  * afunila.
  */
 
-export type ProdFiltros = FiscalFilters;
-
-export function parseProdFiltros(sp: URLSearchParams): ProdFiltros {
-  return parseFilters(sp);
-}
-
-/** Escopo efetivo: "todas" (sem restrição) ou a interseção sessão × pedido. */
-async function escopoEmpresas(f: ProdFiltros): Promise<number[] | "todas"> {
-  const sessao = await getSessaoOpcional();
-  const escopo: number[] | "todas" = sessao ? empresasPermitidas(sessao) : [];
-  if (escopo === "todas") return f.empresas.length ? f.empresas : "todas";
-  return f.empresas.length ? f.empresas.filter((e) => escopo.includes(e)) : escopo;
-}
-
 /**
  * WHERE do período de TRABALHO. `datahoralctoctb` é timestamp: o fim entra como
  * `< fim + 1 dia` para pegar o dia inteiro (entre datas cortaria à meia-noite).
+ * O escopo de empresa e o filtro de filial vêm do `condEscopo`, compartilhado
+ * com as outras abas da seção.
  */
 async function montarWhere(f: ProdFiltros): Promise<{ sql: string; params: unknown[] }> {
   const params: unknown[] = [f.inicio, f.fim];
   const conds = [`datahoralctoctb >= $1::date and datahoralctoctb < ($2::date + 1)`];
-
-  const escopo = await escopoEmpresas(f);
-  if (escopo !== "todas") {
-    params.push(escopo);
-    conds.push(`codigoempresa = any($${params.length}::int[])`);
-  }
-  if (f.estabs.length > 0) {
-    params.push(f.estabs);
-    conds.push(`codigoestab = any($${params.length}::int[])`);
-  }
+  conds.push(...(await condEscopo(f, params)));
   return { sql: conds.join(" and "), params };
 }
 
@@ -118,31 +106,6 @@ const novoAcc = (codigo: number): Acc => ({
   horas: Array.from({ length: 24 }, () => 0),
   rodadas: new Set(),
 });
-
-const somaMapa = (m: Map<string, number>, k: string, n: number) => m.set(k, (m.get(k) ?? 0) + n);
-
-/** Buckets densos do período (dia ou mês) — sem furo, para a série não mentir. */
-function buckets(inicio: string, fim: string, granularidade: "dia" | "mes"): string[] {
-  const out: string[] = [];
-  const ini = new Date(inicio + "T00:00:00Z");
-  const end = new Date(fim + "T00:00:00Z");
-  if (granularidade === "mes") {
-    const cur = new Date(Date.UTC(ini.getUTCFullYear(), ini.getUTCMonth(), 1));
-    while (cur <= end) {
-      out.push(cur.toISOString().slice(0, 10));
-      cur.setUTCMonth(cur.getUTCMonth() + 1);
-    }
-    return out;
-  }
-  for (const t = new Date(ini); t <= end; t.setUTCDate(t.getUTCDate() + 1)) {
-    out.push(t.toISOString().slice(0, 10));
-  }
-  return out;
-}
-
-/** Dia "YYYY-MM-DD" → chave do bucket (o próprio dia, ou o 1º do mês). */
-const bucketDe = (d: string, granularidade: "dia" | "mes") =>
-  granularidade === "mes" ? d.slice(0, 7) + "-01" : d;
 
 export async function montarProdutividadeContabil(
   f: ProdFiltros
@@ -214,8 +177,8 @@ export async function montarProdutividadeContabil(
     p.porClasse[classe] += r.n;
     p.horas[r.h] += r.n;
     p.rodadas.add(`${r.e}|${r.o}|${r.d}`);
-    somaMapa(p.origens, r.o, r.n);
-    somaMapa(p.dias, r.d, r.n);
+    somarMapa(p.origens, r.o, r.n);
+    somarMapa(p.dias, r.d, r.n);
     const pe = p.empresas.get(r.e) ?? { qtd: 0, valor: 0 };
     pe.qtd += r.n;
     pe.valor += r.v;
@@ -224,52 +187,23 @@ export async function montarProdutividadeContabil(
   }
 
   // ── Cadastros de apoio (só o necessário para nomear o que apareceu) ───────
-  const codigosEmpresa = [...empresas.keys()];
-  const [usuarios, nomesEmpresa, descrOrigem] = await Promise.all([
-    query<{ codigo: number; nome: string | null; inativo: boolean }>(
-      `select codigousuario as codigo,
-              coalesce(nullif(btrim(nomeusuariocompl), ''), nullif(btrim(nomeusuario), '')) as nome,
-              (databaixausuario is not null) as inativo
-         from usuario`
-    ),
-    codigosEmpresa.length
-      ? query<{ codigo: number; nome: string | null }>(
-          `select codigoempresa as codigo, btrim(nomeempresa) as nome
-             from empresa where codigoempresa = any($1::int[])`,
-          [codigosEmpresa]
-        )
-      : Promise.resolve([]),
-    query<{ codigo: string; descr: string | null }>(
-      `select codigooriglctoctb as codigo, btrim(descroriglctoctb) as descr from origemlctoctb`
-    ),
-  ]);
-
-  const mapaUsuario = new Map(usuarios.map((u) => [u.codigo, u]));
-  const mapaEmpresa = new Map(nomesEmpresa.map((e) => [e.codigo, e.nome]));
-  const mapaOrigem = new Map(descrOrigem.map((o) => [o.codigo, o.descr]));
-
-  const nomeEmpresa = (c: number) => mapaEmpresa.get(c) || `Empresa ${c}`;
-  const nomeOrigem = (c: string) => mapaOrigem.get(c) || (c === "--" ? "Sem origem" : `Origem ${c}`);
+  const cadastros = await carregarCadastros({ empresas: [...empresas.keys()], origens: true });
   const itensEmpresa = (m: Map<number, { qtd: number; valor: number }>, teto: number): CtbItem[] =>
     [...m.entries()]
-      .map(([codigo, v]) => ({ chave: String(codigo), nome: nomeEmpresa(codigo), ...v }))
+      .map(([codigo, v]) => ({ chave: String(codigo), nome: cadastros.nomeEmpresa(codigo), ...v }))
       .sort((a, b) => b.qtd - a.qtd)
       .slice(0, teto);
 
   // ── Ranking de pessoas ───────────────────────────────────────────────────
   const ranking: CtbPessoa[] = [...pessoas.values()]
     .map((p) => {
-      const u = mapaUsuario.get(p.codigo);
       const serie: CtbDia[] = [...p.dias.entries()]
         .map(([d, n]) => ({ d, n }))
         .sort((a, b) => a.d.localeCompare(b.d));
       return {
         codigo: p.codigo,
-        // Usuário 0 é o ADMINISTRADOR do Questor (rotinas automáticas). No
-        // contábil ele praticamente não aparece, mas se aparecer tem de ficar
-        // legível — não é ninguém do time.
-        nome: p.codigo === 0 ? "Sistema (automático)" : (u?.nome ?? `Usuário ${p.codigo}`),
-        inativo: u?.inativo ?? false,
+        nome: cadastros.nomeUsuario(p.codigo),
+        inativo: cadastros.usuarioInativo(p.codigo),
         lancamentos: p.lancamentos,
         valor: p.valor,
         empresas: p.empresas.size,
@@ -288,8 +222,7 @@ export async function montarProdutividadeContabil(
     .sort((a, b) => b.lancamentos - a.lancamentos);
 
   // ── Série do time (buckets densos, quebrada por classe) ───────────────────
-  const nDias = (Date.parse(f.fim) - Date.parse(f.inicio)) / 86_400_000 + 1;
-  const granularidade: "dia" | "mes" = nDias > 92 ? "mes" : "dia";
+  const granularidade = granularidadeDe(f.inicio, f.fim);
   const porBucket = new Map<string, CtbSeriePonto>();
   for (const b of buckets(f.inicio, f.fim, granularidade)) {
     porBucket.set(b, { bucket: b, total: 0, ...zeroClasses() });
@@ -320,7 +253,7 @@ export async function montarProdutividadeContabil(
   const listaOrigens: CtbOrigemItem[] = [...origens.entries()]
     .map(([chave, o]) => ({
       chave,
-      nome: nomeOrigem(chave),
+      nome: cadastros.nomeOrigem(chave),
       classe: classeDaOrigem(chave),
       qtd: o.qtd,
       valor: o.valor,
@@ -349,4 +282,5 @@ export async function montarProdutividadeContabil(
   };
 }
 
-export { FilterError };
+export { FilterError, parseProdFiltros };
+export type { ProdFiltros };

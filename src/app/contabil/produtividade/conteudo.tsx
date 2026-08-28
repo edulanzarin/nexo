@@ -14,10 +14,10 @@ import { useFiltros } from "@/hooks/use-filters";
 import { useContabilProdutividade } from "@/hooks/use-api";
 import { brl, brlCompact, dataBR, deltaPct, num, numCompact } from "@/lib/format";
 import { decimalBR } from "@/lib/csv";
+import { pico, slug } from "@/lib/contabil-prod-formato";
 import {
   CLASSES,
   zeroClasses,
-  type CtbDia,
   type CtbPessoa,
   type CtbSeriePonto,
   type PorClasse,
@@ -47,23 +47,6 @@ function serieDaPessoa(
     total: porBucket.get(p.bucket) ?? 0,
     ...zeroClasses(),
   }));
-}
-
-/** Nome vira pedaço de nome de arquivo: sem acento, sem espaço. */
-function slug(nome: string): string {
-  return nome
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 40);
-}
-
-function pico(celulas: CtbDia[]): CtbDia | null {
-  let melhor: CtbDia | null = null;
-  for (const c of celulas) if (!melhor || c.n > melhor.n) melhor = c;
-  return melhor;
 }
 
 /** Faixa de classes: a composição do período em quatro números, com o peso. */
@@ -110,6 +93,11 @@ export default function ProdutividadeContabilPage() {
   const pessoa = useMemo(
     () => (pessoaSel != null ? d?.ranking.find((p) => p.codigo === pessoaSel) : undefined),
     [d, pessoaSel]
+  );
+
+  const opcoesPessoa = useMemo(
+    () => d?.ranking.map((p) => ({ codigo: p.codigo, nome: p.nome, qtd: p.lancamentos })),
+    [d]
   );
 
   const corDaClasse = useMemo(
@@ -321,7 +309,7 @@ export default function ProdutividadeContabilPage() {
     <div className="flex flex-col gap-5">
       {/* Recorte por pessoa: vale para todos os blocos, menos o ranking */}
       <div className="flex flex-wrap items-center gap-2">
-        <CtbPessoaFiltro dados={d?.ranking} valor={pessoaSel} onMudar={setPessoaSel} />
+        <CtbPessoaFiltro dados={opcoesPessoa} valor={pessoaSel} onMudar={setPessoaSel} />
         <span className="text-xs text-muted">
           {pessoa
             ? "Mostrando só o trabalho desta pessoa · o ranking segue com o time todo"
