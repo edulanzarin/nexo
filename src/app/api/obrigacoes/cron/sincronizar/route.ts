@@ -8,8 +8,8 @@ import { sincronizarObrigacoes } from "@/lib/obrigacoes";
  * SCHEDULER_OBRIGACOES_HORA. Também dá para disparar à mão:
  *   curl -H "x-cron-secret: ..." http://<host>/api/obrigacoes/cron/sincronizar
  *
- * Demora: são ~1.200 chamadas à API espaçadas pelo teto de 100 req/min, ou seja
- * dezenas de minutos. É por isso que ela existe como job e não como rota de
+ * Demora: é uma chamada por empresa (mais as confirmações de vazio) espaçadas
+ * bem abaixo do teto de 100 req/min — hora(s), não minutos. É por isso que ela existe como job e não como rota de
  * tela — nenhum request espera por isso.
  */
 async function handler(req: NextRequest) {

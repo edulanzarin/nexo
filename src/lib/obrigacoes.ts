@@ -54,7 +54,8 @@ function soDigitos(v: string): string {
 /**
  * CNPJ (só dígitos) -> codigoempresa do Questor. Casa por QUALQUER
  * estabelecimento, não só a matriz: o Acessórias cadastra filial como empresa
- * própria, e casar só por `codigoestab = 1` perdia 179 das 1.200 (medido).
+ * própria, e casar só por `codigoestab = 1` perdia 179 numa amostra de 1.200
+ * (medido em ago/2026).
  */
 async function mapaCnpjQuestor(): Promise<Map<string, number>> {
   const linhas = await query<{ codigoempresa: number; inscrfederal: string }>(
@@ -117,8 +118,8 @@ export async function sincronizarObrigacoes(): Promise<ResumoSync> {
       }
       if (!lote.length) continue;
 
-      // Um insert por empresa (não por linha): a carteira tem 1.200 empresas e
-      // uma ida ao banco por entrega seria o gargalo real, não a API.
+      // Um insert por empresa (não por linha): a carteira passa de mil empresas
+      // e uma ida ao banco por entrega seria um gargalo nosso somado ao da API.
       const valores = lote.map((e) => [
         e.entId,
         e.cnpj,

@@ -17,6 +17,12 @@ import "server-only";
  *  3. **`deliveries` exige o CNPJ no caminho** e não aceita `ListAll` (devolve
  *     204). Não existe varredura global: é uma chamada por empresa, e o CNPJ vai
  *     cru na URL — a barra dele é separador de caminho, encodar quebra.
+ *  4. **Sob pressão, ela responde VAZIO em vez de 429.** Medido: varrendo a
+ *     lista de empresas, páginas no meio do intervalo voltaram `[]` com HTTP
+ *     200 e, repetidas na sequência, vieram cheias. É a pior falha possível —
+ *     "não tem nada" e "não te respondo agora" ficam indistinguíveis, e quem
+ *     interrompe na primeira página vazia trunca a carteira em silêncio. Por
+ *     isso vazio aqui é SUSPEITA, não fim: confirma-se repetindo.
  *
  * Não há webhook: nada avisa quando uma entrega muda. Quem quiser o dado fresco
  * varre de novo (ver `obrigacoes.ts`).
@@ -25,11 +31,25 @@ import "server-only";
 const BASE = "https://api.acessorias.com";
 
 /**
- * Espaçamento entre chamadas. O teto é 100/min; 90/min deixa folga para o
- * relógio do servidor não bater com o nosso e para outra integração dividir a
- * mesma cota.
+ * Espaçamento entre chamadas. O teto é 100/min; 70/min deixa folga real — a
+ * janela é deslizante e do lado deles, então encostar no limite é o que dispara
+ * a resposta vazia silenciosa. Varredura previsivelmente mais lenta vale mais
+ * que rápida e incompleta.
  */
-const INTERVALO_MS = 60_000 / 90;
+const INTERVALO_MS = 60_000 / 70;
+
+/**
+ * Uma resposta vazia pode ser fim de lista OU throttle disfarçado. Confirma-se
+ * repetindo: só é vazio de verdade quem repete vazio.
+ */
+const CONFIRMACOES_DE_VAZIO = 2;
+
+/**
+ * Teto de páginas da carteira. Não é o tamanho esperado — é a trava contra um
+ * laço infinito se a API passar a devolver conteúdo para sempre. Medido em
+ * ago/2026: acima de 1.500 empresas cadastradas, ~78 páginas de 20.
+ */
+const MAX_PAGINAS = 400;
 
 export class AcessoriasErro extends Error {
   constructor(
@@ -133,13 +153,30 @@ export interface EmpresaAcessorias {
  * custa o mesmo e o status é útil no diagnóstico.
  */
 export async function listarEmpresas(apenasAtivas = true): Promise<EmpresaAcessorias[]> {
-  const todas: EmpresaAcessorias[] = [];
-  for (let pagina = 1; ; pagina++) {
+  // Deduplicado por identificador: a confirmação de vazio repete páginas, e
+  // repetir não pode inflar a carteira.
+  const porId = new Map<string, EmpresaAcessorias>();
+  let vaziasSeguidas = 0;
+
+  for (let pagina = 1; pagina <= MAX_PAGINAS; pagina++) {
     const lote = await get<EmpresaAcessorias[]>("/companies/ListAll", { Pagina: String(pagina) });
-    if (!lote?.length) break;
-    todas.push(...lote);
-    if (lote.length < 20) break;
+
+    if (!lote?.length) {
+      // Vazio é suspeita, não fim (ver armadilha 4). Só encerra depois de
+      // páginas vazias CONSECUTIVAS confirmadas.
+      vaziasSeguidas++;
+      if (vaziasSeguidas >= CONFIRMACOES_DE_VAZIO) break;
+      pagina--; // repete a mesma página
+      continue;
+    }
+
+    vaziasSeguidas = 0;
+    for (const e of lote) porId.set(e.Identificador, e);
+    // Página curta também não é fim confiável aqui: seguimos até o vazio
+    // confirmado, que é o único sinal que a API dá de verdade.
   }
+
+  const todas = [...porId.values()];
   return apenasAtivas ? todas.filter((e) => e.Status === "Ativa") : todas;
 }
 
@@ -211,8 +248,9 @@ export async function entregasPendentes(
   fim: string
 ): Promise<EntregaPendente[]> {
   const pendentes: EntregaPendente[] = [];
+  let vaziasSeguidas = 0;
 
-  for (let pagina = 1; ; pagina++) {
+  for (let pagina = 1; pagina <= MAX_PAGINAS; pagina++) {
     const r = await get<RespostaEntregas>(`/deliveries/${cnpj}`, {
       DtInitial: inicio,
       DtFinal: fim,
@@ -221,7 +259,22 @@ export async function entregasPendentes(
       Pagina: String(pagina),
     });
     const lote = r?.Entregas ?? [];
-    if (!lote.length) break;
+
+    // Mesma armadilha 4, e aqui ela é mais traiçoeira que na lista de empresas:
+    // um vazio engolido vira "esta empresa está em dia", que é uma afirmação
+    // FORTE saindo de uma ausência de resposta. Confirma-se repetindo.
+    if (!lote.length) {
+      vaziasSeguidas++;
+      if (vaziasSeguidas >= CONFIRMACOES_DE_VAZIO) break;
+      pagina--;
+      continue;
+    }
+    if (vaziasSeguidas > 0) {
+      console.warn(
+        `[acessorias] ${cnpj} pág.${pagina}: vazio não confirmado (throttle disfarçado) — a resposta veio cheia na repetição`
+      );
+    }
+    vaziasSeguidas = 0;
 
     for (const e of lote) {
       const entId = inteiro(e.Config?.EntID);
@@ -245,8 +298,8 @@ export async function entregasPendentes(
         respNome: e.Config?.RespPrazo?.trim() || null,
       });
     }
-    // Entregas paginam de 50 em 50.
-    if (lote.length < 50) break;
+    // Sem atalho por "página curta": só o vazio CONFIRMADO encerra. Uma página
+    // com menos de 50 pode ser a última — ou uma resposta parcial sob pressão.
   }
 
   return pendentes;
