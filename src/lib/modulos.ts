@@ -2,9 +2,10 @@ import { SECOES_CONFIG } from "./config-secoes";
 import { SECOES_CONTABIL } from "./contabil-secoes";
 import { SECOES_FISCAL, type SecaoFiscal } from "./fiscal-secoes";
 import { SECOES_FOLHA } from "./folha-secoes";
+import { SECOES_OBRIGACOES } from "./obrigacoes-secoes";
 import { SECOES_RH } from "./rh-secoes";
 
-export type ModuloId = "fiscal" | "contabil" | "folha" | "rh" | "config";
+export type ModuloId = "fiscal" | "contabil" | "folha" | "rh" | "obrigacoes" | "config";
 
 /**
  * Catálogo dos módulos do Nexo. É a fonte única: dirige o launcher, a
@@ -59,6 +60,15 @@ export const MODULOS: Modulo[] = [
     home: "/rh",
   },
   {
+    id: "obrigacoes",
+    titulo: "Obrigações",
+    descricao: "Fila de entregas do Acessórias, por setor e responsável",
+    icone: "/images/compliance.png",
+    // Home = o índice, que redireciona pra 1ª seção visível. Quem só tem a
+    // seção do seu setor cai nela; quem tem tudo, na Visão geral.
+    home: "/obrigacoes",
+  },
+  {
     id: "config",
     titulo: "Configurações",
     descricao: "Configs de domínio do sistema, como grupos de empresa",
@@ -76,6 +86,7 @@ const SECOES: Record<ModuloId, SecaoFiscal[]> = {
   contabil: SECOES_CONTABIL,
   folha: SECOES_FOLHA,
   rh: SECOES_RH,
+  obrigacoes: SECOES_OBRIGACOES,
   config: SECOES_CONFIG,
 };
 

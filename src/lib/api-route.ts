@@ -11,13 +11,14 @@ type RouteCtx = { params: Promise<Record<string, string>> };
 type Handler = (req: NextRequest, ctx: RouteCtx) => Promise<unknown>;
 
 /**
- * A rota declara o módulo pelo próprio caminho: /api/fiscal/..., /api/contabil/...
- * e /api/folha/... Assim o gate mora num lugar só e nenhuma rota nasce
- * desprotegida. (/api/empresas é compartilhado — basta estar logado; /api/admin
+ * A rota declara o módulo pelo próprio caminho: /api/fiscal/..., /api/contabil/...,
+ * /api/folha/... e /api/obrigacoes/... Assim o gate mora num lugar só e nenhuma
+ * rota nasce desprotegida. Módulo novo ENTRA NESTE REGEX — fora dele a rota só
+ * exige login, que é falhar em aberto. (/api/empresas é compartilhado — basta estar logado; /api/admin
  * exige admin.)
  */
 function moduloDaRota(pathname: string): ModuloId | undefined {
-  const m = pathname.match(/^\/api\/(fiscal|contabil|folha|rh)(?:\/|$)/);
+  const m = pathname.match(/^\/api\/(fiscal|contabil|folha|rh|obrigacoes)(?:\/|$)/);
   return m ? (m[1] as ModuloId) : undefined;
 }
 

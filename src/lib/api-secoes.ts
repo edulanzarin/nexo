@@ -159,6 +159,15 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     pessoas: ["rotatividade"],
     // /api/rh/cron/experiencia é público (segredo próprio) — NÃO passa por apiRoute.
   },
+  obrigacoes: {
+    // Uma rota só serve as quatro seções: o recorte é o SETOR, e ele vem no
+    // parâmetro `secao`. O gate aqui só garante que a pessoa acessa ALGUMA das
+    // seções; qual ela pediu, quem confere é o handler (como no Post Mortem do
+    // DP, que também compartilha endpoint entre analista e gestão).
+    fila: ["geral", "contabil", "fiscal", "dp"],
+    // Disparo manual da varredura: só a Visão geral (é ação de escritório).
+    sincronizar: ["geral"],
+  },
   // Configurações não tem rotas de API: o CRUD roda por Server Action (gateada
   // por assertSecao). Mapa vazio; nenhum endpoint /api/config existe.
   config: {},

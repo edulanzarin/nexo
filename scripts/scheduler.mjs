@@ -13,6 +13,11 @@
 //                      (0-23, default 8).
 //   SCHEDULER_RESCISOES_HORA  hora local do disparo diário das rescisões
 //                      (0-23, default 8).
+//   SCHEDULER_OBRIGACOES_HORA  hora local da varredura do Acessórias (0-23,
+//                      default 5). Cedo de propósito: são ~1.200 chamadas
+//                      espaçadas pelo teto de 100 req/min, então a varredura
+//                      leva dezenas de minutos e deve terminar antes do
+//                      expediente — a fila do dia é o que o time abre de manhã.
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -34,6 +39,7 @@ const BASE = (process.env.SCHEDULER_APP_URL ?? "http://app:3000").replace(/\/$/,
 const ENVIOS_MS = Math.max(1, Number(process.env.SCHEDULER_ENVIOS_MIN ?? 15)) * 60_000;
 const HORA_EXPERIENCIA = Math.min(23, Math.max(0, Number(process.env.SCHEDULER_EXPERIENCIA_HORA ?? 8)));
 const HORA_RESCISOES = Math.min(23, Math.max(0, Number(process.env.SCHEDULER_RESCISOES_HORA ?? 8)));
+const HORA_OBRIGACOES = Math.min(23, Math.max(0, Number(process.env.SCHEDULER_OBRIGACOES_HORA ?? 5)));
 
 if (!SEGREDO) {
   console.error("[scheduler] RH_CRON_SECRET não definido — nada a agendar. Encerrando.");
@@ -74,7 +80,8 @@ function agendarDiario(rota, hora) {
 // Campanhas agendadas + regras recorrentes: a cada N minutos.
 log(
   `iniciado — base=${BASE}, envios a cada ${ENVIOS_MS / 60_000}min, ` +
-    `experiência às ${HORA_EXPERIENCIA}h, rescisões às ${HORA_RESCISOES}h`,
+    `experiência às ${HORA_EXPERIENCIA}h, rescisões às ${HORA_RESCISOES}h, ` +
+    `obrigações às ${HORA_OBRIGACOES}h`,
 );
 bater("/api/rh/cron/envios");
 setInterval(() => bater("/api/rh/cron/envios"), ENVIOS_MS);
@@ -84,3 +91,8 @@ agendarDiario("/api/rh/cron/experiencia", HORA_EXPERIENCIA);
 
 // Rescisões (DP): aviso diário de rescisões a pagar dentro/fora do prazo.
 agendarDiario("/api/folha/cron/rescisoes", HORA_RESCISOES);
+
+// Obrigações: varredura diária do Acessórias, que materializa a fila de
+// entregas. É a única rota do agendador que demora dezenas de minutos — a API
+// de origem cobra uma chamada por empresa sob teto de 100 req/min.
+agendarDiario("/api/obrigacoes/cron/sincronizar", HORA_OBRIGACOES);

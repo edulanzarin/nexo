@@ -68,6 +68,7 @@ import type {
 } from "@/lib/rescisoes-tipos";
 import type { PainelColaborador, PainelGestao } from "@/lib/painel-dp-tipos";
 import type { PainelContabilColaborador, PainelContabilGestao } from "@/lib/painel-contabil-tipos";
+import type { PainelObrigacoes } from "@/lib/obrigacoes-tipos";
 import type { PainelRh } from "@/lib/painel-rh-tipos";
 import type { EnvioDetalhe, EnvioResumo } from "@/lib/envios";
 import type { EnvioRegra } from "@/lib/envio-regras";
@@ -370,6 +371,17 @@ export const usePainelGestao = (enabled = true) =>
 /** Painel do Contábil: contadores de atividade + base configurada, sem filtros. */
 export const usePainelContabil = (enabled = true) =>
   useApiQuery<PainelContabilColaborador>(["painel-contabil"], `/api/contabil/painel`, enabled);
+
+/**
+ * Fila do Acessórias, recortada pela seção (o setor). A chave inclui a seção
+ * para que trocar de setor não sirva o cache do anterior.
+ */
+export const useFilaObrigacoes = (secao: string, enabled = true) =>
+  useApiQuery<PainelObrigacoes>(
+    ["obrigacoes-fila", secao],
+    `/api/obrigacoes/fila?secao=${encodeURIComponent(secao)}`,
+    enabled
+  );
 
 /** Painel de gestão do Contábil: o time todo (seção `painel-gestao`). */
 export const usePainelContabilGestao = (enabled = true) =>
