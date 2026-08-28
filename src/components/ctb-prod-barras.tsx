@@ -20,16 +20,18 @@ interface TooltipProps {
   payload?: { payload: BarraItem }[];
   corPadrao: string;
   rotuloEixo: string;
+  rotuloQtd: string;
+  formatarQtd: (v: number) => string;
 }
 
-function TooltipBarra({ active, payload, corPadrao, rotuloEixo }: TooltipProps) {
+function TooltipBarra({ active, payload, corPadrao, rotuloEixo, rotuloQtd, formatarQtd }: TooltipProps) {
   if (!active || !payload?.length) return null;
   const p = payload[0].payload;
   return (
     <TooltipContainer>
       <p className="mb-1 max-w-72 text-xs font-medium text-ink">{p.nome}</p>
       <p className="mb-1 text-[11px] text-muted">{rotuloEixo}</p>
-      <TooltipLinha cor={p.cor ?? corPadrao} nome="Lançamentos" valor={num(p.qtd)} />
+      <TooltipLinha cor={p.cor ?? corPadrao} nome={rotuloQtd} valor={formatarQtd(p.qtd)} />
       {p.valor != null && <TooltipLinha nome="Valor" valor={brl(p.valor)} />}
       {p.detalhe && <p className="mt-1 text-[11px] text-muted">{p.detalhe}</p>}
     </TooltipContainer>
@@ -40,6 +42,10 @@ function TooltipBarra({ active, payload, corPadrao, rotuloEixo }: TooltipProps) 
  * Barras horizontais de um ranking do Contábil (origens, empresas). Horizontal
  * porque os rótulos são nomes longos de empresa — em barra vertical eles viram
  * "AGROP…". O clique é opcional (só a origem filtra a tela).
+ *
+ * O que a barra MEDE é do chamador: a maioria conta lançamentos, mas a aba
+ * Atraso mede dias e a aba Tempo mede horas. Daí `rotuloQtd`/`formatarQtd` —
+ * sem eles o tooltip dizia "Lançamentos: 137" para 137 dias de atraso.
  */
 export function CtbProdBarras({
   titulo,
@@ -48,6 +54,8 @@ export function CtbProdBarras({
   carregando,
   recarregando,
   rotuloEixo,
+  rotuloQtd = "Lançamentos",
+  formatarQtd,
   corPadrao = "var(--accent)",
   limite = 12,
   selecionado,
@@ -60,6 +68,12 @@ export function CtbProdBarras({
   carregando: boolean;
   recarregando: boolean;
   rotuloEixo: string;
+  /** O que a barra conta ("Lançamentos", "Dias de atraso", "Horas"). */
+  rotuloQtd?: string;
+  /** Formato da grandeza. Sem ele, o tooltip usa o número cheio e o rótulo da
+   *  barra a forma compacta — que é o certo para contagem, mas erra em dia e
+   *  hora, onde a unidade importa mais que a compactação. */
+  formatarQtd?: (v: number) => string;
   corPadrao?: string;
   limite?: number;
   selecionado?: string | null;
@@ -67,6 +81,8 @@ export function CtbProdBarras({
   acao?: React.ReactNode;
 }) {
   const itens = dados?.slice(0, limite) ?? [];
+  const formatarTooltip = formatarQtd ?? num;
+  const formatarRotulo = formatarQtd ?? numCompact;
   const altura = Math.max(160, itens.length * 30 + 24);
 
   return (
@@ -100,7 +116,14 @@ export function CtbProdBarras({
                 tickFormatter={(v: string) => (v.length > 22 ? v.slice(0, 21) + "…" : v)}
               />
               <Tooltip
-                content={<TooltipBarra corPadrao={corPadrao} rotuloEixo={rotuloEixo} />}
+                content={
+                  <TooltipBarra
+                    corPadrao={corPadrao}
+                    rotuloEixo={rotuloEixo}
+                    rotuloQtd={rotuloQtd}
+                    formatarQtd={formatarTooltip}
+                  />
+                }
                 cursor={{ fill: "var(--surface-2)" }}
               />
               <Bar
@@ -124,7 +147,7 @@ export function CtbProdBarras({
                 <LabelList
                   dataKey="qtd"
                   position="right"
-                  formatter={(v) => numCompact(v as number)}
+                  formatter={(v) => formatarRotulo(v as number)}
                   style={{ fill: "var(--ink-2)", fontSize: 11 }}
                 />
               </Bar>

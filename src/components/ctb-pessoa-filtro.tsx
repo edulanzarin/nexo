@@ -4,8 +4,16 @@ import { useMemo, useState } from "react";
 import { Check, Search, Users, X } from "lucide-react";
 import { Dropdown, ItemLista } from "@/components/ui/dropdown";
 import { IconButton } from "@/components/ui";
-import type { CtbPessoa } from "@/lib/contabil-produtividade-tipos";
 import { num } from "@/lib/format";
+
+/** O mínimo que o filtro precisa saber de alguém: quem é e quanto fez. Cada aba
+ *  da Produtividade conta uma coisa diferente (lançamentos, exclusões, horas) e
+ *  traduz para cá — assim o filtro serve as cinco sem conhecer nenhuma. */
+export interface PessoaOpcao {
+  codigo: number;
+  nome: string;
+  qtd: number;
+}
 
 /**
  * Escolhe uma pessoa do Contábil para recortar a tela. A lista sai do ranking já
@@ -15,10 +23,12 @@ export function CtbPessoaFiltro({
   dados,
   valor,
   onMudar,
+  rotuloTodos = "Todo o time",
 }: {
-  dados: CtbPessoa[] | undefined;
+  dados: PessoaOpcao[] | undefined;
   valor: number | null;
   onMudar: (codigo: number | null) => void;
+  rotuloTodos?: string;
 }) {
   const [busca, setBusca] = useState("");
 
@@ -33,7 +43,7 @@ export function CtbPessoaFiltro({
   return (
     <div className="flex items-center gap-1">
       <Dropdown
-        rotulo={selecionado ? selecionado.nome : "Todo o time"}
+        rotulo={selecionado ? selecionado.nome : rotuloTodos}
         icone={<Users className="size-4 shrink-0 text-muted" />}
         ativo={valor != null}
         largura="w-80"
@@ -66,7 +76,7 @@ export function CtbPessoaFiltro({
                 <span className="grid size-4 shrink-0 place-items-center">
                   {valor == null && <Check className="size-4 stroke-[3] text-accent" />}
                 </span>
-                <span className="flex-1 truncate text-muted">Todo o time</span>
+                <span className="flex-1 truncate text-muted">{rotuloTodos}</span>
               </ItemLista>
               {filtrados?.map((p) => (
                 <ItemLista
@@ -81,7 +91,7 @@ export function CtbPessoaFiltro({
                     {p.codigo === valor && <Check className="size-4 stroke-[3] text-accent" />}
                   </span>
                   <span className="flex-1 truncate">{p.nome}</span>
-                  <span className="tnum text-xs text-muted">{num(p.lancamentos)}</span>
+                  <span className="tnum text-xs text-muted">{num(p.qtd)}</span>
                 </ItemLista>
               ))}
             </div>
