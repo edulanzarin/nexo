@@ -167,11 +167,11 @@ export async function montarCarteiraContabil(f: ProdFiltros): Promise<ContabilCa
   let metadeEm = 0;
   atendidas.forEach((e, i) => {
     acumulado += e.lancamentos;
-    const pctLancamentos = lancamentos > 0 ? (acumulado / lancamentos) * 100 : 0;
-    if (metadeEm === 0 && pctLancamentos >= 50) metadeEm = i + 1;
+    const pctItens = lancamentos > 0 ? (acumulado / lancamentos) * 100 : 0;
+    if (metadeEm === 0 && pctItens >= 50) metadeEm = i + 1;
     pareto.push({
       pctEmpresas: ((i + 1) / atendidas.length) * 100,
-      pctLancamentos,
+      pctItens,
     });
   });
 

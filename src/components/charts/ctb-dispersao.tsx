@@ -17,30 +17,40 @@ export interface PontoDispersao {
   codigo: number;
   nome: string;
   horas: number;
-  lancamentos: number;
+  /** O que saiu daquelas horas. Nome neutro: lançamentos no Contábil, notas no
+   *  Fiscal — o rótulo entra por prop, o campo é o mesmo. */
+  itens: number;
 }
 
 const h1 = (v: number) => `${v.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} h`;
 
-function TooltipDisp({ active, payload }: { active?: boolean; payload?: { payload: PontoDispersao }[] }) {
+function TooltipDisp({
+  active,
+  payload,
+  rotuloItem,
+}: {
+  active?: boolean;
+  payload?: { payload: PontoDispersao }[];
+  rotuloItem: string;
+}) {
   if (!active || !payload?.length) return null;
   const p = payload[0].payload;
   return (
     <TooltipContainer>
       <p className="mb-1 text-xs font-medium text-ink">{p.nome}</p>
       <TooltipLinha cor="var(--accent)" nome="Horas no Questor" valor={h1(p.horas)} />
-      <TooltipLinha nome="Lançamentos" valor={num(p.lancamentos)} />
+      <TooltipLinha nome={rotuloItem} valor={num(p.itens)} />
       <TooltipLinha
         nome="Por hora"
-        valor={p.horas > 0 ? num(Math.round(p.lancamentos / p.horas)) : "—"}
+        valor={p.horas > 0 ? num(Math.round(p.itens / p.horas)) : "—"}
       />
     </TooltipContainer>
   );
 }
 
 /**
- * Horas × lançamentos, uma bolha por pessoa. Não é placar: quem passa o mês em
- * conferência e conciliação aparece embaixo à direita com todo o direito — o
+ * Horas × o que saiu delas, uma bolha por pessoa. Não é placar: quem passa o mês
+ * em conferência e conciliação aparece embaixo à direita com todo o direito — o
  * lançamento é só uma das coisas que se faz dentro do Questor.
  *
  * O que o gráfico serve é a DISPERSÃO: duas pessoas com a mesma carga horária em
@@ -50,14 +60,16 @@ export function CtbDispersao({
   dados,
   carregando,
   recarregando,
+  rotuloItem = "Lançamentos",
 }: {
   dados: PontoDispersao[] | undefined;
   carregando: boolean;
   recarregando: boolean;
+  rotuloItem?: string;
 }) {
   return (
     <ChartCard
-      titulo="Horas × lançamentos"
+      titulo={`Horas × ${rotuloItem.toLowerCase()}`}
       subtitulo="Uma bolha por pessoa — o eixo horizontal é o tempo no sistema, o vertical é o que saiu dele"
       carregando={carregando || !dados}
       recarregando={recarregando}
@@ -81,8 +93,8 @@ export function CtbDispersao({
               />
               <YAxis
                 type="number"
-                dataKey="lancamentos"
-                name="Lançamentos"
+                dataKey="itens"
+                name={rotuloItem}
                 tickFormatter={(v: number) => numCompact(v)}
                 tick={{ fill: "var(--muted)", fontSize: 11 }}
                 axisLine={false}
@@ -90,7 +102,10 @@ export function CtbDispersao({
                 width={52}
               />
               <ZAxis range={[60, 60]} />
-              <Tooltip content={<TooltipDisp />} cursor={{ strokeDasharray: "3 3" }} />
+              <Tooltip
+                content={<TooltipDisp rotuloItem={rotuloItem} />}
+                cursor={{ strokeDasharray: "3 3" }}
+              />
               <Scatter
                 data={dados}
                 fill="var(--accent)"

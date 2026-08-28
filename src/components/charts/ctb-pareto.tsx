@@ -29,7 +29,7 @@ function TooltipPareto({
       <p className="mb-1 text-xs font-medium text-ink">
         As {pctBR(p.pctEmpresas)} empresas com mais movimento
       </p>
-      <TooltipLinha cor="var(--accent)" nome="Concentram" valor={pctBR(p.pctLancamentos)} />
+      <TooltipLinha cor="var(--accent)" nome="Concentram" valor={pctBR(p.pctItens)} />
     </TooltipContainer>
   );
 }
@@ -107,7 +107,7 @@ export function CtbPareto({
               <ReferenceLine x={50} stroke="var(--baseline)" strokeDasharray="4 3" />
               <Area
                 type="monotone"
-                dataKey="pctLancamentos"
+                dataKey="pctItens"
                 stroke="var(--accent)"
                 strokeWidth={2}
                 fill="url(#ctb-pareto)"

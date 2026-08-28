@@ -3,23 +3,27 @@
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ChartCard, TooltipContainer, TooltipLinha } from "@/components/ui/chart-card";
 import { FAIXAS_ATRASO, type CtbCompetencia } from "@/lib/contabil-atraso-tipos";
-import { faixaDe } from "@/lib/prod-escala";
+import { faixaDe, type Faixa } from "@/lib/prod-escala";
 import { mesBR, num, numCompact } from "@/lib/format";
 
 function TooltipCompet({
   active,
   payload,
+  faixas,
+  rotuloItem,
 }: {
   active?: boolean;
   payload?: { payload: CtbCompetencia }[];
+  faixas: Faixa[];
+  rotuloItem: string;
 }) {
   if (!active || !payload?.length) return null;
   const c = payload[0].payload;
-  const faixa = FAIXAS_ATRASO[faixaDe(FAIXAS_ATRASO, c.mediana ?? 0)];
+  const faixa = faixas[faixaDe(faixas, c.mediana ?? 0)];
   return (
     <TooltipContainer>
       <p className="mb-1 text-xs font-medium text-ink">Competência {mesBR(c.compet + "-01")}</p>
-      <TooltipLinha cor={faixa.cor} nome="Lançamentos" valor={num(c.qtd)} />
+      <TooltipLinha cor={faixa.cor} nome={rotuloItem} valor={num(c.qtd)} />
       <TooltipLinha nome="Atraso mediano" valor={c.mediana == null ? "—" : `${num(c.mediana)} dias`} />
       <TooltipLinha nome="Pessoas" valor={num(c.pessoas)} />
     </TooltipContainer>
@@ -40,10 +44,15 @@ export function CtbCompetencias({
   dados,
   carregando,
   recarregando,
+  faixas = FAIXAS_ATRASO,
+  rotuloItem = "Lançamentos",
 }: {
   dados: CtbCompetencia[] | undefined;
   carregando: boolean;
   recarregando: boolean;
+  /** Escada que colore a barra. O Fiscal usa a sua, mais larga que a do Contábil. */
+  faixas?: Faixa[];
+  rotuloItem?: string;
 }) {
   // Um ano de competências já enche o eixo; o que é mais velho que isso vive na
   // tabela e na exportação, não aqui.
@@ -52,7 +61,7 @@ export function CtbCompetencias({
   return (
     <ChartCard
       titulo="Competências trabalhadas"
-      subtitulo="Volume por mês do fato, colorido pelo atraso mediano daquele mês"
+      subtitulo={`${rotuloItem} por mês do fato, colorido pelo atraso mediano daquele mês`}
       carregando={carregando || !dados}
       recarregando={recarregando}
       alturaSkeleton="h-72"
@@ -80,12 +89,15 @@ export function CtbCompetencias({
                   tickLine={false}
                   width={48}
                 />
-                <Tooltip content={<TooltipCompet />} cursor={{ fill: "var(--surface-2)" }} />
+                <Tooltip
+                  content={<TooltipCompet faixas={faixas} rotuloItem={rotuloItem} />}
+                  cursor={{ fill: "var(--surface-2)" }}
+                />
                 <Bar dataKey="qtd" radius={[4, 4, 0, 0]} animationDuration={500}>
                   {itens.map((c) => (
                     <Cell
                       key={c.compet}
-                      fill={FAIXAS_ATRASO[faixaDe(FAIXAS_ATRASO, c.mediana ?? 0)].cor}
+                      fill={faixas[faixaDe(faixas, c.mediana ?? 0)].cor}
                     />
                   ))}
                 </Bar>

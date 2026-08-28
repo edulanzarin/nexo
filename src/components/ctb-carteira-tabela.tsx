@@ -4,12 +4,29 @@ import { useMemo, useState } from "react";
 import { ArrowDown, Search } from "lucide-react";
 import clsx from "clsx";
 import { Badge, Card, Segmented, Table, Td, Th, Thead, Tr } from "@/components/ui";
-import { FAIXAS_PARADA, PARADA_NUNCA, type CtbCarteiraEmpresa } from "@/lib/contabil-carteira-tipos";
-import { faixaDe } from "@/lib/prod-escala";
+import { PARADA_NUNCA } from "@/lib/contabil-carteira-tipos";
+import { faixaDe, type Faixa } from "@/lib/prod-escala";
 import { brlCompact, dataBR, num } from "@/lib/format";
 
 type Recorte = "todas" | "atendidas" | "paradas";
-type Ordem = "lancamentos" | "parada" | "valor" | "nome";
+type Ordem = "itens" | "parada" | "valor" | "nome";
+
+/**
+ * O que a tabela precisa de uma linha de carteira. O que ela CONTA muda por
+ * módulo — lançamentos no Contábil, notas no Fiscal — e por isso não está aqui:
+ * entra pelo `itens`, um acessor. Assim o componente serve os dois sem que
+ * nenhum dos dois precise renomear o próprio campo para agradá-lo.
+ */
+export interface LinhaCarteira {
+  codigo: number;
+  nome: string;
+  ativa: boolean;
+  valor: number;
+  pessoas: number;
+  principal: string | null;
+  ultimo: string | null;
+  diasParada: number | null;
+}
 
 const RECORTES: { value: Recorte; label: string }[] = [
   { value: "todas", label: "Todas" },
@@ -26,36 +43,46 @@ const RECORTES: { value: Recorte; label: string }[] = [
  * recorte ficam no componente (são leitura, não filtro de consulta); o que
  * dispara banco continua sendo só a barra de cima.
  */
-export function CtbCarteiraTabela({
+export function CtbCarteiraTabela<T extends LinhaCarteira>({
   dados,
+  itens,
+  faixas,
+  rotuloItem,
+  rotuloPrincipal,
   carregando,
   recarregando,
 }: {
-  dados: CtbCarteiraEmpresa[] | undefined;
+  dados: T[] | undefined;
+  /** Quantos itens do período a empresa teve (lançamentos, notas…). */
+  itens: (e: T) => number;
+  /** Escada que colore a coluna "parada há" — cada módulo tem a sua. */
+  faixas: Faixa[];
+  rotuloItem: string;
+  rotuloPrincipal: string;
   carregando: boolean;
   recarregando: boolean;
 }) {
   const [busca, setBusca] = useState("");
   const [recorte, setRecorte] = useState<Recorte>("todas");
-  const [ordem, setOrdem] = useState<Ordem>("lancamentos");
+  const [ordem, setOrdem] = useState<Ordem>("itens");
 
   const linhas = useMemo(() => {
     if (!dados) return undefined;
     const q = busca.trim().toLowerCase();
     const filtradas = dados.filter((e) => {
-      if (recorte === "atendidas" && e.lancamentos === 0) return false;
-      if (recorte === "paradas" && e.lancamentos > 0) return false;
+      if (recorte === "atendidas" && itens(e) === 0) return false;
+      if (recorte === "paradas" && itens(e) > 0) return false;
       if (q && !e.nome.toLowerCase().includes(q) && !String(e.codigo).includes(q)) return false;
       return true;
     });
-    const parada = (e: CtbCarteiraEmpresa) => e.diasParada ?? PARADA_NUNCA;
+    const parada = (e: T) => e.diasParada ?? PARADA_NUNCA;
     return [...filtradas].sort((a, b) => {
       if (ordem === "nome") return a.nome.localeCompare(b.nome, "pt-BR");
       if (ordem === "parada") return parada(b) - parada(a);
       if (ordem === "valor") return b.valor - a.valor;
-      return b.lancamentos - a.lancamentos;
+      return itens(b) - itens(a);
     });
-  }, [dados, busca, recorte, ordem]);
+  }, [dados, busca, recorte, ordem, itens]);
 
   const cabecalho = (key: Ordem, rotulo: string, titulo?: string) => (
     <Th numeric={key !== "nome"} title={titulo}>
@@ -78,7 +105,7 @@ export function CtbCarteiraTabela({
         <div>
           <h2 className="text-sm font-semibold">Carteira, empresa por empresa</h2>
           <p className="mt-0.5 text-xs text-muted">
-            Movimento no período e tempo desde o último lançamento de todos os tempos
+            Movimento no período e tempo desde o último de todos os tempos
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -112,17 +139,17 @@ export function CtbCarteiraTabela({
             <Thead sticky>
               <Th className="w-14 pr-2 text-right">Código</Th>
               {cabecalho("nome", "Empresa")}
-              {cabecalho("lancamentos", "Lançamentos")}
+              {cabecalho("itens", rotuloItem)}
               <Th numeric title="Pessoas do time que tocaram nela no período">Pessoas</Th>
-              <Th>Quem mais lançou</Th>
+              <Th>{rotuloPrincipal}</Th>
               {cabecalho("valor", "Valor")}
-              <Th numeric>Último lançamento</Th>
-              {cabecalho("parada", "Parada há", "Dias desde o último lançamento de todos os tempos")}
+              <Th numeric>Último</Th>
+              {cabecalho("parada", "Parada há", "Dias desde o último movimento de todos os tempos")}
             </Thead>
             <tbody>
               {linhas.map((e) => {
                 const dias = e.diasParada;
-                const faixa = FAIXAS_PARADA[faixaDe(FAIXAS_PARADA, dias ?? PARADA_NUNCA)];
+                const faixa = faixas[faixaDe(faixas, dias ?? PARADA_NUNCA)];
                 return (
                   <Tr key={e.codigo}>
                     <Td numeric className="pr-2 text-xs text-muted">
@@ -134,8 +161,8 @@ export function CtbCarteiraTabela({
                         {!e.ativa && <Badge tone="neutral">baixada</Badge>}
                       </span>
                     </Td>
-                    <Td numeric className={clsx(e.lancamentos === 0 && "text-muted")}>
-                      {num(e.lancamentos)}
+                    <Td numeric className={clsx(itens(e) === 0 && "text-muted")}>
+                      {num(itens(e))}
                     </Td>
                     <Td numeric className={clsx(e.pessoas === 0 && "text-muted")}>
                       {num(e.pessoas)}

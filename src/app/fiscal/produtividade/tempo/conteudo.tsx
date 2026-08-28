@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Building2, CalendarDays, Clock, Timer, Users } from "lucide-react";
+import { Building2, CalendarDays, Clock, Hand, Timer, Users } from "lucide-react";
 import { StatTile } from "@/components/ui";
 import { ProdPessoaFiltro } from "@/components/prod-pessoa-filtro";
 import { ExportarMenu, type CorteExport } from "@/components/exportar-menu";
@@ -10,17 +10,17 @@ import { CtbProdBarras, type BarraItem } from "@/components/ctb-prod-barras";
 import { CtbSerieSimples } from "@/components/charts/ctb-serie-simples";
 import { CtbDispersao } from "@/components/charts/ctb-dispersao";
 import { useFiltros } from "@/hooks/use-filters";
-import { useContabilTempo } from "@/hooks/use-api";
+import { useFiscalTempo } from "@/hooks/use-api";
 import { dataBR, num, numCompact } from "@/lib/format";
 import { decimalBR } from "@/lib/csv";
-import type { CtbTempoPessoa } from "@/lib/contabil-tempo-tipos";
+import type { FisTempoPessoa } from "@/lib/fiscal-tempo-tipos";
 import { emHoras, slug } from "@/lib/prod-formato";
 
 const DIAS_SEMANA = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
 const umaCasa = (v: number) => v.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
 
-const COLUNAS: ColunaRanking<CtbTempoPessoa>[] = [
+const COLUNAS: ColunaRanking<FisTempoPessoa>[] = [
   { key: "horas", rotulo: "Horas", valor: (p) => p.horas, render: (p) => emHoras(p.horas) },
   { key: "dias", rotulo: "Dias", titulo: "Dias com algum tempo registrado", valor: (p) => p.dias },
   {
@@ -30,22 +30,28 @@ const COLUNAS: ColunaRanking<CtbTempoPessoa>[] = [
     render: (p) => emHoras(p.horasPorDia),
   },
   { key: "empresas", rotulo: "Empresas", valor: (p) => p.empresas },
-  { key: "lancamentos", rotulo: "Lançamentos", valor: (p) => p.lancamentos },
+  { key: "notas", rotulo: "Notas", valor: (p) => p.notas },
+  {
+    key: "aDedo",
+    rotulo: "A dedo",
+    titulo: "Notas digitadas ou importadas — o pedaço que de fato consome hora humana",
+    valor: (p) => p.aDedo,
+  },
   {
     key: "porHora",
-    rotulo: "Lançtos/hora",
+    rotulo: "Notas/hora",
     titulo:
-      "Lançamentos por hora no Questor. Compara pessoas entre si; o número absoluto infla porque a importação fiscal grava em lote, sem consumir hora humana.",
+      "Notas por hora no Questor. Compara pessoas entre si; o número absoluto infla muito porque ~98% das notas entram pela integração, sem consumir hora humana.",
     valor: (p) => p.porHora,
     render: (p) => umaCasa(p.porHora),
   },
 ];
 
-export default function TempoContabilPage() {
+export default function TempoFiscalPage() {
   const { qs, filtros } = useFiltros();
   const [pessoaSel, setPessoaSel] = useState<number | null>(null);
 
-  const consulta = useContabilTempo(qs);
+  const consulta = useFiscalTempo(qs);
   const d = consulta.data;
   const carregando = consulta.isLoading;
   const recarregando = consulta.isFetching && !consulta.isLoading;
@@ -70,9 +76,9 @@ export default function TempoContabilPage() {
       nome: e.nome,
       qtd: Math.round(e.horas * 10) / 10,
       detalhe:
-        e.minutosPorLancamento == null
-          ? `${num(e.pessoas)} pessoa(s) · sem lançamento no período`
-          : `${num(e.pessoas)} pessoa(s) · ${umaCasa(e.minutosPorLancamento)} min por lançamento`,
+        e.minutosPorNota == null
+          ? `${num(e.pessoas)} pessoa(s) · sem nota no período`
+          : `${num(e.pessoas)} pessoa(s) · ${umaCasa(e.minutosPorNota)} min por nota`,
     }));
   }, [d, pessoa]);
 
@@ -86,18 +92,18 @@ export default function TempoContabilPage() {
     [d]
   );
 
-  const serie = useMemo(
-    () => d?.serie.map((p) => ({ bucket: p.bucket, valor: p.horas })),
-    [d]
-  );
+  const serie = useMemo(() => d?.serie.map((p) => ({ bucket: p.bucket, valor: p.horas })), [d]);
 
+  // A dispersão usa o A DEDO, não o total: com 98% do volume vindo da
+  // integração, "horas × notas" desenharia o tamanho da carteira de cada um, não
+  // o trabalho de cada um.
   const dispersao = useMemo(
     () =>
       d?.ranking.map((p) => ({
         codigo: p.codigo,
         nome: p.nome,
         horas: p.horas,
-        itens: p.lancamentos,
+        itens: p.aDedo,
       })),
     [d]
   );
@@ -111,11 +117,11 @@ export default function TempoContabilPage() {
         id: "pessoas",
         rotulo: "Tempo por pessoa",
         descricao: "Uma linha por pessoa — sempre o time inteiro",
-        nome: `tempo-contabil-pessoas-${periodo}`,
+        nome: `tempo-fiscal-pessoas-${periodo}`,
         montar: () => ({
           cabecalhos: [
             "Código", "Pessoa", "Situação", "Horas", "Dias", "Horas por dia", "Empresas",
-            "Lançamentos", "Lançamentos por hora",
+            "Notas", "Notas a dedo", "Notas por hora",
           ],
           linhas: d.ranking.map((p) => [
             p.codigo,
@@ -125,7 +131,8 @@ export default function TempoContabilPage() {
             p.dias,
             decimalBR(p.horasPorDia),
             p.empresas,
-            p.lancamentos,
+            p.notas,
+            p.aDedo,
             decimalBR(p.porHora),
           ]),
         }),
@@ -133,8 +140,8 @@ export default function TempoContabilPage() {
       {
         id: "empresas",
         rotulo: pessoa ? `Empresas de ${pessoa.nome}` : "Tempo por empresa",
-        descricao: "Quanto tempo cada empresa consumiu do time contábil",
-        nome: `tempo-contabil-empresas-${periodo}${alvo}`,
+        descricao: "Quanto tempo cada empresa consumiu do time fiscal",
+        nome: `tempo-fiscal-empresas-${periodo}${alvo}`,
         montar: () =>
           pessoa
             ? {
@@ -142,16 +149,14 @@ export default function TempoContabilPage() {
                 linhas: pessoa.topEmpresas.map((e) => [e.chave, e.nome, decimalBR(e.qtd)]),
               }
             : {
-                cabecalhos: [
-                  "Código", "Empresa", "Horas", "Pessoas", "Lançamentos", "Minutos por lançamento",
-                ],
+                cabecalhos: ["Código", "Empresa", "Horas", "Pessoas", "Notas", "Minutos por nota"],
                 linhas: d.empresas.map((e) => [
                   e.chave,
                   e.nome,
                   decimalBR(e.horas),
                   e.pessoas,
-                  e.lancamentos,
-                  e.minutosPorLancamento == null ? "" : decimalBR(e.minutosPorLancamento),
+                  e.notas,
+                  e.minutosPorNota == null ? "" : decimalBR(e.minutosPorNota),
                 ]),
               },
       },
@@ -159,7 +164,7 @@ export default function TempoContabilPage() {
         id: "serie",
         rotulo: "Horas no período",
         descricao: d.periodo.granularidade === "mes" ? "Um mês por linha" : "Um dia por linha",
-        nome: `tempo-contabil-evolucao-${periodo}`,
+        nome: `tempo-fiscal-evolucao-${periodo}`,
         montar: () => ({
           cabecalhos: [d.periodo.granularidade === "mes" ? "Mês" : "Dia", "Horas"],
           linhas: d.serie.map((p) => [dataBR(p.bucket), decimalBR(p.horas)]),
@@ -169,23 +174,23 @@ export default function TempoContabilPage() {
   }, [d, pessoa]);
 
   const horas = pessoa ? pessoa.horas : (d?.totais.horas ?? 0);
-  const escopo = pessoa ? `de ${pessoa.nome}` : "do time contábil";
+  const escopo = pessoa ? `de ${pessoa.nome}` : "do time fiscal";
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center gap-2">
         <ProdPessoaFiltro dados={opcoesPessoa} valor={pessoaSel} onMudar={setPessoaSel} />
         <span className="text-xs text-muted">
-          Tempo medido pelo Questor inteiro, não só pelo módulo contábil · a filial não recorta aqui
+          Tempo medido pelo Questor inteiro, não só pelo módulo fiscal · a filial não recorta aqui
         </span>
         <div className="ml-auto">
-          <ExportarMenu modulo="contabil" cortes={cortes} desabilitado={!d || carregando} />
+          <ExportarMenu modulo="fiscal" cortes={cortes} desabilitado={!d || carregando} />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
         {carregando || !d ? (
-          Array.from({ length: 5 }).map((_, i) => <div key={i} className="skeleton h-36" />)
+          Array.from({ length: 6 }).map((_, i) => <div key={i} className="skeleton h-36" />)
         ) : (
           <>
             <StatTile
@@ -200,7 +205,9 @@ export default function TempoContabilPage() {
               rotulo="Horas por dia"
               icon={<CalendarDays className="size-4 text-ink-2" />}
               valor={emHoras(pessoa ? pessoa.horasPorDia : d.totais.horasPorPessoaDia)}
-              secundario={pessoa ? "média dela nos dias em que trabalhou" : "média por pessoa, por dia trabalhado"}
+              secundario={
+                pessoa ? "média dela nos dias em que trabalhou" : "média por pessoa, por dia trabalhado"
+              }
             />
             <StatTile
               rotulo="Horas por empresa"
@@ -219,13 +226,21 @@ export default function TempoContabilPage() {
               }
             />
             <StatTile
+              rotulo="Notas a dedo por hora"
+              icon={<Hand className="size-4 text-ink-2" />}
+              valor={umaCasa(pessoa ? (pessoa.horas > 0 ? pessoa.aDedo / pessoa.horas : 0) : d.totais.aDedoPorHora)}
+              secundario={`ritmo sem a integração · com ela seria ${umaCasa(
+                pessoa ? pessoa.porHora : d.totais.notasPorHora
+              )}`}
+            />
+            <StatTile
               rotulo="Pessoas"
               icon={<Users className="size-4 text-ink-2" />}
               valor={num(pessoa ? 1 : d.totais.pessoas)}
               secundario={
-                d.foraDoContabil.pessoas > 0
-                  ? `+${num(d.foraDoContabil.pessoas)} de outras áreas (${numCompact(d.foraDoContabil.horas)} h) fora da conta`
-                  : "todas com lançamento no contábil no período"
+                d.foraDoFiscal.pessoas > 0
+                  ? `+${num(d.foraDoFiscal.pessoas)} de outras áreas (${numCompact(d.foraDoFiscal.horas)} h) fora da conta`
+                  : "todas com nota escriturada no período"
               }
             />
             <StatTile
@@ -244,7 +259,7 @@ export default function TempoContabilPage() {
 
       <CtbRankingTabela
         titulo="Tempo por pessoa"
-        subtitulo="Só quem lançou algo no contábil no período · clique numa pessoa para isolar o restante da tela"
+        subtitulo="Só quem escriturou nota no período · clique numa pessoa para isolar o restante da tela"
         dados={d?.ranking}
         colunas={COLUNAS}
         ordemInicial="horas"
@@ -252,10 +267,11 @@ export default function TempoContabilPage() {
         recarregando={recarregando}
         selecionado={pessoaSel}
         onSelecionar={setPessoaSel}
-        vazio="Ninguém do contábil tem tempo registrado no período"
+        vazio="Ninguém do fiscal tem tempo registrado no período"
+        minWidth="min-w-[860px]"
         rodape={
-          d && d.foraDoContabil.pessoas > 0
-            ? `Fora desta lista: ${num(d.foraDoContabil.pessoas)} pessoa(s) com ${emHoras(d.foraDoContabil.horas)} no Questor que não lançaram nada no contábil no período — folha, fiscal e afins.`
+          d && d.foraDoFiscal.pessoas > 0
+            ? `Fora desta lista: ${num(d.foraDoFiscal.pessoas)} pessoa(s) com ${emHoras(d.foraDoFiscal.horas)} no Questor que não escrituraram nota no período — folha, contábil e afins.`
             : undefined
         }
       />
@@ -263,9 +279,7 @@ export default function TempoContabilPage() {
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <CtbProdBarras
           titulo="Empresas que mais consomem tempo"
-          subtitulo={
-            pessoa ? `Onde ${pessoa.nome} passou o tempo` : "Horas do time contábil por empresa"
-          }
+          subtitulo={pessoa ? `Onde ${pessoa.nome} passou o tempo` : "Horas do time fiscal por empresa"}
           dados={empresas}
           carregando={carregando}
           recarregando={recarregando}
@@ -298,13 +312,18 @@ export default function TempoContabilPage() {
         recarregando={recarregando}
       />
 
-      <CtbDispersao dados={dispersao} carregando={carregando} recarregando={recarregando} />
+      <CtbDispersao
+        dados={dispersao}
+        rotuloItem="Notas a dedo"
+        carregando={carregando}
+        recarregando={recarregando}
+      />
 
       {d && (
         <p className="text-center text-xs text-muted">
           {dataBR(filtros.inicio)} a {dataBR(filtros.fim)} · {emHoras(d.totais.horas)} no tempouso ·{" "}
-          {num(d.totais.lancamentos)} lançamentos no mesmo período · o tempo é do Questor inteiro,
-          das pessoas que lançaram no contábil
+          {num(d.totais.notas)} notas no mesmo período, {num(d.totais.aDedo)} delas a dedo · o tempo
+          é do Questor inteiro, das pessoas que escrituraram no fiscal
         </p>
       )}
     </div>

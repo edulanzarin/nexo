@@ -182,9 +182,9 @@ export async function montarCarteiraFiscal(f: ProdFiltros): Promise<FiscalCartei
   let metadeEm = 0;
   atendidas.forEach((e, i) => {
     acumulado += e.notas;
-    const pctNotas = notas > 0 ? (acumulado / notas) * 100 : 0;
-    if (metadeEm === 0 && pctNotas >= 50) metadeEm = i + 1;
-    pareto.push({ pctEmpresas: ((i + 1) / atendidas.length) * 100, pctNotas });
+    const pctItens = notas > 0 ? (acumulado / notas) * 100 : 0;
+    if (metadeEm === 0 && pctItens >= 50) metadeEm = i + 1;
+    pareto.push({ pctEmpresas: ((i + 1) / atendidas.length) * 100, pctItens });
   });
 
   return {

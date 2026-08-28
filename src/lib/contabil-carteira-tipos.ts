@@ -57,7 +57,7 @@ export interface CtbParetoPonto {
   /** % das empresas atendidas, acumulado. */
   pctEmpresas: number;
   /** % dos lançamentos, acumulado. */
-  pctLancamentos: number;
+  pctItens: number;
 }
 
 export interface ContabilCarteiraResp {

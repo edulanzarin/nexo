@@ -54,7 +54,8 @@ export interface FisCarteiraEmpresa {
 /** Um ponto da curva de concentração (Pareto) da carteira. */
 export interface FisParetoPonto {
   pctEmpresas: number;
-  pctNotas: number;
+  /** % das notas, acumulado. Nome neutro: o gráfico de Pareto é compartilhado. */
+  pctItens: number;
 }
 
 export interface FiscalCarteiraResp {
