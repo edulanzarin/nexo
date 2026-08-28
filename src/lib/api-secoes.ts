@@ -56,8 +56,11 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     contrapartes: ["dados"],
   },
   contabil: {
-    // Painel (home do módulo): contadores da trilha de auditoria + base configurada.
+    // Painéis (home do módulo), separados por cargo e por permissão: o
+    // colaborador só alcança /painel (os SEUS números); o gestor, /painel-gestao
+    // (o time todo, com série e feed por autor).
     painel: ["painel"],
+    "painel-gestao": ["painel-gestao"],
     // Notas (explorador)
     "notas-lista": ["notas"],
     "nota-itens": ["notas"],

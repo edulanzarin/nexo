@@ -67,7 +67,7 @@ import type {
   RescisaoDestinatario,
 } from "@/lib/rescisoes-tipos";
 import type { PainelColaborador, PainelGestao } from "@/lib/painel-dp-tipos";
-import type { PainelContabil } from "@/lib/painel-contabil-tipos";
+import type { PainelContabilColaborador, PainelContabilGestao } from "@/lib/painel-contabil-tipos";
 import type { PainelRh } from "@/lib/painel-rh-tipos";
 import type { EnvioDetalhe, EnvioResumo } from "@/lib/envios";
 import type { EnvioRegra } from "@/lib/envio-regras";
@@ -369,7 +369,15 @@ export const usePainelGestao = (enabled = true) =>
 
 /** Painel do Contábil: contadores de atividade + base configurada, sem filtros. */
 export const usePainelContabil = (enabled = true) =>
-  useApiQuery<PainelContabil>(["painel-contabil"], `/api/contabil/painel`, enabled);
+  useApiQuery<PainelContabilColaborador>(["painel-contabil"], `/api/contabil/painel`, enabled);
+
+/** Painel de gestão do Contábil: o time todo (seção `painel-gestao`). */
+export const usePainelContabilGestao = (enabled = true) =>
+  useApiQuery<PainelContabilGestao>(
+    ["painel-contabil-gestao"],
+    `/api/contabil/painel-gestao`,
+    enabled
+  );
 
 /** Painel do RH: pendências (experiências, denúncias, clima) + panorama do mês. */
 export const usePainelRh = (enabled = true) =>

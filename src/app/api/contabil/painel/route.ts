@@ -1,11 +1,12 @@
 import { apiRoute } from "@/lib/api-route";
-import { montarPainelContabil } from "@/lib/painel-contabil";
-import type { PainelContabil } from "@/lib/painel-contabil-tipos";
+import { montarPainelContabilColaborador } from "@/lib/painel-contabil";
+import type { PainelContabilColaborador } from "@/lib/painel-contabil-tipos";
 
 /**
- * Painel do Contábil: a home do módulo. Sem filtros — contadores do que o time
- * rodou (trilha de auditoria) e a base configurada. Escopo pela sessão.
+ * Painel do COLABORADOR: a home de quem não é gestor. Os MEUS números do mês
+ * (recorte por dono na trilha) + a base configurada — sem série do time nem
+ * atividade alheia. Endpoint próprio, seção `painel`.
  */
 export const GET = apiRoute(async () => {
-  return (await montarPainelContabil()) satisfies PainelContabil;
+  return (await montarPainelContabilColaborador()) satisfies PainelContabilColaborador;
 });

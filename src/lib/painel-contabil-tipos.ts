@@ -1,14 +1,20 @@
 /**
- * Tipos do Painel do Contábil — a home do módulo. Diferente do DP (que é fila de
- * pendências), aqui o retrato é de ATIVIDADE: o que o time rodou no app (nada de
- * disparar automação, só contar) + a BASE configurada acumulada. Fonte: a trilha
- * `auditoria` e as tabelas `conf_*`/`implantacao_*` do banco do app.
+ * Tipos dos PAINÉIS do Contábil — a home do módulo, em DUAS versões por cargo
+ * (mesma doutrina do DP: [[Permissão se valida no servidor, não na interface]]).
+ * Diferente do DP (que é fila de pendências), aqui o retrato é de ATIVIDADE: o
+ * que se rodou no app (nada de disparar automação, só contar) + a BASE
+ * configurada acumulada. Fonte: a trilha `auditoria` e as tabelas
+ * `conf_*`/`implantacao_*` do banco do app.
+ *
+ * O recorte entre os dois é POR DONO, como no Post Mortem do DP: o colaborador
+ * vê os SEUS números; a gestão vê os de TODOS, mais a série do time e o feed
+ * com nome de quem fez.
  *
  * Cada bloco é independente e opcional (`| null`): se uma consulta falha, o
  * painel ainda mostra os outros.
  */
 
-/** O que o time do Contábil rodou no período (contadores da trilha de auditoria). */
+/** O que se rodou no período (contadores da trilha de auditoria). */
 export interface ContabilAtividade {
   conciliacoes: number;
   /** Lançamentos gerados nas conciliações (soma de detalhe.linhas). */
@@ -47,8 +53,22 @@ export interface ContabilEvento {
   quando: string; // "YYYY-MM-DDTHH:MM:SS"
 }
 
-/** Payload do painel: período de referência + os blocos (cada um pode faltar). */
-export interface PainelContabil {
+/**
+ * Painel do COLABORADOR: os MEUS números do mês + a base configurada. Sem série
+ * do time e sem atividade alheia — quem não é gestor não busca o dado dos
+ * outros (a rota é outra, e o gate é por seção).
+ */
+export interface PainelContabilColaborador {
+  periodo: { inicio: string; fim: string };
+  /** Recortada pelo dono: só o que ESTA pessoa rodou. */
+  atividade: ContabilAtividade | null;
+  base: ContabilBase | null;
+  /** Feed só dos meus eventos. */
+  recentes: ContabilEvento[] | null;
+}
+
+/** Painel de GESTÃO: o time inteiro — atividade, base, série e feed com autor. */
+export interface PainelContabilGestao {
   periodo: { inicio: string; fim: string };
   atividade: ContabilAtividade | null;
   base: ContabilBase | null;

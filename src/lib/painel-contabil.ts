@@ -6,22 +6,33 @@ import type {
   ContabilBase,
   ContabilEvento,
   ContabilSeriePonto,
-  PainelContabil,
+  PainelContabilColaborador,
+  PainelContabilGestao,
 } from "./painel-contabil-tipos";
 
 /**
- * PAINEL DO CONTÁBIL — a home do módulo. Diferente do DP: o Contábil é uma
- * bancada (conciliação, balancete, implantação PRECISAM ser rodados por
- * empresa/período), então o painel NÃO dispara nada — ele mostra o que o time
- * JÁ rodou (contadores da trilha `auditoria`) e a BASE configurada acumulada
- * (`conf_*`). Materializa [[A home de um módulo é o resumo que carrega sozinho;
- * automação não abre sozinha]] — o avesso do painel: aqui a home é o placar da
- * automação, não a automação.
+ * PAINÉIS DO CONTÁBIL — a home do módulo, em DUAS versões por cargo:
+ *
+ *  - `montarPainelContabilColaborador`: os MEUS números do mês + a base
+ *    configurada. Recorte por dono (`usuario_id` da trilha), como o Post Mortem
+ *    do DP: o analista vê os SEUS.
+ *  - `montarPainelContabilGestao`: o time inteiro — atividade, base, série de 6
+ *    meses e o feed com nome de quem fez.
+ *
+ * Endpoints e permissões separados: o colaborador NÃO tem como buscar os
+ * números do time (a rota `/painel-gestao` é de outra seção).
+ *
+ * Diferente do DP: o Contábil é uma bancada (conciliação, balancete,
+ * implantação PRECISAM ser rodados por empresa/período), então o painel NÃO
+ * dispara nada — ele mostra o que JÁ se rodou (contadores da trilha `auditoria`)
+ * e a BASE configurada acumulada (`conf_*`). Materializa [[A home de um módulo é
+ * o resumo que carrega sozinho; automação não abre sozinha]] — o avesso do
+ * painel: aqui a home é o placar da automação, não a automação.
  *
  * Tudo é banco do app (nenhuma consulta ao Questor) — o painel carrega rápido e
  * não degrada por indisponibilidade do Questor. Cada bloco é independente
- * (`allSettled`). Os contadores de atividade e o feed respeitam o escopo de
- * empresa da sessão (a trilha guarda `codigoempresa`); a base é contagem pura.
+ * (`allSettled`). Os contadores e o feed respeitam o escopo de empresa da
+ * sessão (a trilha guarda `codigoempresa`); a base é contagem pura.
  */
 
 function hojeISO(): string {
@@ -33,14 +44,30 @@ function primeiroDiaMes(iso: string, nMeses = 0): string {
   return new Date(Date.UTC(y, m - 1 + nMeses, 1)).toISOString().slice(0, 10);
 }
 
-/** Escopo de empresa da sessão para a trilha: filtro SQL + params, ou "" quando "todas". */
-async function condEscopo(base: unknown[]): Promise<{ cond: string; params: unknown[] }> {
+/**
+ * Filtros da trilha: escopo de empresa da sessão e, quando `dono` vem, o recorte
+ * por autor. Os `$n` são numerados na ordem em que entram — por isso o array de
+ * params cresce junto com a condição, e não em dois passos.
+ */
+async function filtrosTrilha(
+  base: unknown[],
+  dono?: string
+): Promise<{ cond: string; params: unknown[] }> {
+  const params = [...base];
+  let cond = "";
+
   const s = await getSessaoOpcional();
   const escopo = s ? empresasPermitidas(s) : [];
-  if (escopo === "todas") return { cond: "", params: base };
-  // Eventos sem empresa (codigoempresa null) valem para todos — não escondê-los.
-  const params = [...base, escopo];
-  return { cond: ` and (codigoempresa is null or codigoempresa = any($${params.length}::int[]))`, params };
+  if (escopo !== "todas") {
+    params.push(escopo);
+    // Eventos sem empresa (codigoempresa null) valem para todos — não escondê-los.
+    cond += ` and (codigoempresa is null or codigoempresa = any($${params.length}::int[]))`;
+  }
+  if (dono) {
+    params.push(dono);
+    cond += ` and usuario_id = $${params.length}`;
+  }
+  return { cond, params };
 }
 
 const ACAO = {
@@ -51,9 +78,23 @@ const ACAO = {
   export: "contabil.export",
 } as const;
 
-/** Contadores do que o time rodou no mês (trilha de auditoria). */
-async function blocoAtividade(inicioMes: string): Promise<ContabilAtividade> {
-  const { cond, params } = await condEscopo([inicioMes]);
+const ATIVIDADE_ZERO: ContabilAtividade = {
+  conciliacoes: 0,
+  conciliacaoLinhas: 0,
+  implantacoes: 0,
+  laudos: 0,
+  pendenciasTriadas: 0,
+  pendenciasResolvidas: 0,
+  pendenciasIgnoradas: 0,
+  exportacoes: 0,
+};
+
+/**
+ * Contadores do que se rodou no mês (trilha de auditoria). Sem `dono` conta o
+ * time todo (gestão); com `dono`, só aquela pessoa (colaborador).
+ */
+async function blocoAtividade(inicioMes: string, dono?: string): Promise<ContabilAtividade> {
+  const { cond, params } = await filtrosTrilha([inicioMes], dono);
   const [row] = await appQuery<{
     conciliacoes: number;
     conciliacao_linhas: number;
@@ -114,9 +155,9 @@ async function blocoBase(): Promise<ContabilBase> {
   };
 }
 
-/** Série mensal (6 meses) dos trabalhos rodados. */
+/** Série mensal (6 meses) dos trabalhos rodados pelo time. Só gestão. */
 async function blocoSerie(inicio: string): Promise<ContabilSeriePonto[]> {
-  const { cond, params } = await condEscopo([inicio]);
+  const { cond, params } = await filtrosTrilha([inicio]);
   return appQuery<ContabilSeriePonto>(
     `select to_char(g.b, 'YYYY-MM') as bucket,
             count(a.id) filter (where a.acao = '${ACAO.conciliacao}')::int as conciliacoes,
@@ -132,9 +173,9 @@ async function blocoSerie(inicio: string): Promise<ContabilSeriePonto[]> {
   );
 }
 
-/** Últimos eventos da trilha (feed de atividade), no escopo. */
-async function blocoRecentes(): Promise<ContabilEvento[]> {
-  const { cond, params } = await condEscopo([]);
+/** Últimos eventos da trilha, no escopo. Com `dono`, só os da própria pessoa. */
+async function blocoRecentes(dono?: string): Promise<ContabilEvento[]> {
+  const { cond, params } = await filtrosTrilha([], dono);
   return appQuery<ContabilEvento>(
     `select id, usuario_nome as usuario, acao, alvo,
             to_char(criado_em, 'YYYY-MM-DD"T"HH24:MI:SS') as quando
@@ -152,7 +193,35 @@ function colher<T>(r: PromiseSettledResult<T>, nome: string): T | null {
   return null;
 }
 
-export async function montarPainelContabil(): Promise<PainelContabil> {
+/**
+ * Painel do colaborador: recorte por dono. Sem sessão não há dono, e sem dono a
+ * consulta traria o time inteiro — então devolve zerado em vez de vazar.
+ */
+export async function montarPainelContabilColaborador(): Promise<PainelContabilColaborador> {
+  const fim = hojeISO();
+  const inicio = primeiroDiaMes(fim);
+  const dono = (await getSessaoOpcional())?.usuario.id;
+
+  if (!dono) {
+    return { periodo: { inicio, fim }, atividade: ATIVIDADE_ZERO, base: null, recentes: [] };
+  }
+
+  const [atividade, base, recentes] = await Promise.allSettled([
+    blocoAtividade(inicio, dono),
+    blocoBase(),
+    blocoRecentes(dono),
+  ]);
+
+  return {
+    periodo: { inicio, fim },
+    atividade: colher(atividade, "atividade"),
+    base: colher(base, "base"),
+    recentes: colher(recentes, "recentes"),
+  };
+}
+
+/** Painel de gestão: o time inteiro, sem recorte por dono. */
+export async function montarPainelContabilGestao(): Promise<PainelContabilGestao> {
   const fim = hojeISO();
   const inicio = primeiroDiaMes(fim);
   const serie6m = primeiroDiaMes(fim, -5);

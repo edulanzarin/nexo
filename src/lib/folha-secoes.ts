@@ -24,14 +24,10 @@ export const SECOES_FOLHA: SecaoFiscal[] = [
   // DOIS, liberados por cargo: o colaborador vê a fila de trabalho (pendências);
   // o gestor vê também a atividade/produtividade. Quem tiver só um cai nele; o
   // recorte por cargo é permissão binária (uma seção por perfil).
-  {
-    id: "painel",
-    icone: LayoutGrid,
-    rotulo: "Painel",
-    path: "/folha/painel",
-    metrica: false,
-    descricao: "Fila do DP: rescisões a pagar, férias vencidas e eSocial a resolver",
-  },
+  //
+  // Gestão vem PRIMEIRO de propósito: admin enxerga as duas (podeSecao libera
+  // tudo pra ele) e `primeiraSecaoPath` entrega a 1ª visível — enquanto o Painel
+  // simples vinha antes, o adm caía no painel do colaborador.
   {
     id: "painel-gestao",
     icone: LayoutDashboard,
@@ -39,6 +35,14 @@ export const SECOES_FOLHA: SecaoFiscal[] = [
     path: "/folha/painel-gestao",
     metrica: false,
     descricao: "Visão do gestor: pendências + atividade do DP no mês e ranking",
+  },
+  {
+    id: "painel",
+    icone: LayoutGrid,
+    rotulo: "Painel",
+    path: "/folha/painel",
+    metrica: false,
+    descricao: "Fila do DP: rescisões a pagar, férias vencidas e eSocial a resolver",
   },
   {
     id: "rotatividade",

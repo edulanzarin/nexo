@@ -1,4 +1,4 @@
-import { ClipboardCheck, FileSpreadsheet, Gauge, Import, Landmark, LayoutGrid, ListChecks, Scale, ScanSearch, Table2 } from "lucide-react";
+import { ClipboardCheck, FileSpreadsheet, Gauge, Import, Landmark, LayoutDashboard, LayoutGrid, ListChecks, Scale, ScanSearch, Table2 } from "lucide-react";
 import type { SecaoFiscal } from "./fiscal-secoes";
 
 /**
@@ -40,23 +40,49 @@ export interface SecaoContabil extends SecaoFiscal {
  * caminho da seção (a Configuração do plano de contabilização, por exemplo).
  */
 export const SECOES_CONTABIL: SecaoContabil[] = [
-  // Painel é a HOME do módulo: primeira seção (o índice /contabil cai na 1ª
-  // visível) e a única self-contained — carrega sozinha, sem barra de filtro nem
-  // Executar (ver shell). É o placar da automação (o que o time rodou + a base
+  // Painel é a HOME do módulo: as primeiras seções (o índice /contabil cai na 1ª
+  // visível) e as únicas self-contained — carregam sozinhas, sem barra de filtro
+  // nem Executar (ver shell). É o placar da automação (o que se rodou + a base
   // configurada), não a automação: conciliação e cia continuam se rodando.
+  //
+  // São DOIS, liberados por cargo, com o mesmo recorte do Post Mortem do DP: o
+  // colaborador vê os SEUS números; o gestor vê os de TODOS, mais a série do
+  // time e o feed com autor. Permissão binária (uma seção por perfil).
+  //
+  // Gestão vem PRIMEIRO de propósito: admin enxerga as duas (podeSecao libera
+  // tudo pra ele) e `primeiraSecaoPath` entrega a 1ª visível — se o Painel
+  // simples viesse antes, o adm cairia no painel do colaborador.
+  {
+    id: "painel-gestao",
+    rotulo: "Painel · Gestão",
+    icone: LayoutDashboard,
+    path: "/contabil/painel-gestao",
+    metrica: false,
+    descricao: "Visão do gestor: atividade do time no mês, série e base configurada",
+    abas: [
+      {
+        id: "painel-gestao",
+        rotulo: "Painel · Gestão",
+        path: "/contabil/painel-gestao",
+        descricao: "Atividade do time (conciliações, laudos…), série de 6 meses e a base",
+        semPeriodo: true,
+        execucao: null,
+      },
+    ],
+  },
   {
     id: "painel",
     rotulo: "Painel",
     icone: LayoutGrid,
     path: "/contabil/painel",
     metrica: false,
-    descricao: "Retrato do Contábil: o que o time rodou e a base configurada",
+    descricao: "Os seus números do mês no Contábil e a base configurada",
     abas: [
       {
         id: "painel",
         rotulo: "Painel",
         path: "/contabil/painel",
-        descricao: "Contadores de atividade (conciliações, laudos…) e a base configurada",
+        descricao: "O que VOCÊ rodou no mês (conciliações, laudos…) e a base configurada",
         semPeriodo: true,
         execucao: null,
       },

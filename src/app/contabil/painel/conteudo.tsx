@@ -1,15 +1,6 @@
 "use client";
 
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import {
   AlertTriangle,
   Banknote,
   ClipboardCheck,
@@ -22,10 +13,14 @@ import {
 } from "lucide-react";
 import { Kpi } from "@/components/kpi-conf";
 import { Card, EmptyState } from "@/components/ui";
-import { ChartCard, LegendaSeries, TooltipContainer, TooltipLinha } from "@/components/ui/chart-card";
 import { usePainelContabil } from "@/hooks/use-api";
-import { dataBR, dataHoraBR, mesBR, num } from "@/lib/format";
-import type { ContabilSeriePonto } from "@/lib/painel-contabil-tipos";
+import { dataBR, dataHoraBR, num } from "@/lib/format";
+
+/**
+ * Painel do COLABORADOR: os SEUS números do mês. Mesmos contadores da trilha do
+ * painel de gestão, recortados por dono no servidor — aqui não há série do time
+ * nem nome de outra pessoa. Quem precisa do time todo tem a seção `painel-gestao`.
+ */
 
 /** acao da trilha → rótulo legível no feed. */
 const ROTULO_ACAO: Record<string, string> = {
@@ -35,68 +30,6 @@ const ROTULO_ACAO: Record<string, string> = {
   "contabil.pendencia.triar": "Pendência triada",
   "contabil.export": "Exportação",
 };
-
-function TipSerie({
-  active,
-  label,
-  payload,
-}: {
-  active?: boolean;
-  label?: string;
-  payload?: { payload: ContabilSeriePonto }[];
-}) {
-  if (!active || !payload?.length || !label) return null;
-  const p = payload[0].payload;
-  return (
-    <TooltipContainer>
-      <p className="mb-1 text-xs font-medium text-ink">{mesBR(label)}</p>
-      <TooltipLinha cor="var(--accent)" nome="Conciliações" valor={num(p.conciliacoes)} />
-      <TooltipLinha cor="var(--good)" nome="Implantações" valor={num(p.implantacoes)} />
-      <TooltipLinha cor="var(--esp-5)" nome="Laudos" valor={num(p.laudos)} />
-    </TooltipContainer>
-  );
-}
-
-function SerieChart({ dados }: { dados: ContabilSeriePonto[] }) {
-  return (
-    <ChartCard
-      titulo="O que o time rodou nos últimos meses"
-      subtitulo="Conciliações, implantações e laudos gerados por mês"
-      acao={
-        <LegendaSeries
-          series={[
-            { nome: "Conciliações", cor: "var(--accent)" },
-            { nome: "Implantações", cor: "var(--good)" },
-            { nome: "Laudos", cor: "var(--esp-5)" },
-          ]}
-        />
-      }
-      carregando={false}
-      recarregando={false}
-      alturaSkeleton="h-72"
-    >
-      <div className="h-72 w-full">
-        <ResponsiveContainer>
-          <BarChart data={dados} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
-            <CartesianGrid vertical={false} stroke="var(--grid)" strokeWidth={1} />
-            <XAxis
-              dataKey="bucket"
-              tickFormatter={mesBR}
-              tick={{ fontSize: 11, fill: "var(--muted)" }}
-              axisLine={{ stroke: "var(--hairline)" }}
-              tickLine={false}
-            />
-            <YAxis tick={{ fontSize: 11, fill: "var(--muted)" }} axisLine={false} tickLine={false} width={28} />
-            <Tooltip cursor={{ fill: "var(--surface-2)" }} content={<TipSerie />} />
-            <Bar dataKey="conciliacoes" fill="var(--accent)" radius={[3, 3, 0, 0]} />
-            <Bar dataKey="implantacoes" fill="var(--good)" radius={[3, 3, 0, 0]} />
-            <Bar dataKey="laudos" fill="var(--esp-5)" radius={[3, 3, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </ChartCard>
-  );
-}
 
 export default function PainelContabilPage() {
   const res = usePainelContabil();
@@ -122,14 +55,14 @@ export default function PainelContabilPage() {
     );
   }
 
-  const { atividade, base, serie, recentes } = dados;
+  const { atividade, base, recentes } = dados;
 
   return (
     <div className="space-y-6">
-      {/* Atividade do mês */}
+      {/* O que EU rodei no mês */}
       <section>
         <div className="mb-2 flex items-center gap-2">
-          <h2 className="text-sm font-semibold text-ink">Atividade do mês</h2>
+          <h2 className="text-sm font-semibold text-ink">O que você rodou no mês</h2>
           <span className="text-xs text-muted">
             {dataBR(dados.periodo.inicio)} – {dataBR(dados.periodo.fim)}
           </span>
@@ -170,7 +103,7 @@ export default function PainelContabilPage() {
         )}
       </section>
 
-      {/* Base configurada */}
+      {/* Base configurada — o cadastro que sustenta o trabalho de todo mundo */}
       <section>
         <h2 className="mb-2 text-sm font-semibold text-ink">Base configurada</h2>
         {base ? (
@@ -209,46 +142,35 @@ export default function PainelContabilPage() {
         )}
       </section>
 
-      {/* Série + feed recente */}
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          {serie && serie.length > 0 ? (
-            <SerieChart dados={serie} />
-          ) : (
-            <Card padding="md" className="grid h-full min-h-[18rem] place-items-center">
-              <p className="text-sm text-muted">Série indisponível agora.</p>
-            </Card>
-          )}
+      {/* Feed só dos MEUS eventos: sem coluna de autor, seria sempre o mesmo nome */}
+      <Card as="section" overflow padding="none">
+        <div className="border-b border-hairline px-4 py-3">
+          <h3 className="text-sm font-medium text-ink">Sua atividade recente</h3>
         </div>
-
-        <Card as="section" overflow padding="none" className="h-full">
-          <div className="border-b border-hairline px-4 py-3">
-            <h3 className="text-sm font-medium text-ink">Atividade recente</h3>
-          </div>
-          {recentes == null ? (
-            <p className="px-4 py-10 text-center text-sm text-muted">Indisponível agora.</p>
-          ) : recentes.length === 0 ? (
-            <p className="px-4 py-10 text-center text-sm text-muted">Sem atividade registrada.</p>
-          ) : (
-            <ul className="divide-y divide-hairline/60">
-              {recentes.map((e) => (
-                <li key={e.id} className="px-4 py-2.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm text-ink">{ROTULO_ACAO[e.acao] ?? e.acao}</span>
-                    <span className="shrink-0 text-[11px] text-muted">{dataHoraBR(e.quando)}</span>
-                  </div>
-                  {e.alvo && (
-                    <p className="truncate text-[11px] text-muted" title={e.alvo}>
-                      {e.alvo}
-                    </p>
-                  )}
-                  <p className="text-[11px] text-muted">{e.usuario}</p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-      </section>
+        {recentes == null ? (
+          <p className="px-4 py-10 text-center text-sm text-muted">Indisponível agora.</p>
+        ) : recentes.length === 0 ? (
+          <p className="px-4 py-10 text-center text-sm text-muted">
+            Você ainda não rodou nada por aqui.
+          </p>
+        ) : (
+          <ul className="divide-y divide-hairline/60">
+            {recentes.map((e) => (
+              <li key={e.id} className="px-4 py-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm text-ink">{ROTULO_ACAO[e.acao] ?? e.acao}</span>
+                  <span className="shrink-0 text-[11px] text-muted">{dataHoraBR(e.quando)}</span>
+                </div>
+                {e.alvo && (
+                  <p className="truncate text-[11px] text-muted" title={e.alvo}>
+                    {e.alvo}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
     </div>
   );
 }

@@ -43,8 +43,9 @@ export function ContabilShell({ children }: { children: React.ReactNode }) {
   const abas = abasDaSecao(pathname);
   const carregando = useIsFetching() > 0;
   // Painel é self-contained (home do módulo): carrega sozinho, sem barra de
-  // filtro nem abas — como o Post Mortem/Painel no DP.
-  const ehPainel = secao?.id === "painel";
+  // filtro nem abas — como o Post Mortem/Painel no DP. Casa por PREFIXO porque
+  // são dois (`painel` e `painel-gestao`), liberados por cargo.
+  const ehPainel = secao?.id?.startsWith("painel") ?? false;
 
   // Busca, extrato carregado e memória de filtro valem pelo MÓDULO inteiro:
   // trocar de seção (ou de aba) mantém, e só "Trocar módulo" — quando este shell
