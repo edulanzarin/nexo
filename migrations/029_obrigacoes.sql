@@ -4,8 +4,8 @@
 -- controla as obrigações entregues ao cliente. Vem por REST, com teto de 100
 -- req/min e SEM webhook — nada avisa quando uma entrega muda. E `deliveries`
 -- exige o CNPJ no caminho: não existe varredura global, é uma chamada por
--- empresa. Varrer a carteira (mais de mil ativas) leva horas, o que não cabe num
--- request — por isso a fila é MATERIALIZADA aqui por um job, e a tela lê daqui.
+-- empresa. Varrer a carteira (mais de mil ativas) leva ~20 min, o que não cabe
+-- num request — por isso a fila é MATERIALIZADA aqui por um job, e a tela lê daqui.
 --
 -- O que se guarda é só o ACIONÁVEL (`situation=pending` na API: "Atrasada!" e
 -- "Pendente"), não o histórico inteiro. Entrega dispensada, entregue ou em prazo

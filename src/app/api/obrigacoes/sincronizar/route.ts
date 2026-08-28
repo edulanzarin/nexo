@@ -4,8 +4,8 @@ import { sincronizacaoEmAndamento, sincronizarObrigacoes } from "@/lib/obrigacoe
 /**
  * Disparo MANUAL da varredura, para quem não quer esperar o job das 5h.
  *
- * Não espera terminar: a varredura leva horas (uma chamada por empresa sob teto
- * de 100 req/min), e nenhum navegador segura isso. A rota apenas INICIA e
+ * Não espera terminar: a varredura leva ~20 minutos (uma chamada por empresa
+ * sob teto de 100 req/min), tempo demais para uma requisição. A rota INICIA e
  * responde; o progresso a tela lê pelo bloco `sync` da fila, que diz se há uma
  * rodando e de quando é o último retrato.
  *

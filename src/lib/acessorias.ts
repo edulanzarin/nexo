@@ -31,12 +31,17 @@ import "server-only";
 const BASE = "https://api.acessorias.com";
 
 /**
- * Espaçamento entre chamadas. O teto é 100/min; 70/min deixa folga real — a
- * janela é deslizante e do lado deles, então encostar no limite é o que dispara
- * a resposta vazia silenciosa. Varredura previsivelmente mais lenta vale mais
- * que rápida e incompleta.
+ * Ritmo alvo. O teto é 100/min; 80/min deixa folga para a janela deslizante do
+ * lado deles, que é o que dispara a resposta vazia silenciosa quando se encosta
+ * no limite.
+ *
+ * O intervalo conta de INÍCIO a INÍCIO de chamada, descontando o tempo que a
+ * própria chamada levou. Dormir o intervalo cheio DEPOIS da resposta somava a
+ * latência (~600ms) ao espaçamento e derrubava a taxa real para ~40/min — metade
+ * do pretendido, e a varredura para o dobro do tempo, sem que nada no código
+ * dissesse isso.
  */
-const INTERVALO_MS = 60_000 / 70;
+const INTERVALO_MS = 60_000 / 80;
 
 /**
  * Uma resposta vazia pode ser fim de lista OU throttle disfarçado. Confirma-se
@@ -45,11 +50,20 @@ const INTERVALO_MS = 60_000 / 70;
 const CONFIRMACOES_DE_VAZIO = 2;
 
 /**
- * Teto de páginas da carteira. Não é o tamanho esperado — é a trava contra um
- * laço infinito se a API passar a devolver conteúdo para sempre. Medido em
- * ago/2026: acima de 1.500 empresas cadastradas, ~78 páginas de 20.
+ * Trava contra laço infinito, não tamanho esperado. Medido em ago/2026: ~1.560
+ * empresas cadastradas, o que dá ~78 páginas de 20 — mas a API devolve conteúdo
+ * esparso bem além disso, então o teto precisa de folga sem ser absurdo. Antes
+ * estava em 400, e sozinho fazia a listagem consumir ~10 minutos.
  */
-const MAX_PAGINAS = 400;
+const MAX_PAGINAS = 140;
+
+/**
+ * A listagem encerra quando N páginas seguidas não trazem NENHUMA empresa nova.
+ * É mais robusto que "parou de vir conteúdo": a API devolve páginas esparsas no
+ * fim do intervalo, e o que interessa não é a página vir cheia, é ela acrescentar
+ * alguém à carteira.
+ */
+const PAGINAS_SEM_NOVIDADE = 3;
 
 /**
  * 429 não é erro do pedido, é "agora não" — e desistir na primeira faria a
@@ -89,8 +103,11 @@ function token(): string {
 let fila: Promise<unknown> = Promise.resolve();
 function enfileirar<T>(fn: () => Promise<T>): Promise<T> {
   const proximo = fila.then(async () => {
+    const inicio = Date.now();
     const r = await fn();
-    await new Promise((res) => setTimeout(res, INTERVALO_MS));
+    // Só o que FALTA para completar o intervalo: o tempo de rede já contou.
+    const resta = INTERVALO_MS - (Date.now() - inicio);
+    if (resta > 0) await new Promise((res) => setTimeout(res, resta));
     return r;
   });
   // A fila não pode morrer por causa de uma falha: encadeia o "depois", não o erro.
@@ -188,24 +205,23 @@ export async function listarEmpresas(apenasAtivas = true): Promise<EmpresaAcesso
   // Deduplicado por identificador: a confirmação de vazio repete páginas, e
   // repetir não pode inflar a carteira.
   const porId = new Map<string, EmpresaAcessorias>();
-  let vaziasSeguidas = 0;
+  let semNovidade = 0;
 
   for (let pagina = 1; pagina <= MAX_PAGINAS; pagina++) {
     const lote = await get<EmpresaAcessorias[]>("/companies/ListAll", { Pagina: String(pagina) });
 
-    if (!lote?.length) {
-      // Vazio é suspeita, não fim (ver armadilha 4). Só encerra depois de
-      // páginas vazias CONSECUTIVAS confirmadas.
-      vaziasSeguidas++;
-      if (vaziasSeguidas >= CONFIRMACOES_DE_VAZIO) break;
-      pagina--; // repete a mesma página
-      continue;
-    }
+    const antes = porId.size;
+    for (const e of lote ?? []) porId.set(e.Identificador, e);
 
-    vaziasSeguidas = 0;
-    for (const e of lote) porId.set(e.Identificador, e);
-    // Página curta também não é fim confiável aqui: seguimos até o vazio
-    // confirmado, que é o único sinal que a API dá de verdade.
+    // O que encerra não é a página vir vazia (ver armadilha 4: vazio pode ser
+    // throttle), é ela não ACRESCENTAR ninguém. Páginas esparsas no fim do
+    // intervalo deixam de ser um problema — só contam se trouxerem gente nova.
+    if (porId.size === antes) {
+      semNovidade++;
+      if (semNovidade >= PAGINAS_SEM_NOVIDADE) break;
+    } else {
+      semNovidade = 0;
+    }
   }
 
   const todas = [...porId.values()];
@@ -294,7 +310,7 @@ export async function entregasPendentes(
 
     // Mesma armadilha 4, e aqui ela é mais traiçoeira que na lista de empresas:
     // um vazio engolido vira "esta empresa está em dia", que é uma afirmação
-    // FORTE saindo de uma ausência de resposta. Confirma-se repetindo.
+    // FORTE saindo de uma ausência de resposta. Só o VAZIO se confirma repetindo.
     if (!lote.length) {
       vaziasSeguidas++;
       if (vaziasSeguidas >= CONFIRMACOES_DE_VAZIO) break;
@@ -330,8 +346,15 @@ export async function entregasPendentes(
         respNome: e.Config?.RespPrazo?.trim() || null,
       });
     }
-    // Sem atalho por "página curta": só o vazio CONFIRMADO encerra. Uma página
-    // com menos de 50 pode ser a última — ou uma resposta parcial sob pressão.
+    // Página INCOMPLETA encerra: a API pagina de 50 em 50, então um lote menor
+    // que isso é o fim da lista desta empresa. Sondar a página seguinte só para
+    // ver um vazio custaria DUAS chamadas extras por empresa (a sonda e a
+    // confirmação) — em mais de mil empresas, é o triplo da varredura inteira
+    // para confirmar o que o tamanho do lote já disse.
+    //
+    // O caso perigoso continua coberto: quem devolve ZERO na primeira página
+    // (a empresa "em dia") passa pela confirmação acima.
+    if (lote.length < 50) break;
   }
 
   return pendentes;
