@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiRoute } from "@/lib/api-route";
 import { FilterError } from "@/lib/fiscal-filters";
-import { montarPainelObrigacoes } from "@/lib/obrigacoes";
+import { montarPainelObrigacoes, type FiltrosFila } from "@/lib/obrigacoes";
 import { setoresDaSecao } from "@/lib/obrigacoes-secoes";
 import { getSessaoOpcional, podeSecao } from "@/lib/sessao";
 import type { PainelObrigacoes } from "@/lib/obrigacoes-tipos";
@@ -24,6 +24,33 @@ export const GET = apiRoute(async (req: NextRequest) => {
     throw new FilterError("Seção fora do seu acesso");
   }
 
+  const q = req.nextUrl.searchParams;
+  const data = (k: string) => {
+    const v = q.get(k)?.trim();
+    // Só ISO: uma data malformada viraria `null` no cast e o filtro sumiria em
+    // silêncio, mostrando mais linhas do que o usuário pediu.
+    return v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined;
+  };
+  const inteiro = (k: string) => {
+    const v = Number(q.get(k));
+    return Number.isInteger(v) ? v : undefined;
+  };
+
+  const filtros: FiltrosFila = {
+    cnpj: q.get("cnpj")?.trim() || undefined,
+    respId: inteiro("respId"),
+    prazoDe: data("prazoDe"),
+    prazoAte: data("prazoAte"),
+    competenciaDe: data("competenciaDe"),
+    competenciaAte: data("competenciaAte"),
+    obrigacao: q.get("obrigacao")?.trim() || undefined,
+    soVencidas: q.get("soVencidas") === "1",
+    soMulta: q.get("soMulta") === "1",
+  };
+
   // Visão geral (setores vazio) = sem recorte; as demais, os setores da seção.
-  return (await montarPainelObrigacoes(setores.length ? setores : undefined)) satisfies PainelObrigacoes;
+  return (await montarPainelObrigacoes(
+    setores.length ? setores : undefined,
+    filtros
+  )) satisfies PainelObrigacoes;
 });

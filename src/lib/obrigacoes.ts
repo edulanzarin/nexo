@@ -2,6 +2,7 @@ import "server-only";
 import { appQuery } from "./app-db";
 import { query } from "./db";
 import { entregasPendentes, listarEmpresas, AcessoriasErro } from "./acessorias";
+import type { EmpresaAcessorias } from "./acessorias";
 import { getSessaoOpcional, empresasPermitidas } from "./sessao";
 import type {
   EntregaFila,
@@ -82,6 +83,75 @@ async function mapaCnpjQuestor(): Promise<Map<string, number>> {
  */
 const HORAS_ATE_ABANDONADA = 8;
 
+/**
+ * Guarda a carteira para o seletor. Upsert por CNPJ: empresa que sai da lista do
+ * Acessórias não é apagada — ela pode ter entregas antigas ainda referenciadas, e
+ * sumir do seletor faria a fila mostrar um CNPJ sem nome.
+ */
+async function guardarCarteira(
+  empresas: EmpresaAcessorias[],
+  mapa: Map<string, number>
+): Promise<void> {
+  if (!empresas.length) return;
+
+  // Em lotes: um insert com milhares de linhas estoura o limite de parâmetros.
+  const LOTE = 200;
+  for (let i = 0; i < empresas.length; i += LOTE) {
+    const fatia = empresas.slice(i, i + LOTE);
+    const valores = fatia.map((e) => [
+      e.Identificador,
+      e.Razao?.trim() || e.Identificador,
+      null,
+      e.Status?.trim() || "?",
+      mapa.get(soDigitos(e.Identificador)) ?? null,
+    ]);
+    const placeholders = valores
+      .map((_, k) => `(${Array.from({ length: 5 }, (_, j) => `$${k * 5 + j + 1}`).join(",")})`)
+      .join(",");
+    await appQuery(
+      `insert into obr_empresa (cnpj, razao, fantasia, status, codigoempresa)
+       values ${placeholders}
+       on conflict (cnpj) do update set
+         razao = excluded.razao,
+         status = excluded.status,
+         codigoempresa = excluded.codigoempresa,
+         atualizado_em = now()`,
+      valores.flat()
+    );
+  }
+}
+
+/** Uma empresa da carteira, para o seletor. */
+export interface EmpresaCarteira {
+  cnpj: string;
+  razao: string;
+  status: string;
+  codigoempresa: number | null;
+  /** Tem entrega na fila agora? Ordena o seletor por quem importa. */
+  temFila: boolean;
+}
+
+/**
+ * Carteira visível para a sessão. Mesma regra de escopo da fila: sem par no
+ * Questor, só quem vê todas — senão o seletor viraria um diretório de clientes
+ * alheios para quem tem carteira restrita.
+ */
+export async function listarCarteira(): Promise<EmpresaCarteira[]> {
+  const sessao = await getSessaoOpcional();
+  const permitidas = sessao ? empresasPermitidas(sessao) : [];
+  const cond = permitidas === "todas" ? "" : ` and e.codigoempresa = any($1::int[])`;
+  const params = permitidas === "todas" ? [] : [permitidas];
+
+  return appQuery<EmpresaCarteira>(
+    `select e.cnpj, e.razao, e.status, e.codigoempresa,
+            exists (select 1 from obr_entrega f where f.cnpj = e.cnpj) as "temFila"
+       from obr_empresa e
+      where e.status = 'Ativa'${cond}
+      order by e.razao`,
+    params
+  );
+}
+
 export interface ResumoSync {
   empresas: number;
   entregas: number;
@@ -119,8 +189,14 @@ export async function sincronizarObrigacoes(): Promise<ResumoSync> {
   const inicio = mesesAtras(fim, MESES_ATRAS);
 
   try {
-    const [empresas, mapa] = await Promise.all([listarEmpresas(true), mapaCnpjQuestor()]);
+    // A lista completa (ativas e inativas) alimenta o seletor; a varredura de
+    // entregas percorre só as ativas. Buscar as duas é a MESMA chamada.
+    const todasEmpresas = await listarEmpresas(false);
+    const mapa = await mapaCnpjQuestor();
+    const empresas = todasEmpresas.filter((e) => e.Status === "Ativa");
     const visto = new Date();
+
+    await guardarCarteira(todasEmpresas, mapa);
     let entregas = 0;
     let falhas = 0;
 
@@ -366,16 +442,67 @@ function condSetor(setores: number[] | undefined, params: unknown[]): string {
 }
 
 /**
+ * Recortes que o usuário escolhe na tela. Todos opcionais e independentes; cada
+ * um vira uma condição a mais no MESMO funil, para não haver dois caminhos de
+ * filtro discordando ([[Filtro transversal só é honesto se todo o funil o
+ * honra]]).
+ */
+export interface FiltrosFila {
+  /** Uma empresa (CNPJ do Acessórias). */
+  cnpj?: string;
+  /** Um responsável pelo prazo (id do Acessórias). */
+  respId?: number;
+  /** Janela de PRAZO — a data que define atraso, e por isso a que se filtra. */
+  prazoDe?: string;
+  prazoAte?: string;
+  /** Janela de COMPETÊNCIA — o mês do fato, não o do vencimento. */
+  competenciaDe?: string;
+  competenciaAte?: string;
+  /** Só o que já venceu. */
+  soVencidas?: boolean;
+  /** Só o que gera multa. */
+  soMulta?: boolean;
+  /** Uma obrigação específica (o nome, como o Acessórias escreve). */
+  obrigacao?: string;
+}
+
+function condFiltros(f: FiltrosFila | undefined, params: unknown[]): string {
+  if (!f) return "";
+  let cond = "";
+  const add = (sql: string, valor: unknown) => {
+    params.push(valor);
+    cond += sql.replace("$?", `$${params.length}`);
+  };
+
+  if (f.cnpj) add(" and cnpj = $?", f.cnpj);
+  if (f.respId != null) add(" and resp_id = $?", f.respId);
+  if (f.prazoDe) add(" and prazo >= $?::date", f.prazoDe);
+  if (f.prazoAte) add(" and prazo <= $?::date", f.prazoAte);
+  if (f.competenciaDe) add(" and competencia >= $?::date", f.competenciaDe);
+  if (f.competenciaAte) add(" and competencia <= $?::date", f.competenciaAte);
+  if (f.obrigacao) add(" and obrigacao = $?", f.obrigacao);
+  // Vencida = tem prazo E ele passou. Sem prazo não é vencida nem no prazo.
+  if (f.soVencidas) cond += " and prazo is not null and prazo < current_date";
+  if (f.soMulta) cond += " and multa";
+  return cond;
+}
+
+/**
  * Painel do módulo: placar, recortes por setor/responsável/obrigação e a fila.
  * `setores` recorta tudo — é como a seção Contábil vira "só os setores contábeis"
  * sem existir uma tabela por setor.
  */
-export async function montarPainelObrigacoes(setores?: number[]): Promise<PainelObrigacoes> {
+export async function montarPainelObrigacoes(
+  setores?: number[],
+  filtros?: FiltrosFila
+): Promise<PainelObrigacoes> {
   const sync = await blocoSync();
   const base = await escopo();
 
   const p = [...base.params];
-  const onde = `where true${base.cond}${condSetor(setores, p)}`;
+  // Ordem importa: cada função ACRESCENTA a `p` e numera o `$n` pelo tamanho
+  // atual, então a string só está correta se construída na mesma sequência.
+  const onde = `where true${base.cond}${condSetor(setores, p)}${condFiltros(filtros, p)}`;
 
   const [totais, setoresRows, responsaveis, obrigacoes, fila] = await Promise.allSettled([
     appQuery<{ total: number; atrasadas: number; com_multa: number; sem_par: number }>(

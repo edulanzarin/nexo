@@ -171,6 +171,8 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     // recorte de setor sai da própria seção. O handler ainda checa a seção
     // pedida e o escopo de empresa.
     empresa: ["geral", "contabil", "fiscal", "dp"],
+    // Carteira para o seletor: leitura do banco, recortada pelo escopo.
+    empresas: ["geral", "contabil", "fiscal", "dp"],
   },
   // Configurações não tem rotas de API: o CRUD roda por Server Action (gateada
   // por assertSecao). Mapa vazio; nenhum endpoint /api/config existe.

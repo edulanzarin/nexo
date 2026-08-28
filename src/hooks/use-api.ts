@@ -69,6 +69,7 @@ import type {
 import type { PainelColaborador, PainelGestao } from "@/lib/painel-dp-tipos";
 import type { PainelContabilColaborador, PainelContabilGestao } from "@/lib/painel-contabil-tipos";
 import type { PainelObrigacoes } from "@/lib/obrigacoes-tipos";
+import type { EmpresaCarteira } from "@/lib/obrigacoes";
 import type { PainelRh } from "@/lib/painel-rh-tipos";
 import type { EnvioDetalhe, EnvioResumo } from "@/lib/envios";
 import type { EnvioRegra } from "@/lib/envio-regras";
@@ -376,12 +377,18 @@ export const usePainelContabil = (enabled = true) =>
  * Fila do Acessórias, recortada pela seção (o setor). A chave inclui a seção
  * para que trocar de setor não sirva o cache do anterior.
  */
-export const useFilaObrigacoes = (secao: string, enabled = true) =>
+export const useFilaObrigacoes = (secao: string, filtros: string, enabled = true) =>
   useApiQuery<PainelObrigacoes>(
-    ["obrigacoes-fila", secao],
-    `/api/obrigacoes/fila?secao=${encodeURIComponent(secao)}`,
+    // A querystring entra na CHAVE: sem isso, trocar de filtro serviria o cache
+    // do filtro anterior e a tela mentiria em silêncio.
+    ["obrigacoes-fila", secao, filtros],
+    `/api/obrigacoes/fila?secao=${encodeURIComponent(secao)}${filtros}`,
     enabled
   );
+
+/** Carteira do Acessórias para o seletor de empresa (vem do banco, não da API). */
+export const useCarteiraObrigacoes = (enabled = true) =>
+  useApiQuery<EmpresaCarteira[]>(["obrigacoes-carteira"], `/api/obrigacoes/empresas`, enabled);
 
 /** Painel de gestão do Contábil: o time todo (seção `painel-gestao`). */
 export const usePainelContabilGestao = (enabled = true) =>

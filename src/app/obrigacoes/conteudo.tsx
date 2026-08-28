@@ -1,14 +1,52 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CalendarClock, CircleAlert, ListChecks, Receipt, RefreshCw, Search } from "lucide-react";
+import {
+  AlertTriangle,
+  Building2,
+  CalendarClock,
+  CircleAlert,
+  ListChecks,
+  Receipt,
+  RefreshCw,
+  Search,
+  UserRound,
+} from "lucide-react";
 import { Kpi } from "@/components/kpi-conf";
-import { Badge, Button, Card, EmptyState, Table, Td, Th, Thead, Tr } from "@/components/ui";
-import { useFilaObrigacoes } from "@/hooks/use-api";
+import { Badge, Button, Card, Dropdown, EmptyState, ItemLista, Segmented, Table, Td, Th, Thead, Tr } from "@/components/ui";
+import { PeriodoDropdown } from "@/components/filters/periodo-dropdown";
+import { useCarteiraObrigacoes, useFilaObrigacoes } from "@/hooks/use-api";
 import { mutar } from "@/hooks/mutar";
 import { dataBR, dataHoraBR, num } from "@/lib/format";
-import type { EntregaFila } from "@/lib/obrigacoes-tipos";
+import type { EmpresaCarteira } from "@/lib/obrigacoes";
+import type { EntregaFila, ObrigacaoFila, ResponsavelFila } from "@/lib/obrigacoes-tipos";
+
+/** Recorte escolhido na tela. Vazio = tudo. */
+interface EstadoFiltros {
+  cnpj?: string;
+  respId?: number;
+  obrigacao?: string;
+  prazoDe?: string;
+  prazoAte?: string;
+  soVencidas?: boolean;
+  soMulta?: boolean;
+}
+
+/** Estado -> querystring. Só o que está setado entra, para a chave de cache
+ *  não variar por campo vazio. */
+function paraQuery(f: EstadoFiltros): string {
+  const q = new URLSearchParams();
+  if (f.cnpj) q.set("cnpj", f.cnpj);
+  if (f.respId != null) q.set("respId", String(f.respId));
+  if (f.obrigacao) q.set("obrigacao", f.obrigacao);
+  if (f.prazoDe) q.set("prazoDe", f.prazoDe);
+  if (f.prazoAte) q.set("prazoAte", f.prazoAte);
+  if (f.soVencidas) q.set("soVencidas", "1");
+  if (f.soMulta) q.set("soMulta", "1");
+  const s = q.toString();
+  return s ? `&${s}` : "";
+}
 
 /**
  * A fila de entregas do Acessórias. Uma tela só, servindo as quatro seções — o
@@ -99,14 +137,21 @@ function BotaoSincronizar({ rodando }: { rodando: boolean }) {
  * O resultado também atualiza o retrato daquela empresa no banco, então a fila
  * abaixo passa a concordar com o que se acabou de ver.
  */
-function ConsultaAoVivo({ secao }: { secao: string }) {
+function ConsultaAoVivo({
+  secao,
+  cnpj,
+  nome,
+}: {
+  secao: string;
+  cnpj: string | undefined;
+  nome: string | undefined;
+}) {
   const qc = useQueryClient();
-  const [cnpj, setCnpj] = useState("");
   const [buscando, setBuscando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [res, setRes] = useState<{ empresa: string | null; fila: EntregaFila[] } | null>(null);
 
-  const digitos = cnpj.replace(/\D/g, "");
+  const digitos = (cnpj ?? "").replace(/\D/g, "");
   const valido = digitos.length === 14 || digitos.length === 11;
 
   async function consultar() {
@@ -132,27 +177,19 @@ function ConsultaAoVivo({ secao }: { secao: string }) {
   return (
     <Card as="section" padding="md" className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-medium text-ink">Consultar uma empresa agora</h3>
+        <div className="min-w-0">
+          <h3 className="text-sm font-medium text-ink">
+            {valido ? `Consultar ${nome ?? "esta empresa"} agora` : "Consultar uma empresa agora"}
+          </h3>
           <p className="text-[11px] text-muted">
-            Vai no Acessórias na hora — não espera a varredura das 5h
+            {valido
+              ? "Vai no Acessórias na hora — não espera a varredura das 5h"
+              : "Escolha uma empresa no filtro acima para consultar ao vivo"}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 rounded-lg border border-hairline bg-surface-2 px-2.5 py-1.5">
-            <Search className="size-4 text-muted" />
-            <input
-              value={cnpj}
-              onChange={(e) => setCnpj(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && consultar()}
-              placeholder="CNPJ da empresa"
-              className="w-44 bg-transparent text-xs text-ink outline-none placeholder:text-muted"
-            />
-          </div>
-          <Button onClick={consultar} disabled={!valido || buscando} variant="secondary">
-            {buscando ? "Consultando…" : "Consultar"}
-          </Button>
-        </div>
+        <Button onClick={consultar} disabled={!valido || buscando} variant="secondary">
+          {buscando ? "Consultando…" : "Consultar ao vivo"}
+        </Button>
       </div>
 
       {erro && <p className="text-xs text-critical">{erro}</p>}
@@ -198,11 +235,221 @@ function ConsultaAoVivo({ secao }: { secao: string }) {
   );
 }
 
+/**
+ * Barra de filtros da fila. Fica NA TELA, e não no shell do módulo, porque aqui
+ * o filtro não dispara consulta cara (a fila já está materializada) — muda o
+ * recorte de algo que já carregou, então aplica na hora, sem "Executar".
+ *
+ * Todo recorte vai para o SERVIDOR na querystring: filtrar no cliente faria os
+ * totais no topo discordarem da tabela embaixo, porque eles são contados na
+ * mesma consulta que a lista.
+ */
+function BarraFiltros({
+  carteira,
+  responsaveis,
+  obrigacoes,
+  valor,
+  aoMudar,
+}: {
+  carteira: EmpresaCarteira[] | undefined;
+  responsaveis: ResponsavelFila[] | null | undefined;
+  obrigacoes: ObrigacaoFila[] | null | undefined;
+  valor: EstadoFiltros;
+  aoMudar: (v: EstadoFiltros) => void;
+}) {
+  const [buscaEmp, setBuscaEmp] = useState("");
+
+  const empresasFiltradas = useMemo(() => {
+    const termo = buscaEmp.trim().toLowerCase();
+    const base = carteira ?? [];
+    const digitos = termo.replace(/\D/g, "");
+    const lista = termo
+      ? base.filter(
+          (e) =>
+            e.razao.toLowerCase().includes(termo) ||
+            (digitos.length > 0 && e.cnpj.replace(/\D/g, "").includes(digitos))
+        )
+      : base;
+    // Quem tem fila primeiro: é o que se procura nesta tela.
+    return [...lista].sort((a, b) => Number(b.temFila) - Number(a.temFila)).slice(0, 60);
+  }, [carteira, buscaEmp]);
+
+  const empresaSel = carteira?.find((e) => e.cnpj === valor.cnpj);
+  const respSel = responsaveis?.find((r) => r.respId === valor.respId);
+  const modo = valor.soVencidas ? "vencidas" : valor.soMulta ? "multa" : "todas";
+  const limpo =
+    !valor.cnpj &&
+    valor.respId == null &&
+    !valor.prazoDe &&
+    !valor.prazoAte &&
+    !valor.obrigacao &&
+    !valor.soVencidas &&
+    !valor.soMulta;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Dropdown
+        icone={<Building2 className="size-4" />}
+        rotulo={empresaSel ? empresaSel.razao : "Todas as empresas"}
+        ativo={!!valor.cnpj}
+        largura="w-80"
+      >
+        {(fechar) => (
+          <>
+            <div className="flex items-center gap-2 border-b border-hairline px-3 py-2">
+              <Search className="size-4 text-muted" />
+              <input
+                autoFocus
+                value={buscaEmp}
+                onChange={(e) => setBuscaEmp(e.target.value)}
+                placeholder="Razão social ou CNPJ…"
+                className="w-full bg-transparent text-xs text-ink outline-none placeholder:text-muted"
+              />
+            </div>
+            <div className="max-h-72 overflow-y-auto">
+              <ItemLista
+                selecionado={!valor.cnpj}
+                onClick={() => {
+                  aoMudar({ ...valor, cnpj: undefined });
+                  fechar();
+                }}
+              >
+                Todas as empresas
+              </ItemLista>
+              {empresasFiltradas.map((e) => (
+                <ItemLista
+                  key={e.cnpj}
+                  selecionado={valor.cnpj === e.cnpj}
+                  onClick={() => {
+                    aoMudar({ ...valor, cnpj: e.cnpj });
+                    fechar();
+                  }}
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate">{e.razao}</span>
+                    <span className="block text-[11px] text-muted">{e.cnpj}</span>
+                  </span>
+                  {e.temFila && <Badge tone="warning">fila</Badge>}
+                </ItemLista>
+              ))}
+              {carteira?.length === 0 && (
+                <p className="px-3 py-4 text-center text-xs text-muted">
+                  A carteira chega na primeira varredura.
+                </p>
+              )}
+            </div>
+          </>
+        )}
+      </Dropdown>
+
+      <Dropdown
+        icone={<UserRound className="size-4" />}
+        rotulo={respSel ? respSel.respNome : "Todos os responsáveis"}
+        ativo={valor.respId != null}
+        largura="w-72"
+      >
+        {(fechar) => (
+          <div className="max-h-72 overflow-y-auto">
+            <ItemLista
+              selecionado={valor.respId == null}
+              onClick={() => {
+                aoMudar({ ...valor, respId: undefined });
+                fechar();
+              }}
+            >
+              Todos os responsáveis
+            </ItemLista>
+            {(responsaveis ?? [])
+              .filter((r) => r.respId != null)
+              .map((r) => (
+                <ItemLista
+                  key={r.respId}
+                  selecionado={valor.respId === r.respId}
+                  onClick={() => {
+                    aoMudar({ ...valor, respId: r.respId ?? undefined });
+                    fechar();
+                  }}
+                >
+                  <span className="min-w-0 flex-1 truncate">{r.respNome}</span>
+                  <span className="text-[11px] text-muted">{num(r.total)}</span>
+                </ItemLista>
+              ))}
+          </div>
+        )}
+      </Dropdown>
+
+      <Dropdown
+        icone={<ListChecks className="size-4" />}
+        rotulo={valor.obrigacao ?? "Todas as obrigações"}
+        ativo={!!valor.obrigacao}
+        largura="w-80"
+      >
+        {(fechar) => (
+          <div className="max-h-72 overflow-y-auto">
+            <ItemLista
+              selecionado={!valor.obrigacao}
+              onClick={() => {
+                aoMudar({ ...valor, obrigacao: undefined });
+                fechar();
+              }}
+            >
+              Todas as obrigações
+            </ItemLista>
+            {(obrigacoes ?? []).map((o) => (
+              <ItemLista
+                key={o.obrigacao}
+                selecionado={valor.obrigacao === o.obrigacao}
+                onClick={() => {
+                  aoMudar({ ...valor, obrigacao: o.obrigacao });
+                  fechar();
+                }}
+              >
+                <span className="min-w-0 flex-1 truncate">{o.obrigacao}</span>
+                <span className="text-[11px] text-muted">{num(o.total)}</span>
+              </ItemLista>
+            ))}
+          </div>
+        )}
+      </Dropdown>
+
+      {/* Prazo é a data que define atraso — é por ela que se filtra. */}
+      <PeriodoDropdown
+        inicio={valor.prazoDe ?? ""}
+        fim={valor.prazoAte ?? ""}
+        onChange={(inicio, fim) =>
+          aoMudar({ ...valor, prazoDe: inicio || undefined, prazoAte: fim || undefined })
+        }
+      />
+
+      <Segmented
+        aria-label="Recorte da fila"
+        options={[
+          { value: "todas", label: "Todas" },
+          { value: "vencidas", label: "Vencidas" },
+          { value: "multa", label: "Com multa" },
+        ]}
+        value={modo}
+        onChange={(v) => aoMudar({ ...valor, soVencidas: v === "vencidas", soMulta: v === "multa" })}
+      />
+
+      {!limpo && (
+        <Button variant="ghost" onClick={() => aoMudar({})}>
+          Limpar
+        </Button>
+      )}
+    </div>
+  );
+}
+
 export default function Conteudo({ secao }: { secao: string }) {
-  const res = useFilaObrigacoes(secao);
+  const [filtros, setFiltros] = useState<EstadoFiltros>({});
+  const query = paraQuery(filtros);
+  const res = useFilaObrigacoes(secao, query);
+  const carteira = useCarteiraObrigacoes();
   const dados = res.data;
   const qc = useQueryClient();
   const rodando = dados?.sync.rodando ?? false;
+  const empresaNome = carteira.data?.find((e) => e.cnpj === filtros.cnpj)?.razao;
 
   // Enquanto a varredura roda, a tela se refaz sozinha — senão o usuário fica
   // olhando um "sincronizando" que nunca vira número sem apertar F5.
@@ -261,7 +508,16 @@ export default function Conteudo({ secao }: { secao: string }) {
           </div>
         )}
         {/* Não depende da varredura: uma empresa se consulta a qualquer momento. */}
-        <ConsultaAoVivo secao={secao} />
+        <Card as="section" padding="md" className="space-y-3">
+          <BarraFiltros
+            carteira={carteira.data}
+            responsaveis={null}
+            obrigacoes={null}
+            valor={filtros}
+            aoMudar={setFiltros}
+          />
+        </Card>
+        <ConsultaAoVivo key={filtros.cnpj ?? "nenhuma"} secao={secao} cnpj={filtros.cnpj} nome={empresaNome} />
       </div>
     );
   }
@@ -283,7 +539,27 @@ export default function Conteudo({ secao }: { secao: string }) {
         {podeSincronizar && <BotaoSincronizar rodando={sync.rodando} />}
       </div>
 
-      <ConsultaAoVivo secao={secao} />
+      <Card as="section" padding="md">
+        <BarraFiltros
+          carteira={carteira.data}
+          responsaveis={responsaveis}
+          obrigacoes={obrigacoes}
+          valor={filtros}
+          aoMudar={setFiltros}
+        />
+      </Card>
+
+      {/* A consulta ao vivo só faz sentido com uma empresa escolhida. A `key`
+          remonta ao trocar de empresa: um resultado velho ao lado de outro nome
+          é o tipo de tela que faz alguém decidir sobre dado errado. */}
+      {filtros.cnpj && (
+        <ConsultaAoVivo
+          key={filtros.cnpj}
+          secao={secao}
+          cnpj={filtros.cnpj}
+          nome={empresaNome}
+        />
+      )}
 
       <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <Kpi
