@@ -85,8 +85,13 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     auditoria: ["auditoria"],
     // Central de Pendências (Conferência + Auditoria numa fila; triagem grava no app-db)
     pendencias: ["pendencias"],
-    // Produtividade do Contábil (lctoctb por pessoa/origem — varre o escopo inteiro)
+    // Produtividade do Contábil: cinco ângulos do mesmo trabalho, uma varredura
+    // cada, todos varrendo o escopo inteiro (empresa é filtro, não obrigação).
     produtividade: ["produtividade"],
+    "produtividade-exclusoes": ["produtividade"],
+    "produtividade-atraso": ["produtividade"],
+    "produtividade-carteira": ["produtividade"],
+    "produtividade-tempo": ["produtividade"],
     // Lookup de contas: usado na Configuração, na Conciliação e na Implantação
     contas: ["conferencia", "conciliacao", "implantacao"],
   },

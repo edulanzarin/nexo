@@ -57,6 +57,10 @@ import type {
 import type { Formulario, FormularioResumo } from "@/lib/formularios-tipos";
 import type { DpResumo, DpLinha, DpQuebra, DpTipo } from "@/lib/dp-tipos";
 import type { ContabilProdutividadeResp } from "@/lib/contabil-produtividade-tipos";
+import type { ContabilExclusoesResp } from "@/lib/contabil-exclusoes-tipos";
+import type { ContabilAtrasoResp } from "@/lib/contabil-atraso-tipos";
+import type { ContabilCarteiraResp } from "@/lib/contabil-carteira-tipos";
+import type { ContabilTempoResp } from "@/lib/contabil-tempo-tipos";
 import type {
   RescisoesResumo,
   RescisoesConfig,
@@ -447,6 +451,38 @@ export const useContabilProdutividade = (qs: string, enabled = true) =>
   useApiQuery<ContabilProdutividadeResp>(
     ["contabil-produtividade", qs],
     `/api/contabil/produtividade?${qs}`,
+    enabled
+  );
+
+/** Aba Exclusões: o que o time apagou do lctoctb no período. */
+export const useContabilExclusoes = (qs: string, enabled = true) =>
+  useApiQuery<ContabilExclusoesResp>(
+    ["contabil-exclusoes", qs],
+    `/api/contabil/produtividade-exclusoes?${qs}`,
+    enabled
+  );
+
+/** Aba Atraso: distância entre a competência do fato e o dia do registro. */
+export const useContabilAtraso = (qs: string, enabled = true) =>
+  useApiQuery<ContabilAtrasoResp>(
+    ["contabil-atraso", qs],
+    `/api/contabil/produtividade-atraso?${qs}`,
+    enabled
+  );
+
+/** Aba Carteira: cobertura das empresas no período e tempo parado de cada uma. */
+export const useContabilCarteira = (qs: string, enabled = true) =>
+  useApiQuery<ContabilCarteiraResp>(
+    ["contabil-carteira", qs],
+    `/api/contabil/produtividade-carteira?${qs}`,
+    enabled
+  );
+
+/** Aba Tempo: horas no Questor por pessoa e por empresa. */
+export const useContabilTempo = (qs: string, enabled = true) =>
+  useApiQuery<ContabilTempoResp>(
+    ["contabil-tempo", qs],
+    `/api/contabil/produtividade-tempo?${qs}`,
     enabled
   );
 

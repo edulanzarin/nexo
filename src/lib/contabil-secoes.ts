@@ -259,15 +259,17 @@ export const SECOES_CONTABIL: SecaoContabil[] = [
     icone: Gauge,
     path: "/contabil/produtividade",
     metrica: false,
-    descricao: "O que o time lançou no período, por pessoa e por origem",
+    descricao: "Lançamentos, exclusões, atraso, carteira e tempo do time no período",
     // Única tela do módulo que NÃO é bancada de uma empresa: varre o escopo
-    // inteiro (empresa é filtro, não obrigação), como a Produtividade do DP. O
-    // recorte é a data em que o lançamento foi FEITO, não a do fato.
-    // A aba se chama LANÇAMENTOS, não "Produtividade": a seção mede o trabalho
-    // do time e hoje só enxerga o `lctoctb`. Quando entrar outra fonte (o que o
-    // time rodou no app — conciliações, laudos, triagens — mora na trilha
-    // `auditoria`), ela é uma aba irmã aqui, não uma reescrita. Com uma aba só o
-    // shell não desenha a barra de abas, então o nome não aparece ainda.
+    // inteiro (empresa é filtro, não obrigação), como a Produtividade do DP.
+    //
+    // Cada aba é UM ÂNGULO do mesmo trabalho, com sua própria varredura e seu
+    // próprio botão Executar — nenhuma dispara as outras. Os cinco ângulos:
+    // o que o time PRODUZIU (Lançamentos), o que APAGOU (Exclusões), o quanto
+    // corre atrás do passado (Atraso), QUEM foi atendido (Carteira) e quanto
+    // TEMPO isso custou (Tempo). Só o primeiro sai do `lctoctb` vivo; os outros
+    // vêm de `lctoctbexcluido`, da competência, do cadastro de estabelecimentos
+    // e do `tempouso`.
     abas: [
       {
         id: "lancamentos",
@@ -275,6 +277,42 @@ export const SECOES_CONTABIL: SecaoContabil[] = [
         path: "/contabil/produtividade",
         descricao:
           "Lançamentos do lctoctb por pessoa, origem, empresa, dia e hora — quem alimentou a contabilidade",
+        empresaOpcional: true,
+        execucao: "Executar",
+      },
+      {
+        id: "exclusoes",
+        rotulo: "Exclusões",
+        path: "/contabil/produtividade/exclusoes",
+        descricao:
+          "O que foi apagado do lctoctb no período: quem excluiu, de quem era e que idade o lançamento tinha",
+        empresaOpcional: true,
+        execucao: "Executar",
+      },
+      {
+        id: "atraso",
+        rotulo: "Atraso",
+        path: "/contabil/produtividade/atraso",
+        descricao:
+          "Distância entre a competência do fato e o dia do registro — em que mês o time está escriturando",
+        empresaOpcional: true,
+        execucao: "Executar",
+      },
+      {
+        id: "carteira",
+        rotulo: "Carteira",
+        path: "/contabil/produtividade/carteira",
+        descricao:
+          "Cobertura da carteira: empresas atendidas no período, empresas paradas e há quanto tempo",
+        empresaOpcional: true,
+        execucao: "Executar",
+      },
+      {
+        id: "tempo",
+        rotulo: "Tempo",
+        path: "/contabil/produtividade/tempo",
+        descricao:
+          "Horas dentro do Questor por pessoa e por empresa, cruzadas com os lançamentos do período",
         empresaOpcional: true,
         execucao: "Executar",
       },
