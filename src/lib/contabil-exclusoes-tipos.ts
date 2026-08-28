@@ -1,4 +1,4 @@
-import { montarFaixas } from "./contabil-prod-escala";
+import { montarFaixas } from "./prod-escala";
 import type { ClasseOrigem, CtbDia, CtbItem, PorClasse } from "./contabil-produtividade-tipos";
 
 /**

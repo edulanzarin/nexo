@@ -14,7 +14,7 @@ import { useFiltros } from "@/hooks/use-filters";
 import { useContabilAtraso } from "@/hooks/use-api";
 import { dataBR, mesBR, num, numCompact } from "@/lib/format";
 import { FAIXAS_ATRASO, type CtbAtrasoPessoa } from "@/lib/contabil-atraso-tipos";
-import { faixaDe } from "@/lib/contabil-prod-escala";
+import { faixaDe } from "@/lib/prod-escala";
 import { emDias, pctBR, pctDe, slug } from "@/lib/contabil-prod-formato";
 
 const compet = (v: string | null) => (v ? mesBR(v + "-01") : "—");

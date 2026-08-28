@@ -7,6 +7,7 @@ import { CtbPessoaFiltro } from "@/components/ctb-pessoa-filtro";
 import { ExportarMenu, type CorteExport } from "@/components/exportar-menu";
 import { CtbProdTabela } from "@/components/ctb-prod-tabela";
 import { CtbProdBarras, type BarraItem } from "@/components/ctb-prod-barras";
+import { ProdFaixaClasses } from "@/components/prod-faixa-classes";
 import { CtbProdSerie } from "@/components/charts/ctb-prod-serie";
 import { CtbProdHoras } from "@/components/charts/ctb-prod-horas";
 import { CalendarioAtividade } from "@/components/charts/calendario-atividade";
@@ -20,7 +21,6 @@ import {
   zeroClasses,
   type CtbPessoa,
   type CtbSeriePonto,
-  type PorClasse,
 } from "@/lib/contabil-produtividade-tipos";
 
 /** Dia "YYYY-MM-DD" → bucket da série (o dia, ou o 1º do mês). */
@@ -47,37 +47,6 @@ function serieDaPessoa(
     total: porBucket.get(p.bucket) ?? 0,
     ...zeroClasses(),
   }));
-}
-
-/** Faixa de classes: a composição do período em quatro números, com o peso. */
-function FaixaClasses({ porClasse, total }: { porClasse: PorClasse; total: number }) {
-  return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-      {CLASSES.map((c) => {
-        const n = porClasse[c.id];
-        if (c.id === "outros" && n === 0) return null;
-        const pct = total > 0 ? (n / total) * 100 : 0;
-        return (
-          <StatTile
-            key={c.id}
-            size="mini"
-            as="cell"
-            rotulo={c.rotulo}
-            icon={
-              <span
-                className="size-2 shrink-0 rounded-full"
-                style={{ background: c.cor }}
-                aria-hidden
-              />
-            }
-            valor={numCompact(n)}
-            valorCheio={num(n)}
-            secundario={`${pct.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% · ${c.descricao}`}
-          />
-        );
-      })}
-    </div>
-  );
 }
 
 export default function ProdutividadeContabilPage() {
@@ -387,7 +356,12 @@ export default function ProdutividadeContabilPage() {
       {carregando || !d ? (
         <div className="skeleton h-24 w-full" />
       ) : (
-        <FaixaClasses porClasse={porClasse} total={lancamentos} />
+        <ProdFaixaClasses
+          classes={CLASSES}
+          porClasse={porClasse}
+          total={lancamentos}
+          ocultarVazio={["outros"]}
+        />
       )}
 
       {/* Ranking do time (sempre inteiro — é a comparação entre pessoas) */}

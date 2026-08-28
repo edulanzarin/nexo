@@ -1,9 +1,9 @@
 /**
- * ESCADA DE IDADE DAS ABAS DE PRODUTIVIDADE.
+ * ESCADA DE IDADE DAS ABAS DE PRODUTIVIDADE (Contábil e Fiscal).
  *
- * Três abas respondem à mesma pergunta — "quanto tempo isso ficou parado?": o
- * atraso entre o fato e o registro, a idade do lançamento que alguém excluiu e o
- * tempo desde o último movimento de uma empresa. Como a grandeza é a mesma, a
+ * Várias abas respondem à mesma pergunta — "quanto tempo isso ficou parado?": o
+ * atraso entre o fato e o registro (nos dois módulos), a idade do lançamento que
+ * alguém excluiu e o tempo desde o último movimento de uma empresa. Como a grandeza é a mesma, a
  * escada é a mesma: cinco degraus, do verde ao crítico, sempre na mesma ordem.
  * Faixas parecidas com cores diferentes fariam a mesma pergunta parecer duas.
  *

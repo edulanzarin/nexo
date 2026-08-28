@@ -9,19 +9,33 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { CLASSES, type CtbSeriePonto } from "@/lib/contabil-produtividade-tipos";
+import { CLASSES } from "@/lib/contabil-produtividade-tipos";
+import type { ClasseInfo, SeriePontoGen } from "@/lib/prod-classes";
 import { dataBR, mesBR, num, numCompact } from "@/lib/format";
 import { ChartCard, LegendaSeries, TooltipContainer, TooltipLinha } from "@/components/ui/chart-card";
+
+/** Contagem de uma classe no ponto — o índice do ponto também carrega o bucket. */
+const qtd = (p: SeriePontoGen, id: string): number => (typeof p[id] === "number" ? p[id] : 0);
 
 interface TooltipProps {
   active?: boolean;
   label?: string;
-  payload?: { payload: CtbSeriePonto }[];
+  payload?: { payload: SeriePontoGen }[];
   granularidade: "dia" | "mes";
   soTotal: boolean;
+  classes: ClasseInfo[];
+  rotuloItem: string;
 }
 
-function TooltipSerie({ active, label, payload, granularidade, soTotal }: TooltipProps) {
+function TooltipSerie({
+  active,
+  label,
+  payload,
+  granularidade,
+  soTotal,
+  classes,
+  rotuloItem,
+}: TooltipProps) {
   if (!active || !payload?.length || !label) return null;
   const p = payload[0].payload;
   return (
@@ -30,12 +44,14 @@ function TooltipSerie({ active, label, payload, granularidade, soTotal }: Toolti
         {granularidade === "mes" ? mesBR(label) : dataBR(label)}
       </p>
       {!soTotal &&
-        CLASSES.filter((c) => p[c.id] > 0).map((c) => (
-          <TooltipLinha key={c.id} cor={c.cor} nome={c.rotulo} valor={num(p[c.id])} />
-        ))}
+        classes
+          .filter((c) => qtd(p, c.id) > 0)
+          .map((c) => (
+            <TooltipLinha key={c.id} cor={c.cor} nome={c.rotulo} valor={num(qtd(p, c.id))} />
+          ))}
       <TooltipLinha
         cor={soTotal ? "var(--accent)" : undefined}
-        nome="Lançamentos"
+        nome={rotuloItem}
         valor={num(p.total)}
       />
     </TooltipContainer>
@@ -43,8 +59,9 @@ function TooltipSerie({ active, label, payload, granularidade, soTotal }: Toolti
 }
 
 /**
- * Ritmo no período, empilhado por natureza do lançamento — a pergunta é "esse
- * pico foi trabalho ou integração?", e o total sozinho não responde.
+ * Ritmo no período, empilhado pela dimensão categórica do módulo — natureza do
+ * lançamento no Contábil, espécie da nota no Fiscal. A pergunta é "esse pico foi
+ * trabalho ou integração?", e o total sozinho não responde.
  *
  * `soTotal` desenha uma área única: é o modo de quando UMA pessoa está isolada,
  * porque a quebra dia × natureza por pessoa não vem do servidor (seria um cubo
@@ -57,23 +74,32 @@ export function CtbProdSerie({
   titulo = "Ritmo no período",
   subtitulo,
   soTotal = false,
+  classes = CLASSES,
+  rotuloItem = "Lançamentos",
   carregando,
   recarregando,
 }: {
-  dados: CtbSeriePonto[] | undefined;
+  dados: SeriePontoGen[] | undefined;
   granularidade: "dia" | "mes";
   titulo?: string;
   subtitulo?: string;
   soTotal?: boolean;
+  /** Catálogo do módulo. O default é o do Contábil, dono original do gráfico. */
+  classes?: ClasseInfo[];
+  /** Como se chama o que está sendo contado ("Lançamentos", "Notas"). */
+  rotuloItem?: string;
   carregando: boolean;
   recarregando: boolean;
 }) {
-  const visiveis = soTotal ? [] : CLASSES.filter((c) => dados?.some((p) => p[c.id] > 0));
+  const visiveis = soTotal ? [] : classes.filter((c) => dados?.some((p) => qtd(p, c.id) > 0));
 
   return (
     <ChartCard
       titulo={titulo}
-      subtitulo={subtitulo ?? `Lançamentos por ${granularidade === "mes" ? "mês" : "dia"}, por natureza`}
+      subtitulo={
+        subtitulo ??
+        `${rotuloItem} por ${granularidade === "mes" ? "mês" : "dia"}, por natureza`
+      }
       acao={
         soTotal ? undefined : (
           <LegendaSeries series={visiveis.map((c) => ({ nome: c.rotulo, cor: c.cor }))} />
@@ -84,7 +110,9 @@ export function CtbProdSerie({
       alturaSkeleton="h-72"
     >
       {dados && dados.every((p) => p.total === 0) ? (
-        <p className="grid h-40 place-items-center text-sm text-muted">Sem lançamentos no período</p>
+        <p className="grid h-40 place-items-center text-sm text-muted">
+          Sem movimento no período
+        </p>
       ) : (
         <div className="h-72 w-full">
           <ResponsiveContainer>
@@ -94,7 +122,7 @@ export function CtbProdSerie({
                   <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.24} />
                   <stop offset="100%" stopColor="var(--accent)" stopOpacity={0.02} />
                 </linearGradient>
-                {CLASSES.map((c) => (
+                {classes.map((c) => (
                   <linearGradient key={c.id} id={`ctb-prod-${c.id}`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={c.cor} stopOpacity={0.28} />
                     <stop offset="100%" stopColor={c.cor} stopOpacity={0.04} />
@@ -121,7 +149,14 @@ export function CtbProdSerie({
                 allowDecimals={false}
               />
               <Tooltip
-                content={<TooltipSerie granularidade={granularidade} soTotal={soTotal} />}
+                content={
+                  <TooltipSerie
+                    granularidade={granularidade}
+                    soTotal={soTotal}
+                    classes={classes}
+                    rotuloItem={rotuloItem}
+                  />
+                }
                 cursor={{ stroke: "var(--baseline)", strokeWidth: 1 }}
               />
               {soTotal && (

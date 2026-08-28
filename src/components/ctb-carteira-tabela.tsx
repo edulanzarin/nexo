@@ -5,7 +5,7 @@ import { ArrowDown, Search } from "lucide-react";
 import clsx from "clsx";
 import { Badge, Card, Segmented, Table, Td, Th, Thead, Tr } from "@/components/ui";
 import { FAIXAS_PARADA, PARADA_NUNCA, type CtbCarteiraEmpresa } from "@/lib/contabil-carteira-tipos";
-import { faixaDe } from "@/lib/contabil-prod-escala";
+import { faixaDe } from "@/lib/prod-escala";
 import { brlCompact, dataBR, num } from "@/lib/format";
 
 type Recorte = "todas" | "atendidas" | "paradas";

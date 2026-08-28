@@ -3,7 +3,7 @@
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ChartCard, TooltipContainer, TooltipLinha } from "@/components/ui/chart-card";
 import { FAIXAS_ATRASO, type CtbCompetencia } from "@/lib/contabil-atraso-tipos";
-import { faixaDe } from "@/lib/contabil-prod-escala";
+import { faixaDe } from "@/lib/prod-escala";
 import { mesBR, num, numCompact } from "@/lib/format";
 
 function TooltipCompet({

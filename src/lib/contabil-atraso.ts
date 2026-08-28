@@ -10,7 +10,7 @@ import {
   somarMapa,
   type ProdFiltros,
 } from "./contabil-prod-comum";
-import { faixaDe, zeroFaixas } from "./contabil-prod-escala";
+import { faixaDe, zeroFaixas } from "./prod-escala";
 import {
   FAIXAS_ATRASO,
   type ContabilAtrasoResp,

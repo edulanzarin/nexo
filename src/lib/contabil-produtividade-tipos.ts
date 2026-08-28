@@ -146,11 +146,15 @@ export interface CtbPessoa {
   serie: CtbDia[];
 }
 
-/** Um ponto da série do time, já quebrado por classe. */
-export interface CtbSeriePonto extends PorClasse {
+/**
+ * Um ponto da série do time, já quebrado por classe. `type` e não `interface` de
+ * propósito: só um alias ganha índice implícito, e é o que deixa o gráfico
+ * compartilhado (`CtbProdSerie`) aceitar o catálogo de qualquer módulo.
+ */
+export type CtbSeriePonto = PorClasse & {
   bucket: string;
   total: number;
-}
+};
 
 export interface CtbTotais {
   lancamentos: number;

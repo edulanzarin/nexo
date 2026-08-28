@@ -1,4 +1,4 @@
-import { montarFaixas } from "./contabil-prod-escala";
+import { montarFaixas } from "./prod-escala";
 
 /**
  * Tipos da aba CARTEIRA da Produtividade do Contábil — a leitura pelo lado do

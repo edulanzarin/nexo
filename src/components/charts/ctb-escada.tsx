@@ -1,7 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui";
-import type { Faixa } from "@/lib/contabil-prod-escala";
+import type { Faixa } from "@/lib/prod-escala";
 import { num } from "@/lib/format";
 
 const pct = (n: number, total: number) => (total > 0 ? (n / total) * 100 : 0);

@@ -1,4 +1,4 @@
-import { montarFaixas } from "./contabil-prod-escala";
+import { montarFaixas } from "./prod-escala";
 
 /**
  * Tipos da aba ATRASO da Produtividade do Contábil — a distância entre o FATO e
