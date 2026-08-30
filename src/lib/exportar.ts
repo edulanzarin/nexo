@@ -10,15 +10,30 @@ import type { ModuloId } from "./modulos";
  * arquivo baixa do mesmo jeito.
  */
 function auditarExport(modulo: ModuloId, alvo: string): void {
+  registrarNaTrilha(modulo, "export", alvo);
+}
+
+/**
+ * Beacon genérico da trilha para gesto que só o cliente conhece. O servidor
+ * deriva o verbo de `modulo` + `tipo` (lista fechada) — daqui não sai ação
+ * arbitrária. Best-effort por definição: nunca bloqueia nem falha o gesto que
+ * está sendo registrado.
+ */
+export function registrarNaTrilha(
+  modulo: ModuloId,
+  tipo: "export" | "consulta",
+  alvo: string,
+  codigoempresa?: number
+): void {
   try {
     fetch("/api/auditoria", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ modulo, alvo }),
+      body: JSON.stringify({ modulo, tipo, alvo, codigoempresa }),
       keepalive: true,
     }).catch(() => {});
   } catch {
-    /* nunca atrapalha a exportação */
+    /* nunca atrapalha o gesto que está sendo registrado */
   }
 }
 

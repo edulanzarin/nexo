@@ -1,5 +1,6 @@
 import { pool } from "@/lib/db";
 import { apiRoute, assertEmpresaVisivel } from "@/lib/api-route";
+import { registrarAuditoria } from "@/lib/auditoria";
 import { FilterError } from "@/lib/fiscal-filters";
 import { planoQuestor } from "@/lib/plano-contabil";
 import {
@@ -165,6 +166,15 @@ export const PUT = apiRoute(async (req) => {
     observacao: corpo.observacao ?? null,
     linhas,
   });
+  // Configurar o plano é trabalho contábil como conciliar é: muda o que a
+  // Conferência vai cobrar de todas as notas daquele CFOP dali pra frente.
+  await registrarAuditoria({
+    acao: "contabil.plano.salvar",
+    modulo: "contabil",
+    alvo: `CFOP ${cfop} · empresa ${empresa}`,
+    codigoempresa: empresa!,
+    detalhe: { cfop, estab, contabiliza, linhas: linhas.length },
+  });
   return { id, ok: true };
 });
 
@@ -179,5 +189,14 @@ export const DELETE = apiRoute(async (req) => {
   }
   await assertEmpresaVisivel(empresa);
   const removido = await removerOverride(empresa, estab, cfop);
+  if (removido) {
+    await registrarAuditoria({
+      acao: "contabil.plano.reverter",
+      modulo: "contabil",
+      alvo: `CFOP ${cfop} · empresa ${empresa}`,
+      codigoempresa: empresa,
+      detalhe: { cfop, estab },
+    });
+  }
   return { ok: removido };
 });

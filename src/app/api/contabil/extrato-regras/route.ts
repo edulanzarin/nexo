@@ -1,4 +1,5 @@
 import { apiRoute, assertEmpresaVisivel } from "@/lib/api-route";
+import { registrarAuditoria } from "@/lib/auditoria";
 import { FilterError } from "@/lib/fiscal-filters";
 import {
   contasFaltantes,
@@ -75,6 +76,13 @@ export const POST = apiRoute(async (req) => {
       await assertEmpresaVisivel(d.empresa);
     }
     const resultado = await replicarRegras({ empresa: c.empresa!, conta: c.conta! }, c.destinos);
+    await registrarAuditoria({
+      acao: "contabil.regra.replicar",
+      modulo: "contabil",
+      alvo: `Conta ${c.conta} da empresa ${c.empresa} para ${c.destinos.length} destino(s)`,
+      codigoempresa: c.empresa!,
+      detalhe: { conta: c.conta, destinos: c.destinos.length },
+    });
     return { resultado, ok: true };
   }
 
@@ -96,11 +104,29 @@ export const POST = apiRoute(async (req) => {
     historico: c.historico?.trim() || null,
     ativo: c.ativo ?? true,
   });
+  // Regra de extrato é o cadastro que faz a Conciliação acertar a contrapartida
+  // sozinha: escrevê-la é o trabalho que evita o próximo lançamento a dedo.
+  await registrarAuditoria({
+    acao: "contabil.regra.salvar",
+    modulo: "contabil",
+    alvo: `"${termo}" · conta ${c.conta} · empresa ${c.empresa}`,
+    codigoempresa: c.empresa!,
+    detalhe: { conta: c.conta, termo, tipo: c.tipo, novo: c.id == null },
+  });
   return { id, ok: true };
 });
 
 export const DELETE = apiRoute(async (req) => {
   const id = Number(req.nextUrl.searchParams.get("regra"));
   if (!Number.isInteger(id)) throw new FilterError("Regra inválida");
-  return { ok: await removerRegra(id) };
+  const ok = await removerRegra(id);
+  if (ok) {
+    await registrarAuditoria({
+      acao: "contabil.regra.remover",
+      modulo: "contabil",
+      alvo: `Regra ${id}`,
+      detalhe: { regra: id },
+    });
+  }
+  return { ok };
 });

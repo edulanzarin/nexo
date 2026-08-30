@@ -14,11 +14,31 @@ export const metadata = { title: tituloPagina("Auditoria") };
 
 const PAGINA = 100;
 
-/** Rótulos legíveis das ações registradas. */
+/**
+ * Rótulos legíveis das ações registradas. Verbo sem rótulo aqui aparece cru na
+ * tela (e em "Outros" na aba No Nexo) — de propósito: é o que denuncia gesto
+ * instrumentado sem batismo, em vez de escondê-lo num rótulo genérico.
+ */
 const ROTULO_ACAO: Record<string, string> = {
   "folha.ficha.ver": "Viu ficha (Folha)",
   "rh.ficha.ver": "Viu ficha (RH)",
   "contabil.laudo.gerar": "Gerou laudo",
+  "contabil.conciliacao.gerar": "Gerou conciliação",
+  "contabil.implantacao.gerar": "Gerou implantação de saldos",
+  "contabil.pendencia.triar": "Triou pendência",
+  "contabil.plano.salvar": "Salvou plano de contabilização",
+  "contabil.plano.reverter": "Reverteu plano ao Questor",
+  "contabil.plano.replicar": "Replicou plano entre empresas",
+  "contabil.plano.aprender": "Reaprendeu plano do histórico",
+  "contabil.regra.salvar": "Salvou regra de extrato",
+  "contabil.regra.remover": "Removeu regra de extrato",
+  "contabil.regra.replicar": "Replicou regras de extrato",
+  "contabil.nota.ver": "Abriu nota (Contábil)",
+  "fiscal.nota.ver": "Abriu nota (Fiscal)",
+  "fiscal.consulta": "Executou consulta (Fiscal)",
+  "contabil.consulta": "Executou consulta (Contábil)",
+  "folha.consulta": "Executou consulta (Folha)",
+  "rh.consulta": "Executou consulta (RH)",
   "fiscal.export": "Exportou (Fiscal)",
   "contabil.export": "Exportou (Contábil)",
   "folha.export": "Exportou (Folha)",

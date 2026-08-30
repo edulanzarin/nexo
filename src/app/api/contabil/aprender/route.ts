@@ -1,5 +1,6 @@
 import { pool } from "@/lib/db";
 import { apiRoute, assertEmpresaVisivel } from "@/lib/api-route";
+import { registrarAuditoria } from "@/lib/auditoria";
 import { FilterError } from "@/lib/fiscal-filters";
 import { aprenderContabilizacao } from "@/lib/aprender-contabilizacao";
 import { aprenderContaEfetiva } from "@/lib/conta-efetiva";
@@ -18,6 +19,13 @@ export const POST = apiRoute(async (req) => {
   try {
     const cfops = await aprenderContabilizacao(client, empresa);
     const naturezas = await aprenderContaEfetiva(client, empresa);
+    await registrarAuditoria({
+      acao: "contabil.plano.aprender",
+      modulo: "contabil",
+      alvo: `Empresa ${empresa}`,
+      codigoempresa: empresa,
+      detalhe: { cfops, naturezas },
+    });
     return { ok: true, cfops, naturezas };
   } finally {
     client.release();

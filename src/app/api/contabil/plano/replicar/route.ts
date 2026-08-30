@@ -1,5 +1,6 @@
 import { pool } from "@/lib/db";
 import { apiRoute } from "@/lib/api-route";
+import { registrarAuditoria } from "@/lib/auditoria";
 import { FilterError } from "@/lib/fiscal-filters";
 import { listarOverrides, salvarOverride, type Override } from "@/lib/plano-override";
 import { appQuery } from "@/lib/app-db";
@@ -142,5 +143,12 @@ export const POST = apiRoute(async (req) => {
     });
     replicados += 1;
   }
+  await registrarAuditoria({
+    acao: "contabil.plano.replicar",
+    modulo: "contabil",
+    alvo: `${replicados} CFOP(s) da empresa ${origem} para ${destino}`,
+    codigoempresa: destino,
+    detalhe: { origem, destino, replicados, pulados: pulados.length },
+  });
   return { replicados, pulados } satisfies ReplicarResp;
 });

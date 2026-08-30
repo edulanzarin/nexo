@@ -3,6 +3,8 @@
 import { useCallback, useMemo, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { hojeISO, inicioDoMesISO } from "@/lib/format";
+import { registrarNaTrilha } from "@/lib/exportar";
+import type { ModuloId } from "@/lib/modulos";
 import type { Metrica } from "@/lib/types";
 
 export interface FiltrosState {
@@ -89,7 +91,44 @@ export function useFiltros() {
  * mudar empresa/data ([[executar-com-botao]]). Um hook só, reusado pelas duas
  * barras de filtro.
  */
+/** Módulos cuja trilha aceita o beacon de consulta (os mesmos do `/api/auditoria`). */
+const MODULOS_TRILHA: ModuloId[] = ["fiscal", "contabil", "folha", "rh"];
+
+/**
+ * O clique no Executar vira UM registro na trilha — não uma requisição, um
+ * gesto. A tela que dispara seis consultas com o mesmo filtro continua sendo
+ * uma consulta do ponto de vista de quem a pediu, e é assim que a aba No Nexo
+ * conta.
+ *
+ * Mora aqui, e não em cada barra de filtro, porque `executar` é o funil por onde
+ * TODA consulta com botão passa nos quatro módulos — instrumentar tela a tela
+ * era garantir que a próxima nascesse sem registro.
+ *
+ * `codigoempresa` só vai quando há UMA empresa: com várias, ou nenhuma, o gesto
+ * é do escritório e vale para todos no escopo (a trilha trata empresa nula
+ * assim). Best-effort — falha de beacon nunca segura a consulta.
+ */
+function auditarConsulta(pathname: string, f: FiltrosState): void {
+  const modulo = pathname.split("/")[1] as ModuloId;
+  if (!MODULOS_TRILHA.includes(modulo)) return;
+  const escopo =
+    f.empresas.length === 1
+      ? `empresa ${f.empresas[0]}`
+      : f.empresas.length
+        ? `${f.empresas.length} empresas`
+        : f.grupos.length
+          ? `${f.grupos.length} grupo(s)`
+          : "todo o escopo";
+  registrarNaTrilha(
+    modulo,
+    "consulta",
+    `${pathname} · ${f.inicio} a ${f.fim} · ${escopo}`,
+    f.empresas.length === 1 ? f.empresas[0] : undefined
+  );
+}
+
 export function useRascunhoFiltros() {
+  const pathname = usePathname();
   const { filtros, atualizar, aplicado } = useFiltros();
   const aplicadoSig = assinatura(filtros);
 
@@ -108,7 +147,10 @@ export function useRascunhoFiltros() {
   );
 
   const dirty = assinatura(rascunho) !== aplicadoSig;
-  const executar = useCallback(() => atualizar(rascunho), [atualizar, rascunho]);
+  const executar = useCallback(() => {
+    auditarConsulta(pathname, rascunho);
+    atualizar(rascunho);
+  }, [atualizar, rascunho, pathname]);
 
   return { rascunho, editar, dirty, executar, aplicado };
 }
