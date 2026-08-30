@@ -5,12 +5,13 @@ import { Check, Search, Users, X } from "lucide-react";
 import { Dropdown, ItemLista } from "@/components/ui/dropdown";
 import { IconButton } from "@/components/ui";
 import { num } from "@/lib/format";
+import type { ChaveRanking } from "@/components/ctb-ranking-tabela";
 
 /** O mínimo que o filtro precisa saber de alguém: quem é e quanto fez. Cada aba
  *  da Produtividade conta uma coisa diferente (lançamentos, notas, exclusões,
  *  horas) e traduz para cá — assim o filtro serve todas sem conhecer nenhuma. */
-export interface PessoaOpcao {
-  codigo: number;
+export interface PessoaOpcao<K extends ChaveRanking = number> {
+  codigo: K;
   nome: string;
   qtd: number;
 }
@@ -20,15 +21,15 @@ export interface PessoaOpcao {
  * as do Fiscal. A lista sai do ranking já carregado, sem ida ao banco, como no
  * filtro de funcionário do DP.
  */
-export function ProdPessoaFiltro({
+export function ProdPessoaFiltro<K extends ChaveRanking = number>({
   dados,
   valor,
   onMudar,
   rotuloTodos = "Todo o time",
 }: {
-  dados: PessoaOpcao[] | undefined;
-  valor: number | null;
-  onMudar: (codigo: number | null) => void;
+  dados: PessoaOpcao<K>[] | undefined;
+  valor: K | null;
+  onMudar: (codigo: K | null) => void;
   rotuloTodos?: string;
 }) {
   const [busca, setBusca] = useState("");

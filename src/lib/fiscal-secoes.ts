@@ -70,7 +70,7 @@ export const SECOES_FISCAL: SecaoFiscal[] = [
     rotulo: "Produtividade",
     path: "/fiscal/produtividade",
     metrica: false,
-    descricao: "Notas, impostos, atraso, carteira e tempo do time no período",
+    descricao: "Notas, impostos, atraso, carteira, tempo e o uso do próprio app",
     // Cinco ÂNGULOS do mesmo trabalho, espelhando a Produtividade do Contábil,
     // cada um com sua própria varredura: o que o time ESCRITUROU (Lançamentos),
     // que PESO fiscal isso tinha (Impostos), com quanto ATRASO em relação à
@@ -110,6 +110,18 @@ export const SECOES_FISCAL: SecaoFiscal[] = [
         rotulo: "Tempo",
         path: "/fiscal/produtividade/tempo",
         descricao: "Horas dentro do Questor por pessoa e por empresa, cruzadas com as notas do período",
+      },
+      // Sexto ângulo, e o único que não lê o Questor: o uso do próprio Nexo.
+      // Diferente do Contábil, aqui ele NÃO mede produção — o módulo Fiscal é
+      // painel sobre base somente leitura, não há botão que grave nada. Mede
+      // quem puxou o quê: varredura executada, nota aberta, planilha levada. A
+      // tela diz isso na cara, em vez de vender consulta como trabalho.
+      {
+        id: "app",
+        rotulo: "No Nexo",
+        path: "/fiscal/produtividade/app",
+        descricao:
+          "O uso do app no período: varreduras executadas, notas abertas e exportações, por pessoa e empresa",
       },
     ],
   },

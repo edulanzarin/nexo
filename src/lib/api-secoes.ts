@@ -45,6 +45,7 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     "impostos-empresas": ["tributos"],
     // Produtividade — uma rota por aba, todas da mesma seção
     produtividade: ["produtividade"],
+    "produtividade-app": ["produtividade"],
     "produtividade-impostos": ["produtividade"],
     "produtividade-atraso": ["produtividade"],
     "produtividade-carteira": ["produtividade"],
@@ -93,6 +94,7 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     // Produtividade do Contábil: cinco ângulos do mesmo trabalho, uma varredura
     // cada, todos varrendo o escopo inteiro (empresa é filtro, não obrigação).
     produtividade: ["produtividade"],
+    "produtividade-app": ["produtividade"],
     "produtividade-exclusoes": ["produtividade"],
     "produtividade-atraso": ["produtividade"],
     "produtividade-carteira": ["produtividade"],

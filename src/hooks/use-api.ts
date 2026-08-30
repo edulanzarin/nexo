@@ -67,6 +67,7 @@ import type { ContabilExclusoesResp } from "@/lib/contabil-exclusoes-tipos";
 import type { ContabilAtrasoResp } from "@/lib/contabil-atraso-tipos";
 import type { ContabilCarteiraResp } from "@/lib/contabil-carteira-tipos";
 import type { ContabilTempoResp } from "@/lib/contabil-tempo-tipos";
+import type { ProdAppResp } from "@/lib/prod-app-tipos";
 import type { FuncionariosContabilResp } from "@/lib/contabil-funcionarios-tipos";
 import type {
   RescisoesResumo,
@@ -372,6 +373,14 @@ export const useFiscalCarteira = (qs: string, enabled = true) =>
     enabled
   );
 
+/** Aba No Nexo: o uso que o time fiscal fez do próprio app no período. */
+export const useFiscalApp = (qs: string, enabled = true) =>
+  useApiQuery<ProdAppResp>(
+    ["fiscal-produtividade-app", qs],
+    `/api/fiscal/produtividade-app?${qs}`,
+    enabled
+  );
+
 /** Aba Tempo: horas no Questor por pessoa e por empresa do time fiscal. */
 export const useFiscalTempo = (qs: string, enabled = true) =>
   useApiQuery<FiscalTempoResp>(
@@ -540,6 +549,14 @@ export const useContabilCarteira = (qs: string, enabled = true) =>
   useApiQuery<ContabilCarteiraResp>(
     ["contabil-carteira", qs],
     `/api/contabil/produtividade-carteira?${qs}`,
+    enabled
+  );
+
+/** Aba No Nexo: o que o time rodou DENTRO do app (trilha de auditoria). */
+export const useContabilApp = (qs: string, enabled = true) =>
+  useApiQuery<ProdAppResp>(
+    ["contabil-produtividade-app", qs],
+    `/api/contabil/produtividade-app?${qs}`,
     enabled
   );
 

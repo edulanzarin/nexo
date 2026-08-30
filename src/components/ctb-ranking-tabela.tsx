@@ -21,8 +21,17 @@ export interface ColunaRanking<T> {
   alerta?: (linha: T) => boolean;
 }
 
-export interface LinhaRanking {
-  codigo: number;
+/**
+ * Chave de quem está sendo comparado. É `number` em toda aba que lê o Questor
+ * (`codigousuario` é inteiro) e `string` na aba No Nexo, cujo autor é o
+ * `usuario.id` uuid do app. O componente é genérico na chave em vez de o payload
+ * do app inventar um número só para caber aqui — ver [[Componente que serve dois
+ * donos recebe o catálogo, não o campo renomeado]].
+ */
+export type ChaveRanking = string | number;
+
+export interface LinhaRanking<K extends ChaveRanking = number> {
+  codigo: K;
   nome: string;
   inativo: boolean;
 }
@@ -36,7 +45,7 @@ export interface LinhaRanking {
  * Clicar numa linha isola a pessoa no resto da tela; o ranking segue inteiro,
  * porque ele É a comparação.
  */
-export function CtbRankingTabela<T extends LinhaRanking>({
+export function CtbRankingTabela<K extends ChaveRanking, T extends LinhaRanking<K>>({
   titulo,
   subtitulo,
   dados,
@@ -57,8 +66,8 @@ export function CtbRankingTabela<T extends LinhaRanking>({
   ordemInicial: string;
   carregando: boolean;
   recarregando: boolean;
-  selecionado: number | null;
-  onSelecionar: (codigo: number | null) => void;
+  selecionado: K | null;
+  onSelecionar: (codigo: K | null) => void;
   minWidth?: string;
   vazio?: string;
   rodape?: React.ReactNode;

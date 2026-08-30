@@ -308,7 +308,7 @@ export const SECOES_CONTABIL: SecaoContabil[] = [
     icone: Gauge,
     path: "/contabil/produtividade",
     metrica: false,
-    descricao: "Lançamentos, exclusões, atraso, carteira e tempo do time no período",
+    descricao: "Lançamentos, exclusões, atraso, carteira, tempo e o que rodou no app",
     // Única tela do módulo que NÃO é bancada de uma empresa: varre o escopo
     // inteiro (empresa é filtro, não obrigação), como a Produtividade do DP.
     //
@@ -362,6 +362,20 @@ export const SECOES_CONTABIL: SecaoContabil[] = [
         path: "/contabil/produtividade/tempo",
         descricao:
           "Horas dentro do Questor por pessoa e por empresa, cruzadas com os lançamentos do período",
+        empresaOpcional: true,
+        execucao: "Executar",
+      },
+      // Sexto ângulo, e o único que NÃO lê o Questor: o que o time rodou dentro
+      // deste app. Era a aba irmã que a seção já previa quando nasceu — as cinco
+      // primeiras enxergam só o `lctoctb`, e uma conciliação que gerou 300
+      // lançamentos aparece lá como 300 linhas de origem "CC", sem nome de quem
+      // apertou o botão. O fato aqui é a trilha `auditoria`, no banco do app.
+      {
+        id: "app",
+        rotulo: "No Nexo",
+        path: "/contabil/produtividade/app",
+        descricao:
+          "Conciliações, laudos, implantações, triagens e cadastro rodados dentro do app — por pessoa, empresa, dia e hora",
         empresaOpcional: true,
         execucao: "Executar",
       },
