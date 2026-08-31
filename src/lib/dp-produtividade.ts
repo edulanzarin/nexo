@@ -2,26 +2,33 @@ import "server-only";
 import { query } from "./db";
 import { FilterError } from "./fiscal-filters";
 import { getSessaoOpcional, empresasPermitidas } from "./sessao";
-import type {
-  DpColaborador,
-  DpLinha,
-  DpQuebra,
-  DpQuebraItem,
-  DpResumo,
-  DpSeriePonto,
-  DpTipo,
-  EsocialStatus,
+import {
+  DP_TIPOS,
+  infoDoTipo,
+  zeroPorTipo,
+  type DpColaborador,
+  type DpLinha,
+  type DpPorTipo,
+  type DpQuebra,
+  type DpQuebraItem,
+  type DpResumo,
+  type DpSeriePonto,
+  type DpTipo,
+  type EsocialStatus,
 } from "./dp-tipos";
 
 /**
- * Produtividade do DP — "quem fez o quê" na folha, no período. Quatro trabalhos,
+ * Produtividade do DP — "quem fez o quê" na folha, no período. DOZE trabalhos,
  * cada um numa tabela do Questor, todos com a auditoria embutida
- * (`codigousuario` + `datahoralcto`) que já é o padrão do Fiscal:
+ * (`codigousuario` + `datahoralcto`) que já é o padrão do Fiscal. A lista mora
+ * no catálogo `DP_TIPOS`, e toda a montagem de SQL sai dele: acrescentar fonte é
+ * uma linha lá, não uma coluna aqui, no tipo, na tela e em três componentes.
  *
- *   - Avisos prévios cadastrados → `funcavisoprevio`
- *   - Rescisões calculadas       → `rescisao`
- *   - Admissões feitas           → `funccontrato`
- *   - Férias calculadas          → `reciboferias`
+ * Eram quatro até ago/2026, e os quatro mediam o que acontece EM VOLTA da folha
+ * — admitir, demitir, dar férias. A folha em si não era medida: `funcpercalculo`
+ * tem ~7 mil cálculos por mês feitos por 24 pessoas, e não aparecia. Entraram
+ * junto o fechamento (encargos, base do eSocial, provisão de 13º), a manutenção
+ * do contrato vivo (afastamento, reajuste, cargo) e a transmissão ao eSocial.
  *
  * O recorte é por `datahoralcto` (quando o trabalho foi lançado/calculado), NÃO
  * pela data do fato (dataadm/dataresc) — é produtividade, mede o que o DP fez no
@@ -114,43 +121,75 @@ const NOME_USUARIO = `coalesce(nullif(btrim(u.nomeusuariocompl), ''), nullif(btr
 /** nomefunc do Questor vem com espaços/tabs no fim; limpa o conjunto todo. */
 const NOME_FUNC = `btrim(p.nomefunc, E' \\t\\r\\n')`;
 
-interface RankRow {
+type RankRow = ContagemRow & {
   codigousuario: number;
   nome: string;
   inativo: boolean;
-  avisos: number;
-  rescisoes: number;
-  admissoes: number;
-  ferias: number;
-  total: number;
-}
-
-interface TotaisRow {
-  avisos: number;
-  rescisoes: number;
-  admissoes: number;
-  ferias: number;
-}
-
-/** Tabela do Questor onde cada trabalho é registrado (a fonte de auditoria). */
-const TABELA: Record<DpTipo, string> = {
-  avisos: "funcavisoprevio",
-  rescisoes: "rescisao",
-  admissoes: "funccontrato",
-  ferias: "reciboferias",
 };
 
-/** Conta os quatro trabalhos num intervalo (usado no período e no anterior). */
+/** Tabela do Questor onde cada trabalho é registrado (a fonte de auditoria). */
+const TABELA = Object.fromEntries(DP_TIPOS.map((t) => [t.id, t.tabela])) as Record<DpTipo, string>;
+
+/**
+ * Une as doze fontes num intervalo (usado no período e no anterior). O nome da
+ * tabela e o rótulo do tipo saem do CATÁLOGO, nunca de entrada do usuário —
+ * interpolar identificador em SQL só é seguro porque a lista é fechada e mora
+ * no código; o período e o escopo continuam parametrizados ($1, $2, $n).
+ */
 function subFonte(condEmpresa: string): string {
-  return `
-    select codigoempresa, codigousuario, 'aviso'::text tipo from funcavisoprevio where datahoralcto::date between $1 and $2${condEmpresa}
-    union all
-    select codigoempresa, codigousuario, 'resc'::text  from rescisao       where datahoralcto::date between $1 and $2${condEmpresa}
-    union all
-    select codigoempresa, codigousuario, 'adm'::text   from funccontrato   where datahoralcto::date between $1 and $2${condEmpresa}
-    union all
-    select codigoempresa, codigousuario, 'ferias'::text from reciboferias  where datahoralcto::date between $1 and $2${condEmpresa}`;
+  return DP_TIPOS.map((t) => {
+    // `gesto` identifica o ATO. Onde a fonte grava uma linha por funcionário
+    // (folha, encargos, base do eSocial, provisão), é a chave do lote; onde a
+    // linha já é o ato, vai nulo e a contagem cai no `count(*)`.
+    const gesto = t.gesto
+      ? `(${t.gesto.split(", ").join(" || '|' || ")})::text`
+      : `null::text`;
+    return (
+      `select codigoempresa, codigousuario, '${t.id}'::text tipo, ${gesto} as gesto` +
+      ` from ${t.tabela} where datahoralcto::date between $1 and $2${condEmpresa}`
+    );
+  }).join("\n    union all\n    ");
 }
+
+/**
+ * Contagem por tipo — em GESTOS, não em linhas. O tipo que grava uma linha por
+ * funcionário conta `distinct gesto`; o resto conta linha. Sem isso, fechar
+ * encargos (137 atos, 18.504 linhas) apareceria como o maior trabalho do DP.
+ */
+const CONTAGENS = DP_TIPOS.map((t) =>
+  t.gesto
+    ? `count(distinct gesto) filter (where tipo = '${t.id}')::int as ${t.id}`
+    : `count(*) filter (where tipo = '${t.id}')::int as ${t.id}`
+).join(",\n            ");
+
+/**
+ * As LINHAS por tipo, com alias prefixado para conviver com as contagens de
+ * gesto na mesma linha de resultado. Servem à tela dizer "137 fechamentos,
+ * 18.504 linhas" — o tamanho do lote é informação, só não é a unidade.
+ */
+const LINHAS_ALIAS = DP_TIPOS.map(
+  (t) => `count(*) filter (where tipo = '${t.id}')::int as l_${t.id}`
+).join(",\n            ");
+
+type LinhasRow = Record<`l_${DpTipo}`, number>;
+
+function colherLinhas(row: Partial<LinhasRow> | undefined): DpPorTipo {
+  const out = zeroPorTipo();
+  for (const t of DP_TIPOS) out[t.id] = row?.[`l_${t.id}`] ?? 0;
+  return out;
+}
+
+/** Linha crua do banco: uma coluna por tipo do catálogo, mais os campos do autor. */
+type ContagemRow = Record<DpTipo, number>;
+
+/** Colhe as colunas do catálogo numa contagem tipada, sem depender da ordem. */
+function colher(row: Partial<ContagemRow> | undefined): DpPorTipo {
+  const out = zeroPorTipo();
+  for (const t of DP_TIPOS) out[t.id] = row?.[t.id] ?? 0;
+  return out;
+}
+
+const somar = (p: DpPorTipo) => DP_TIPOS.reduce((a, t) => a + p[t.id], 0);
 
 /** Período imediatamente anterior, mesma duração — para o delta dos KPIs. */
 function anterior(f: DpFiltros): { inicio: string; fim: string } {
@@ -174,62 +213,50 @@ export async function montarResumoDp(f: DpFiltros): Promise<DpResumo> {
      select sub.codigousuario,
             ${NOME_USUARIO} as nome,
             (u.databaixausuario is not null) as inativo,
-            count(*) filter (where tipo = 'aviso')::int as avisos,
-            count(*) filter (where tipo = 'resc')::int as rescisoes,
-            count(*) filter (where tipo = 'adm')::int as admissoes,
-            count(*) filter (where tipo = 'ferias')::int as ferias,
-            count(*)::int as total
+            ${CONTAGENS}
        from (select * from fonte where true${filtroUsuario}) sub
        left join usuario u on u.codigousuario = sub.codigousuario
-      group by sub.codigousuario, u.nomeusuariocompl, u.nomeusuario, u.databaixausuario
-      order by total desc`,
+      group by sub.codigousuario, u.nomeusuariocompl, u.nomeusuario, u.databaixausuario`,
     params
   );
 
-  const ranking = rows.map<DpColaborador>((r) => ({
-    codigo: r.codigousuario,
-    nome: r.codigousuario === 0 ? "Sistema (automático)" : r.nome,
-    auto: r.codigousuario === 0,
-    inativo: r.inativo,
-    avisos: r.avisos,
-    rescisoes: r.rescisoes,
-    admissoes: r.admissoes,
-    ferias: r.ferias,
-    total: r.total,
-  }));
+  const ranking = rows
+    .map<DpColaborador>((r) => {
+      const porTipo = colher(r);
+      return {
+        codigo: r.codigousuario,
+        nome: r.codigousuario === 0 ? "Sistema (automático)" : r.nome,
+        auto: r.codigousuario === 0,
+        inativo: r.inativo,
+        porTipo,
+        total: somar(porTipo),
+      };
+    })
+    .sort((a, b) => b.total - a.total);
 
-  const soma = (sel: (c: DpColaborador) => number) => ranking.reduce((a, c) => a + sel(c), 0);
-  const totais = {
-    avisos: soma((c) => c.avisos),
-    rescisoes: soma((c) => c.rescisoes),
-    admissoes: soma((c) => c.admissoes),
-    ferias: soma((c) => c.ferias),
-    total: soma((c) => c.total),
-  };
-
-  // Período anterior: só as contagens (params próprios, mesmo escopo/usuário).
+  /**
+   * Totais do período NÃO saem da soma do ranking. Com contagem por gesto, um
+   * lote tocado por duas pessoas conta uma vez para cada uma (o que está certo
+   * no ranking — cada uma agiu) e contaria duas no total do escritório. O total
+   * é agregado próprio, sobre a mesma fonte, sem agrupar por usuário.
+   */
   const prev = anterior(f);
   const prevParams: unknown[] = [prev.inicio, prev.fim, ...params.slice(2)];
-  const [tot] = await query<TotaisRow>(
-    `with fonte as (select tipo from (${subFonte(condEmpresa)}) x where true${filtroUsuario})
-     select count(*) filter (where tipo = 'aviso')::int as avisos,
-            count(*) filter (where tipo = 'resc')::int as rescisoes,
-            count(*) filter (where tipo = 'adm')::int as admissoes,
-            count(*) filter (where tipo = 'ferias')::int as ferias
-       from fonte`,
-    prevParams
-  );
-  const antTot = {
-    avisos: tot?.avisos ?? 0,
-    rescisoes: tot?.rescisoes ?? 0,
-    admissoes: tot?.admissoes ?? 0,
-    ferias: tot?.ferias ?? 0,
-  };
+  const sqlTotais = `with fonte as (${subFonte(condEmpresa)})
+     select ${CONTAGENS}, ${LINHAS_ALIAS} from (select * from fonte where true${filtroUsuario}) x`;
+
+  const [[tot], [ant]] = await Promise.all([
+    query<ContagemRow & LinhasRow>(sqlTotais, params),
+    query<ContagemRow & LinhasRow>(sqlTotais, prevParams),
+  ]);
+  const porTipo = colher(tot);
+  const totais = { porTipo, total: somar(porTipo), linhas: colherLinhas(tot) };
+  const antPorTipo = colher(ant);
 
   return {
     ranking,
     totais,
-    anterior: { ...antTot, total: antTot.avisos + antTot.rescisoes + antTot.admissoes + antTot.ferias },
+    anterior: { porTipo: antPorTipo, total: somar(antPorTipo), linhas: colherLinhas(ant) },
     colaboradores: ranking.filter((c) => !c.auto && c.total > 0).length,
   };
 }
@@ -346,6 +373,66 @@ export async function montarListaDp(f: DpFiltros, tipo: DpTipo): Promise<DpLinha
       dataAdm: r.data_adm,
       origem: r.origem,
       esocial: r.esocial,
+    }));
+  }
+
+  if (tipo === "esocial") {
+    // Sem `codigofunccontr`: o evento é da EMPRESA, não de um contrato. A linha
+    // mostra o evento no lugar do funcionário em vez de inventar um join que a
+    // tabela não sustenta.
+    const rows = await query<
+      Omit<ListaRawBase, "contrato" | "funcionario"> & { evento: string | null }
+    >(
+      `select src.codigoempresa,
+              coalesce(nullif(btrim(e.nomeempresa), ''), 'Empresa ' || src.codigoempresa) as empresa,
+              coalesce(nullif(btrim(u.nomeusuariocompl), ''), nullif(btrim(u.nomeusuario), ''), 'Usuário ' || src.codigousuario) as usuario,
+              src.codigousuario,
+              to_char(src.datahoralcto, 'YYYY-MM-DD"T"HH24:MI:SS') as quando,
+              nullif(btrim(src.evento), '') as evento
+         from esocialtransacao src
+         left join empresa e on e.codigoempresa = src.codigoempresa
+         left join usuario u on u.codigousuario = src.codigousuario
+         ${where}
+         ${ordem}`,
+      params
+    );
+    return rows.map((r) => ({
+      codigoempresa: r.codigoempresa,
+      empresa: r.empresa,
+      contrato: 0,
+      funcionario: "—",
+      usuario: r.usuario,
+      codigousuario: r.codigousuario,
+      quando: r.quando,
+      evento: r.evento,
+    }));
+  }
+
+  /**
+   * Os trabalhos que entraram em ago/2026 (folha, encargos, base do eSocial,
+   * provisão, afastamento, reajuste, cargo) partilham a MESMA forma: contrato +
+   * autor + carimbo. Não ganham consulta própria porque não têm campo próprio
+   * que valha a coluna — o que a lista precisa responder ali é "quem, em que
+   * empresa, para qual funcionário e quando", e isso é o `SELECT_COMUM`.
+   */
+  const info = infoDoTipo(tipo);
+  if (tipo !== "ferias") {
+    const rows = await query<ListaRawBase>(
+      `select ${SELECT_COMUM}
+         from ${info.tabela} src
+         ${JOINS_COMUNS}
+         ${where}
+         ${ordem}`,
+      params
+    );
+    return rows.map((r) => ({
+      codigoempresa: r.codigoempresa,
+      empresa: r.empresa,
+      contrato: r.contrato,
+      funcionario: r.funcionario,
+      usuario: r.usuario,
+      codigousuario: r.codigousuario,
+      quando: r.quando,
     }));
   }
 

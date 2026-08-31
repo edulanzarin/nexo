@@ -1,7 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarClock, FileMinus, LayoutDashboard, LogOut, Plane, UserPlus } from "lucide-react";
+import {
+  CalendarClock,
+  Calculator,
+  FileMinus,
+  LayoutDashboard,
+  Plane,
+  Send,
+  UserPlus,
+} from "lucide-react";
 import clsx from "clsx";
 import { DpRankingTabela } from "@/components/dp-ranking-tabela";
 import { DpBarras } from "@/components/dp-barras";
@@ -12,31 +20,51 @@ import { Card } from "@/components/ui";
 import { useFiltros } from "@/hooks/use-filters";
 import { useDpProdutividade, useDpQuebra } from "@/hooks/use-api";
 import { num, deltaPct } from "@/lib/format";
-import { DP_TIPOS, type DpColaborador, type DpTipo } from "@/lib/dp-tipos";
+import {
+  DP_FAMILIAS,
+  infoDoTipo,
+  tiposDaFamilia,
+  type DpColaborador,
+  type DpFamilia,
+  type DpPorTipo,
+  type DpTipo,
+} from "@/lib/dp-tipos";
 import { useProdutividadeTabs } from "./tabs";
 
-const COR: Record<DpTipo, string> = {
-  avisos: "var(--warning)",
-  rescisoes: "var(--critical)",
-  admissoes: "var(--ent)",
+/**
+ * Cor e ícone por FAMÍLIA. Eram por trabalho, e com doze trabalhos a paleta
+ * não dá — e a legenda também não. A família carrega a identidade visual; o
+ * trabalho dentro dela herda.
+ */
+const COR: Record<DpFamilia, string> = {
+  movimentacao: "var(--ent)",
   ferias: "var(--sai)",
+  folha: "var(--esp-2)",
+  cadastro: "var(--esp-5)",
+  esocial: "var(--esp-1)",
 };
 
-const ICONE: Record<DpTipo | "total", React.ReactNode> = {
+const ICONE: Record<DpFamilia | "total", React.ReactNode> = {
   total: <CalendarClock className="size-4 text-ink-2" />,
-  avisos: <FileMinus className="size-4 text-warning" />,
-  rescisoes: <LogOut className="size-4 text-critical" />,
-  admissoes: <UserPlus className="size-4 text-ent" />,
+  movimentacao: <UserPlus className="size-4 text-ent" />,
   ferias: <Plane className="size-4 text-sai" />,
+  folha: <Calculator className="size-4" style={{ color: "var(--esp-2)" }} />,
+  cadastro: <FileMinus className="size-4" style={{ color: "var(--esp-5)" }} />,
+  esocial: <Send className="size-4" style={{ color: "var(--esp-1)" }} />,
 };
 
-const BG_ICONE: Record<DpTipo | "total", string> = {
+const BG_ICONE: Record<DpFamilia | "total", string> = {
   total: "bg-surface-2",
-  avisos: "bg-warning/12",
-  rescisoes: "bg-critical/12",
-  admissoes: "bg-ent/12",
+  movimentacao: "bg-ent/12",
   ferias: "bg-sai/12",
+  folha: "bg-surface-2",
+  cadastro: "bg-surface-2",
+  esocial: "bg-surface-2",
 };
+
+/** Soma os trabalhos de uma família numa contagem por tipo. */
+const somaFamilia = (por: DpPorTipo | undefined, f: DpFamilia): number =>
+  tiposDaFamilia(f).reduce((a, t) => a + (por?.[t.id] ?? 0), 0);
 
 function Delta({ atual, anterior }: { atual: number; anterior: number }) {
   const d = deltaPct(atual, anterior);
@@ -55,12 +83,15 @@ function Kpi({
   corIcone,
   valor,
   secundario,
+  rodape,
 }: {
   rotulo: string;
   icone: React.ReactNode;
   corIcone: string;
   valor: string;
   secundario: React.ReactNode;
+  /** Linha extra, menor — usada para o tamanho do lote atrás do gesto. */
+  rodape?: React.ReactNode;
 }) {
   return (
     <Card className="flex flex-col gap-2">
@@ -70,32 +101,47 @@ function Kpi({
       </div>
       <p className="text-3xl font-semibold tracking-tight">{valor}</p>
       <p className="text-xs">{secundario}</p>
+      {rodape && <p className="text-[11px] leading-snug">{rodape}</p>}
     </Card>
   );
 }
 
-/** Aba de um trabalho: só dashboard (KPIs + por colaborador + por empresa + série). */
-function AbaTipo({
-  tipo,
+/**
+ * Aba de uma FAMÍLIA: um cartão por trabalho dela, e os gráficos do trabalho
+ * escolhido. Os gráficos continuam por trabalho porque a quebra do servidor é
+ * por trabalho (`/dp-quebra?tipo=`) — somar famílias no cliente inventaria uma
+ * série que o banco não devolveu.
+ */
+function AbaFamilia({
+  familia,
   qs,
   ranking,
   totais,
+  linhas,
   anterior,
   carregandoResumo,
   usuarioSel,
   onSelecionar,
 }: {
-  tipo: DpTipo;
+  familia: DpFamilia;
   qs: string;
   ranking: DpColaborador[] | undefined;
-  totais: Record<DpTipo, number> | undefined;
-  anterior: Record<DpTipo, number> | undefined;
+  totais: DpPorTipo | undefined;
+  linhas: DpPorTipo | undefined;
+  anterior: DpPorTipo | undefined;
   carregandoResumo: boolean;
   usuarioSel: number | null;
   onSelecionar: (codigo: number | null) => void;
 }) {
-  const rotulo = DP_TIPOS.find((t) => t.id === tipo)!.rotulo;
-  const cor = COR[tipo];
+  const trabalhos = tiposDaFamilia(familia);
+  const [tipo, setTipo] = useState<DpTipo>(trabalhos[0].id);
+  // Trocar de família reposiciona no primeiro trabalho dela — sem isto, a aba
+  // Folha abriria mostrando o gráfico de "Avisos prévios" que ficou no estado.
+  if (!trabalhos.some((t) => t.id === tipo)) setTipo(trabalhos[0].id);
+
+  const info = infoDoTipo(tipo);
+  const rotulo = info.rotulo;
+  const cor = COR[familia];
 
   // Filtro por colaborador vale para série e por-empresa (não para o
   // ranking/por-colaborador, que é a comparação entre pessoas).
@@ -107,7 +153,7 @@ function AbaTipo({
     () =>
       ranking
         ? ranking
-            .map((c) => ({ codigo: c.codigo, nome: c.nome, qtd: c[tipo] }))
+            .map((c) => ({ codigo: c.codigo, nome: c.nome, qtd: c.porTipo[tipo] }))
             .filter((c) => c.qtd > 0)
             .sort((a, b) => b.qtd - a.qtd)
         : undefined,
@@ -115,7 +161,10 @@ function AbaTipo({
   );
 
   const selNome = usuarioSel != null ? ranking?.find((c) => c.codigo === usuarioSel)?.nome : null;
-  const colabTipo = usuarioSel != null ? ranking?.find((c) => c.codigo === usuarioSel)?.[tipo] ?? 0 : null;
+  const colabTipo =
+    usuarioSel != null
+      ? (ranking?.find((c) => c.codigo === usuarioSel)?.porTipo[tipo] ?? 0)
+      : null;
 
   const nColab = porColaborador?.filter((c) => c.codigo !== 0).length ?? 0;
   const totalTeam = totais?.[tipo] ?? 0;
@@ -127,6 +176,39 @@ function AbaTipo({
 
   return (
     <>
+      {/* Seletor de trabalho dentro da família — some quando ela tem um só */}
+      {trabalhos.length > 1 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {trabalhos.map((t) => {
+            const ativo = t.id === tipo;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTipo(t.id)}
+                title={t.descricao}
+                aria-pressed={ativo}
+                className={clsx(
+                  "rounded-full border px-3 py-1 text-xs transition-colors",
+                  ativo
+                    ? "border-accent/40 bg-accent/10 font-medium text-accent"
+                    : "border-hairline text-ink-2 hover:bg-surface-2"
+                )}
+              >
+                {t.rotulo}
+                <span className="ml-1.5 tabular-nums text-muted">{num(totais?.[t.id] ?? 0)}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {info.temAutomacao && (
+        <p className="text-xs text-muted">
+          Parte deste trabalho é rotina automática e cai no usuário “Sistema” — ele aparece no
+          ranking marcado como automático, e não some do total porque o volume é real.
+        </p>
+      )}
+
       {/* KPIs do trabalho */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {carregandoResumo || !totais || !anterior ? (
@@ -135,8 +217,8 @@ function AbaTipo({
           <>
             <Kpi
               rotulo={rotulo}
-              icone={ICONE[tipo]}
-              corIcone={BG_ICONE[tipo]}
+              icone={ICONE[familia]}
+              corIcone={BG_ICONE[familia]}
               valor={num(totalMostrado)}
               secundario={
                 colabTipo != null ? (
@@ -144,6 +226,14 @@ function AbaTipo({
                 ) : (
                   <Delta atual={totalTeam} anterior={anterior[tipo]} />
                 )
+              }
+              rodape={
+                info.gesto ? (
+                  <span className="text-muted">
+                    {num(linhas?.[tipo] ?? 0)} linha(s) de funcionário — um{" "}
+                    {info.unidade} cobre a empresa inteira
+                  </span>
+                ) : undefined
               }
             />
             <Kpi
@@ -243,40 +333,27 @@ export default function ProdutividadeDpPage() {
 
       {menu === "geral" ? (
         <>
-          {/* KPIs — os quatro trabalhos + total, com delta vs. período anterior */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          {/* KPIs — uma família por cartão, mais o total, com delta vs. anterior */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
             {carregandoResumo || !t || !ant ? (
-              Array.from({ length: 5 }).map((_, i) => <div key={i} className="skeleton h-36" />)
+              Array.from({ length: 6 }).map((_, i) => <div key={i} className="skeleton h-36" />)
             ) : (
               <>
-                <Kpi
-                  rotulo="Avisos prévios"
-                  icone={ICONE.avisos}
-                  corIcone={BG_ICONE.avisos}
-                  valor={num(t.avisos)}
-                  secundario={<Delta atual={t.avisos} anterior={ant.avisos} />}
-                />
-                <Kpi
-                  rotulo="Rescisões calculadas"
-                  icone={ICONE.rescisoes}
-                  corIcone={BG_ICONE.rescisoes}
-                  valor={num(t.rescisoes)}
-                  secundario={<Delta atual={t.rescisoes} anterior={ant.rescisoes} />}
-                />
-                <Kpi
-                  rotulo="Admissões feitas"
-                  icone={ICONE.admissoes}
-                  corIcone={BG_ICONE.admissoes}
-                  valor={num(t.admissoes)}
-                  secundario={<Delta atual={t.admissoes} anterior={ant.admissoes} />}
-                />
-                <Kpi
-                  rotulo="Férias calculadas"
-                  icone={ICONE.ferias}
-                  corIcone={BG_ICONE.ferias}
-                  valor={num(t.ferias)}
-                  secundario={<Delta atual={t.ferias} anterior={ant.ferias} />}
-                />
+                {DP_FAMILIAS.map((f) => (
+                  <Kpi
+                    key={f.id}
+                    rotulo={f.rotulo}
+                    icone={ICONE[f.id]}
+                    corIcone={BG_ICONE[f.id]}
+                    valor={num(somaFamilia(t.porTipo, f.id))}
+                    secundario={
+                      <Delta
+                        atual={somaFamilia(t.porTipo, f.id)}
+                        anterior={somaFamilia(ant.porTipo, f.id)}
+                      />
+                    }
+                  />
+                ))}
                 <Kpi
                   rotulo="Total no período"
                   icone={ICONE.total}
@@ -295,7 +372,7 @@ export default function ProdutividadeDpPage() {
           {/* Mais dashboard: composição dos quatro trabalhos + top empilhado */}
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             <DpComposicaoDonut
-              totais={t}
+              totais={t?.porTipo}
               cores={COR}
               carregando={carregandoResumo}
               recarregando={resumo.isFetching && !resumo.isLoading}
@@ -319,16 +396,18 @@ export default function ProdutividadeDpPage() {
           />
 
           <p className="text-center text-xs text-muted">
-            Selecione um colaborador.
+            Clique num colaborador para recortar a tela · cada família tem aba própria com os
+            trabalhos dentro dela
           </p>
         </>
       ) : (
-        <AbaTipo
-          tipo={menu}
+        <AbaFamilia
+          familia={menu}
           qs={qs}
           ranking={resumo.data?.ranking}
-          totais={t}
-          anterior={ant}
+          totais={t?.porTipo}
+          linhas={t?.linhas}
+          anterior={ant?.porTipo}
           carregandoResumo={carregandoResumo}
           usuarioSel={usuarioSel}
           onSelecionar={setUsuarioSel}

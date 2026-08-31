@@ -58,7 +58,7 @@ export const SECOES_FOLHA: SecaoFiscal[] = [
     rotulo: "Produtividade",
     path: "/folha/produtividade",
     metrica: false,
-    descricao: "O que o DP fez no período, por colaborador",
+    descricao: "Movimentação, férias, folha, cadastro e eSocial — por colaborador",
   },
   // Seção nova entra por último (ver memória de ordem da sidebar).
   {

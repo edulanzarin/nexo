@@ -2,14 +2,21 @@
 
 import { createContext, useContext, useState } from "react";
 import clsx from "clsx";
-import { DP_TIPOS, type DpTipo } from "@/lib/dp-tipos";
+import { DP_FAMILIAS, type DpFamilia } from "@/lib/dp-tipos";
 
-/** Aba ativa da Produtividade: visão geral + um por trabalho. */
-export type MenuProd = "geral" | DpTipo;
+/**
+ * Aba ativa da Produtividade: visão geral + uma por FAMÍLIA de trabalho.
+ *
+ * Era uma aba por trabalho, e funcionava com quatro. Com doze viraria uma
+ * lista de treze botões na horizontal — navegação que não cabe na tela nem na
+ * cabeça. A aba passou a ser a família (cinco), e o trabalho dentro dela vira
+ * um seletor: mesma profundidade, um nível de agrupamento a mais.
+ */
+export type MenuProd = "geral" | DpFamilia;
 
-const ABAS: { id: MenuProd; rotulo: string }[] = [
+const ABAS: { id: MenuProd; rotulo: string; titulo?: string }[] = [
   { id: "geral", rotulo: "Visão geral" },
-  ...DP_TIPOS.map((t) => ({ id: t.id as MenuProd, rotulo: t.rotulo })),
+  ...DP_FAMILIAS.map((f) => ({ id: f.id as MenuProd, rotulo: f.rotulo, titulo: f.descricao })),
 ];
 
 interface Ctx {
@@ -47,6 +54,7 @@ export function ProdutividadeMenus() {
           <button
             key={a.id}
             onClick={() => setMenu(a.id)}
+            title={a.titulo}
             aria-current={ativa ? "page" : undefined}
             className={clsx(
               "-mb-px border-b-2 px-3 py-2 text-sm transition-colors",

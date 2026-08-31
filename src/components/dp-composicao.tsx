@@ -11,28 +11,38 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { DpColaborador, DpTipo } from "@/lib/dp-tipos";
-import { DP_TIPOS } from "@/lib/dp-tipos";
+import type { DpColaborador, DpFamilia, DpPorTipo } from "@/lib/dp-tipos";
+import { DP_FAMILIAS, tiposDaFamilia } from "@/lib/dp-tipos";
 import { num } from "@/lib/format";
 import { ChartCard, TooltipContainer, TooltipLinha } from "@/components/ui/chart-card";
 
-type Cores = Record<DpTipo, string>;
+/**
+ * Cor por FAMÍLIA, não por trabalho. São doze trabalhos e a paleta categórica
+ * tem cinco — pintar cada um exigiria repetir cor, e cor repetida num
+ * empilhado é duas coisas que parecem a mesma. A família também é o corte que
+ * a legenda consegue mostrar sem virar parede de texto.
+ */
+type Cores = Record<DpFamilia, string>;
+
+/** Soma os trabalhos de uma família na linha do colaborador. */
+const daFamilia = (c: DpColaborador, f: DpFamilia): number =>
+  tiposDaFamilia(f).reduce((a, t) => a + c.porTipo[t.id], 0);
 
 /* ── Composição: quanto de cada trabalho no período (donut) ─────────────────── */
 
 interface DonutProps {
-  totais: Record<DpTipo, number> | undefined;
+  totais: DpPorTipo | undefined;
   cores: Cores;
   carregando: boolean;
   recarregando: boolean;
 }
 
 export function DpComposicaoDonut({ totais, cores, carregando, recarregando }: DonutProps) {
-  const fatias = DP_TIPOS.map((t) => ({
-    id: t.id,
-    rotulo: t.rotulo,
-    valor: totais?.[t.id] ?? 0,
-    cor: cores[t.id],
+  const fatias = DP_FAMILIAS.map((f) => ({
+    id: f.id,
+    rotulo: f.rotulo,
+    valor: tiposDaFamilia(f.id).reduce((a, t) => a + (totais?.[t.id] ?? 0), 0),
+    cor: cores[f.id],
   }));
   const total = fatias.reduce((a, f) => a + f.valor, 0);
 
@@ -101,7 +111,7 @@ export function DpComposicaoDonut({ totais, cores, carregando, recarregando }: D
   );
 }
 
-/* ── Top colaboradores, barra empilhada pelos 4 trabalhos ───────────────────── */
+/* ── Top colaboradores, barra empilhada pelas famílias de trabalho ──────────── */
 
 interface StackProps {
   dados: DpColaborador[] | undefined;
@@ -122,8 +132,20 @@ export function DpColaboradorStack({
   onSelecionar,
   limite = 12,
 }: StackProps) {
+  /**
+   * O recharts lê cada série por `dataKey` na RAIZ do dado, e a contagem mora
+   * em `porTipo` (aninhada). Então a linha do gráfico é achatada: o colaborador
+   * mais uma coluna por família. Achatar aqui, e não no servidor, mantém o
+   * payload com uma forma só — quem precisa de outra que a derive.
+   */
   const top = dados
-    ? [...dados].sort((a, b) => b.total - a.total).slice(0, limite)
+    ? [...dados]
+        .sort((a, b) => b.total - a.total)
+        .slice(0, limite)
+        .map((c) => ({
+          ...c,
+          ...Object.fromEntries(DP_FAMILIAS.map((f) => [f.id, daFamilia(c, f.id)])),
+        }))
     : undefined;
   const altura = Math.max(220, (top?.length ?? 8) * 34);
 
@@ -135,10 +157,10 @@ export function DpColaboradorStack({
       alturaSkeleton="h-80"
       acao={
         <div className="flex flex-wrap items-center gap-3">
-          {DP_TIPOS.map((t) => (
-            <span key={t.id} className="flex items-center gap-1.5 text-xs text-ink-2">
-              <span className="h-2 w-2 rounded-sm" style={{ background: cores[t.id] }} />
-              {t.rotulo}
+          {DP_FAMILIAS.map((f) => (
+            <span key={f.id} className="flex items-center gap-1.5 text-xs text-ink-2">
+              <span className="h-2 w-2 rounded-sm" style={{ background: cores[f.id] }} />
+              {f.rotulo}
             </span>
           ))}
         </div>
@@ -174,8 +196,13 @@ export function DpColaboradorStack({
                   return (
                     <TooltipContainer>
                       <p className="mb-1 max-w-72 text-xs font-medium text-ink">{c.nome}</p>
-                      {DP_TIPOS.map((t) => (
-                        <TooltipLinha key={t.id} cor={cores[t.id]} nome={t.rotulo} valor={num(c[t.id])} />
+                      {DP_FAMILIAS.map((f) => (
+                        <TooltipLinha
+                          key={f.id}
+                          cor={cores[f.id]}
+                          nome={f.rotulo}
+                          valor={num(daFamilia(c, f.id))}
+                        />
                       ))}
                       <p className="mt-1 border-t border-hairline pt-1 text-[11px] text-muted">
                         {num(c.total)} no total
@@ -184,14 +211,14 @@ export function DpColaboradorStack({
                   );
                 }}
               />
-              {DP_TIPOS.map((t, i) => (
+              {DP_FAMILIAS.map((f, i) => (
                 <Bar
-                  key={t.id}
-                  dataKey={t.id}
+                  key={f.id}
+                  dataKey={f.id}
                   stackId="trab"
-                  fill={cores[t.id]}
+                  fill={cores[f.id]}
                   maxBarSize={20}
-                  radius={i === DP_TIPOS.length - 1 ? [0, 4, 4, 0] : undefined}
+                  radius={i === DP_FAMILIAS.length - 1 ? [0, 4, 4, 0] : undefined}
                   animationDuration={500}
                   onClick={(d: unknown) => {
                     const cod = (d as DpColaborador).codigo;

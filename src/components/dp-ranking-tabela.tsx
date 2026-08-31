@@ -4,18 +4,32 @@ import { useMemo, useState } from "react";
 import { ArrowDown } from "lucide-react";
 import clsx from "clsx";
 import { Card, Badge } from "@/components/ui";
-import type { DpColaborador } from "@/lib/dp-tipos";
+import { DP_FAMILIAS, tiposDaFamilia, type DpColaborador, type DpFamilia } from "@/lib/dp-tipos";
 import { num } from "@/lib/format";
 
-type Coluna = "total" | "avisos" | "rescisoes" | "admissoes" | "ferias";
+/**
+ * A coluna é a FAMÍLIA, não o trabalho. Com doze trabalhos, uma coluna cada
+ * daria uma tabela de catorze colunas que ninguém lê de lado a lado — e a
+ * pergunta do ranking é "quem carregou o mês", que a família responde. O
+ * detalhe por trabalho mora na aba da família e na composição.
+ */
+type Coluna = "total" | DpFamilia;
 
-const CABECALHOS: { key: Coluna; rotulo: string }[] = [
+const CABECALHOS: { key: Coluna; rotulo: string; titulo?: string }[] = [
   { key: "total", rotulo: "Total" },
-  { key: "avisos", rotulo: "Avisos" },
-  { key: "rescisoes", rotulo: "Rescisões" },
-  { key: "admissoes", rotulo: "Admissões" },
-  { key: "ferias", rotulo: "Férias" },
+  ...DP_FAMILIAS.map((f) => ({
+    key: f.id as Coluna,
+    rotulo: f.rotulo,
+    titulo: f.descricao,
+  })),
 ];
+
+/** Soma os trabalhos de uma família na linha do colaborador. */
+const daFamilia = (c: DpColaborador, f: DpFamilia): number =>
+  tiposDaFamilia(f).reduce((a, t) => a + c.porTipo[t.id], 0);
+
+const valorDaColuna = (c: DpColaborador, col: Coluna): number =>
+  col === "total" ? c.total : daFamilia(c, col);
 
 interface Props {
   dados: DpColaborador[] | undefined;
@@ -32,7 +46,7 @@ export function DpRankingTabela({ dados, carregando, recarregando, selecionado, 
 
   const ordenados = useMemo(() => {
     if (!dados) return undefined;
-    return [...dados].sort((a, b) => b[ordenar] - a[ordenar]);
+    return [...dados].sort((a, b) => valorDaColuna(b, ordenar) - valorDaColuna(a, ordenar));
   }, [dados, ordenar]);
 
   const maxTotal = useMemo(
@@ -62,7 +76,7 @@ export function DpRankingTabela({ dados, carregando, recarregando, selecionado, 
         <div
           className={clsx("max-h-[32rem] overflow-x-auto overflow-y-auto", recarregando && "refetching")}
         >
-          <table className="w-full min-w-[640px] border-collapse text-sm">
+          <table className="w-full min-w-[760px] border-collapse text-sm">
             <thead className="sticky top-0 z-10 bg-surface">
               <tr className="border-b border-hairline text-xs text-muted">
                 <th className="w-8 py-2 pr-2 text-right font-medium">#</th>
@@ -70,7 +84,7 @@ export function DpRankingTabela({ dados, carregando, recarregando, selecionado, 
                 {CABECALHOS.map((h) => {
                   const ativo = ordenar === h.key;
                   return (
-                    <th key={h.key} className="py-2 pl-3 text-right font-medium">
+                    <th key={h.key} title={h.titulo} className="py-2 pl-3 text-right font-medium">
                       <button
                         onClick={() => setOrdenar(h.key)}
                         className={clsx(
@@ -131,10 +145,20 @@ export function DpRankingTabela({ dados, carregando, recarregando, selecionado, 
                         {pct.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%
                       </span>
                     </td>
-                    <td className="py-2.5 pl-3 text-right tabular-nums text-ink-2">{num(c.avisos)}</td>
-                    <td className="py-2.5 pl-3 text-right tabular-nums text-ink-2">{num(c.rescisoes)}</td>
-                    <td className="py-2.5 pl-3 text-right tabular-nums text-ink-2">{num(c.admissoes)}</td>
-                    <td className="py-2.5 pl-3 text-right tabular-nums text-ink-2">{num(c.ferias)}</td>
+                    {DP_FAMILIAS.map((f) => {
+                      const v = daFamilia(c, f.id);
+                      return (
+                        <td
+                          key={f.id}
+                          className={clsx(
+                            "py-2.5 pl-3 text-right tabular-nums",
+                            v === 0 ? "text-muted" : "text-ink-2"
+                          )}
+                        >
+                          {num(v)}
+                        </td>
+                      );
+                    })}
                   </tr>
                 );
               })}

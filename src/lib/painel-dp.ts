@@ -4,6 +4,7 @@ import { getSessaoOpcional, empresasPermitidas } from "./sessao";
 import { montarResumoDp } from "./dp-produtividade";
 import { montarRescisoes } from "./rescisoes";
 import { periodosEmAberto } from "./controle-ferias";
+import type { DpContagem } from "./dp-tipos";
 import type {
   PainelAtividade,
   PainelColaborador,
@@ -14,6 +15,7 @@ import type {
   PainelRescisaoUrgente,
   PainelRescisoes,
   PainelSeriePonto,
+  PainelTrabalhos,
 } from "./painel-dp-tipos";
 
 /**
@@ -164,7 +166,23 @@ async function blocoAtividade(inicio: string, fim: string): Promise<PainelAtivid
     .filter((c) => !c.auto && c.total > 0)
     .slice(0, 5)
     .map((c) => ({ nome: c.nome, total: c.total }));
-  return { mes: resumo.totais, anterior: resumo.anterior, colaboradores: resumo.colaboradores, topOperadores };
+  // O Painel do DP mostra os QUATRO trabalhos clássicos, e continua mostrando:
+  // ele responde "como está o meu mês", não "tudo que o setor faz". A
+  // Produtividade cresceu para doze; traduzir aqui mantém as duas telas
+  // independentes, em vez de a home herdar oito cartões que ninguém pediu.
+  const quatro = (c: DpContagem): PainelTrabalhos => ({
+    avisos: c.porTipo.avisos,
+    rescisoes: c.porTipo.rescisoes,
+    admissoes: c.porTipo.admissoes,
+    ferias: c.porTipo.ferias,
+    total: c.porTipo.avisos + c.porTipo.rescisoes + c.porTipo.admissoes + c.porTipo.ferias,
+  });
+  return {
+    mes: quatro(resumo.totais),
+    anterior: quatro(resumo.anterior),
+    colaboradores: resumo.colaboradores,
+    topOperadores,
+  };
 }
 
 async function blocoSerie(scope: number[] | "todas"): Promise<PainelSeriePonto[]> {
