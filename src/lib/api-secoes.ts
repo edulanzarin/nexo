@@ -46,6 +46,7 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     // Produtividade — uma rota por aba, todas da mesma seção
     produtividade: ["produtividade"],
     "produtividade-app": ["produtividade"],
+    "produtividade-apuracao": ["produtividade"],
     "produtividade-impostos": ["produtividade"],
     "produtividade-atraso": ["produtividade"],
     "produtividade-carteira": ["produtividade"],

@@ -68,6 +68,7 @@ import type { ContabilAtrasoResp } from "@/lib/contabil-atraso-tipos";
 import type { ContabilCarteiraResp } from "@/lib/contabil-carteira-tipos";
 import type { ContabilTempoResp } from "@/lib/contabil-tempo-tipos";
 import type { ProdAppResp } from "@/lib/prod-app-tipos";
+import type { FiscalApuracaoResp } from "@/lib/fiscal-apuracao-tipos";
 import type { FuncionariosContabilResp } from "@/lib/contabil-funcionarios-tipos";
 import type {
   RescisoesResumo,
@@ -370,6 +371,14 @@ export const useFiscalCarteira = (qs: string, enabled = true) =>
   useApiQuery<FiscalCarteiraResp>(
     ["fiscal-prod-carteira", qs],
     `/api/fiscal/produtividade-carteira?${qs}`,
+    enabled
+  );
+
+/** Aba Apuração: o fechamento mensal — quem apurou o quê, com quanto atraso. */
+export const useFiscalApuracao = (qs: string, enabled = true) =>
+  useApiQuery<FiscalApuracaoResp>(
+    ["fiscal-produtividade-apuracao", qs],
+    `/api/fiscal/produtividade-apuracao?${qs}`,
     enabled
   );
 

@@ -70,7 +70,7 @@ export const SECOES_FISCAL: SecaoFiscal[] = [
     rotulo: "Produtividade",
     path: "/fiscal/produtividade",
     metrica: false,
-    descricao: "Notas, impostos, atraso, carteira, tempo e o uso do próprio app",
+    descricao: "Notas, apuração, impostos, atraso, carteira, tempo e o uso do app",
     // Cinco ÂNGULOS do mesmo trabalho, espelhando a Produtividade do Contábil,
     // cada um com sua própria varredura: o que o time ESCRITUROU (Lançamentos),
     // que PESO fiscal isso tinha (Impostos), com quanto ATRASO em relação à
@@ -91,6 +91,18 @@ export const SECOES_FISCAL: SecaoFiscal[] = [
         path: "/fiscal/produtividade/impostos",
         descricao:
           "Quanto de ICMS, IPI, ST, ISS, PIS/COFINS e retenção passou pelas mãos de cada pessoa",
+      },
+      // O FECHAMENTO, que é o trabalho mais pesado do setor e não aparecia em
+      // aba nenhuma: as outras contam o que entrou (nota) e o peso disso
+      // (imposto destacado); esta conta o gesto de apurar. Fonte própria
+      // (`periodoapuradofis` + retenções), zero linhas de sistema — é o
+      // contrário do fiscal de nota, onde a integração faz 98%.
+      {
+        id: "apuracao",
+        rotulo: "Apuração",
+        path: "/fiscal/produtividade/apuracao",
+        descricao:
+          "Quem fechou qual imposto de qual empresa, em que competência e com quanto atraso",
       },
       {
         id: "atraso",
