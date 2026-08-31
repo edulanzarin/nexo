@@ -96,6 +96,15 @@ const novoAcc = (codigo: string, nome: string, inativo: boolean, classes: string
  *   uma empresa (exportar o ranking do escritório, consultar sem filtro). Se o
  *   escopo os escondesse, quem não vê todas as empresas veria a própria
  *   produtividade pela metade.
+ *
+ *   Consequência que esta aba tem e o Painel não, porque aqui a visão é do
+ *   TIME: quem enxerga poucas empresas continua vendo os gestos sem empresa dos
+ *   COLEGAS — nome, contagem, verbo, hora. Está certo assim (quem alcança a
+ *   seção Produtividade alcança o time por definição, e o `alvo`, que é onde
+ *   moraria o dado sensível, não entra no payload), mas é uma diferença real em
+ *   relação às cinco abas que leem o Questor: naquelas, todo lançamento tem
+ *   empresa, então escopo vazio devolve tela vazia. Verificado: escopo `{}` aqui
+ *   devolve só os eventos sem empresa, nunca o escritório inteiro.
  * - **`criado_em` é timestamptz** e o corte de período usa a data crua, sem
  *   converter fuso: é o mesmo fuso do servidor em que o `to_char` roda, então a
  *   hora do dia no gráfico e o dia no calendário contam a mesma história. Fuso

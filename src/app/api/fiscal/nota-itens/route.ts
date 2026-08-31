@@ -18,7 +18,11 @@ export const GET = apiRoute(async (req) => {
   await registrarAuditoria({
     acao: "fiscal.nota.ver",
     modulo: "fiscal",
-    alvo: `Nota ${sp.get("chave") ?? "?"} (${sp.get("tipo") === "ent" ? "entrada" : "saída"})`,
+    // CHAVE, não número da nota: o parâmetro é `chavelctofis{ent,sai}`, a chave
+    // interna do Questor. Chamar isso de "Nota 18675" na trilha induz a erro —
+    // a nota 18675 existe e é outra (aquela ali tem numeronf 211). A chave, com
+    // a empresa da coluna ao lado, identifica o documento sem ambiguidade.
+    alvo: `Chave ${sp.get("chave") ?? "?"} · ${sp.get("tipo") === "ent" ? "entrada" : "saída"}`,
     codigoempresa: Number.isInteger(empresa) ? empresa : null,
   });
   return itens;

@@ -101,8 +101,15 @@ const MODULOS_TRILHA: ModuloId[] = ["fiscal", "contabil", "folha", "rh"];
  * conta.
  *
  * Mora aqui, e não em cada barra de filtro, porque `executar` é o funil por onde
- * TODA consulta com botão passa nos quatro módulos — instrumentar tela a tela
+ * toda consulta com BOTÃO passa nos quatro módulos — instrumentar tela a tela
  * era garantir que a próxima nascesse sem registro.
+ *
+ * O que fica de fora, sabidamente: chegar numa tela por link já com `ap=1`
+ * (os atalhos do painel) roda a consulta sem passar por aqui. Registrar na
+ * chegada seria log de navegação — o que a trilha não é — e contaria duas vezes
+ * o clique, que também escreve `ap=1`. Hoje esses atalhos só apontam para a
+ * Folha; se um deles passar a cair no Fiscal ou no Contábil, o buraco deixa de
+ * ser teórico e a decisão volta à mesa.
  *
  * `codigoempresa` só vai quando há UMA empresa: com várias, ou nenhuma, o gesto
  * é do escritório e vale para todos no escopo (a trilha trata empresa nula
