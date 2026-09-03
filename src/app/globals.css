@@ -293,3 +293,50 @@ body {
 
 /* Números tabulares apenas em colunas. */
 .tnum { font-variant-numeric: tabular-nums; }
+
+/* ---- Papel / PDF ----------------------------------------------------------
+   O tema padrão é o escuro, e papel não tem fundo: sem forçar a paleta clara na
+   impressão, o relatório sai branco no branco. Mora aqui porque vale para toda
+   tela que imprime (painel fiscal, laudo do balancete, rotatividade) — a tela só
+   escolhe O QUE sai no papel, nunca reescreve a paleta. */
+@media print {
+  :root,
+  :root[data-theme="light"],
+  :root[data-theme="dark"] {
+    color-scheme: light;
+    --page: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #ffffff;
+    --ink: #000000;
+    --ink-2: #26262e;
+    --muted: #55555f;
+    --grid: #d8d8e0;
+    --baseline: #b4b4c0;
+    --hairline: rgba(0, 0, 0, 0.25);
+    --accent: #3730a3;
+    --ent: #1d4ed8;
+    --sai: #05672f;
+    --good: #05672f;
+    --critical: #b02020;
+    --warning: #8a5a00;
+    --glass: #ffffff;
+    --glass-panel: #ffffff;
+    /* Sombra é tinta desperdiçada no papel. */
+    --shadow-1: none;
+    --shadow-2: none;
+    --shadow-3: none;
+    --shadow-modal: none;
+    --sheen: none;
+  }
+
+  @page { margin: 12mm; }
+
+  /* Controle não vai pro papel: botão, busca, filtro, aba. */
+  .no-print { display: none !important; }
+
+  /* Tabela cortada por rolagem na tela sai INTEIRA no papel, com o cabeçalho
+     repetindo a cada página e sem linha partida ao meio. */
+  .print-solto { max-height: none !important; overflow: visible !important; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+}
