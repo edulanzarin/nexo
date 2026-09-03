@@ -7,6 +7,12 @@ import { getSessaoOpcional, empresasPermitidas } from "./sessao";
  * nomes (organograma, cargo, estab) e a causa da rescisão, e aplicamos os filtros
  * avançados. Três rotas (turnover, filtros, movimentações) partem desta mesma
  * base — DRY. Ver [[Módulo de folha e eSocial do Questor]].
+ *
+ * "Horário" sai do `descrtipojornada` (a jornada do `funcescala`, que a view já
+ * resolve pela vigência) porque é ali que o DP escreve o turno — "1º turno", "2º
+ * turno". O `escala.descrescala` (o horário cru, "13:30 às 17:30/18:00 às 22:00")
+ * fica de reserva para a empresa que não preencheu a jornada: quem já enxergava
+ * o horário continua enxergando, e quem escreveu turno passa a agrupar por turno.
  */
 export interface FolhaFiltrosSel {
   estabs: string[];
@@ -90,7 +96,8 @@ export async function construirBase(
              coalesce(nullif(btrim(o.descrorgan), ''), '(sem setor)') as setor,
              coalesce(nullif(btrim(ca.descrcargo), ''), '(sem cargo)') as cargo,
              coalesce(nullif(btrim(es.apelidoestab), ''), nullif(btrim(es.nomeestab), ''), '(sem estab)') as estab,
-             coalesce(nullif(btrim(esc.descrescala), ''), '(sem horário)') as horario,
+             coalesce(nullif(btrim(f.descrtipojornada), ''),
+                      nullif(btrim(esc.descrescala), ''), '(sem horário)') as horario,
              rr.codigocausa as causa, cd.descrcausa
         from funcionario f
         left join organograma o
