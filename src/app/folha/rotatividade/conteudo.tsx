@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, Repeat, UserMinus, UserPlus, Users } from "lucide-react";
+import { ArrowDown, ArrowUp, Printer, Repeat, UserMinus, UserPlus, Users } from "lucide-react";
 import clsx from "clsx";
 import { TurnoverSerieChart } from "@/components/charts/turnover-serie-chart";
 import { RotatividadeQuebra } from "@/components/rotatividade-quebra";
@@ -11,17 +11,39 @@ import { FolhaMovimentacoes } from "@/components/folha-movimentacoes";
 import { PessoasModal, type Drill } from "@/components/folha-pessoas-modal";
 import { Card } from "@/components/ui";
 import { useFiltros } from "@/hooks/use-filters";
-import { useTurnover, useFolhaFiltros } from "@/hooks/use-api";
-import { deltaPct, num } from "@/lib/format";
+import { useTurnover, useFolhaFiltros, useEmpresas } from "@/hooks/use-api";
+import { imprimirPDF } from "@/lib/exportar";
+import { dataBR, deltaPct, num } from "@/lib/format";
 import {
   FOLHA_SELECAO_VAZIA,
   serializarFolhaSelecao,
   type FolhaSelecao,
 } from "@/lib/folha-filtros";
+import type { FolhaFiltros as FolhaFiltrosOpcoes, FolhaOpcao } from "@/lib/types";
 
 const pct = (v: number) => `${v.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%`;
 const anos = (dias: number | null) =>
   dias == null ? "—" : `${(dias / 365).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} anos`;
+
+/**
+ * Resumo dos filtros avançados para o cabeçalho do papel. Relatório filtrado que
+ * não diz que está filtrado mente para quem lê meses depois — ainda mais com um
+ * rodapé escrito "Total da empresa".
+ */
+function resumoFiltros(sel: FolhaSelecao, opcoes: FolhaFiltrosOpcoes | undefined): string[] {
+  const partes: string[] = [];
+  const juntar = (titulo: string, vals: string[], lista: FolhaOpcao[] | undefined) => {
+    if (vals.length === 0) return;
+    const rotulos = vals.map((v) => lista?.find((o) => o.valor === v)?.rotulo ?? v);
+    partes.push(`${titulo}: ${rotulos.join(", ")}`);
+  };
+  juntar("Estabelecimento", sel.estabs, opcoes?.estabelecimentos);
+  juntar("Setor", sel.setores, opcoes?.setores);
+  juntar("Cargo", sel.cargos, opcoes?.cargos);
+  juntar("Vínculo", sel.vinculos, opcoes?.vinculos);
+  juntar("Horário", sel.horarios, opcoes?.horarios);
+  return partes;
+}
 
 /** Delta vs período anterior. `sentido` diz qual direção é boa (cor). */
 function Delta({
@@ -112,6 +134,9 @@ export default function RotatividadePage() {
 
   const opcoes = useFolhaFiltros(qs);
   const turnover = useTurnover(qsCompleto);
+  const empresas = useEmpresas();
+  const nomeEmpresa = empresas.data?.find((e) => e.codigo === empresa)?.nome ?? "";
+  const filtrosNoPapel = resumoFiltros(sel, opcoes.data);
 
   const d = turnover.data;
   const c = d?.consolidado;
@@ -128,7 +153,45 @@ export default function RotatividadePage() {
 
   return (
     <>
+      {/* Só o relatório vai pro papel — a paleta clara e o destravamento das
+          tabelas roladas moram no globals.css, valem para toda tela que imprime. */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `@media print {
+            body * { visibility: hidden !important; }
+            #rotatividade-print, #rotatividade-print * { visibility: visible !important; }
+            #rotatividade-print { position: absolute; left: 0; top: 0; width: 100%; padding: 0; }
+          }`,
+        }}
+      />
+
       <FolhaFiltros opcoes={opcoes.data} sel={sel} onChange={setSel} />
+
+      <div className="no-print flex justify-end">
+        <button
+          onClick={() => imprimirPDF("folha", "Rotatividade")}
+          title="Imprimir ou salvar em PDF"
+          className="flex h-9 items-center gap-2 rounded-lg border border-hairline bg-surface-2 px-3 text-xs text-ink-2 transition-colors hover:text-ink"
+        >
+          <Printer className="size-3.5" />
+          Imprimir / PDF
+        </button>
+      </div>
+
+      <div id="rotatividade-print" className="flex flex-col gap-4">
+      {/* Cabeçalho que só existe no papel: sem ele o PDF sai sem dizer de qual
+          empresa, de qual período e sob quais filtros. */}
+      <header className="hidden print:block">
+        <h1 className="text-base font-semibold">
+          Rotatividade{nomeEmpresa ? ` — ${nomeEmpresa}` : ""}
+        </h1>
+        <p className="text-xs text-muted">
+          {dataBR(filtros.inicio)} – {dataBR(filtros.fim)}
+        </p>
+        {filtrosNoPapel.length > 0 && (
+          <p className="mt-0.5 text-xs text-muted">{filtrosNoPapel.join(" · ")}</p>
+        )}
+      </header>
 
       {/* KPIs principais */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -253,7 +316,7 @@ export default function RotatividadePage() {
       />
       <RotatividadeQuebra
         titulo="Turnover por horário"
-        subtitulo=""
+        subtitulo="Turno/jornada escrita no cadastro; sem ela, o horário da escala"
         rotuloColuna="Horário"
         dados={d?.horarios}
         total={c}
@@ -327,6 +390,8 @@ export default function RotatividadePage() {
           onDrill={abrirDrill}
           compacto
         />
+      </div>
+
       </div>
 
       <PessoasModal qsBase={qsCompleto} drill={drill} onFechar={() => setDrill(null)} />

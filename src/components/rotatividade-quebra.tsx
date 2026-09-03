@@ -89,7 +89,7 @@ export function RotatividadeQuebra({
 
       {/* Só um toggle útil (esconde setores parados) + busca — some no compacto */}
       {!compacto && (
-      <div className="mb-3 flex flex-wrap items-center gap-2">
+      <div className="no-print mb-3 flex flex-wrap items-center gap-2">
         <button
           onClick={() => setSoMovimento((v) => !v)}
           className={clsx(
@@ -117,7 +117,10 @@ export function RotatividadeQuebra({
         <div className="skeleton h-96 w-full" />
       ) : (
         <div
-          className={clsx("max-h-[34rem] overflow-y-auto overflow-x-auto", recarregando && "refetching")}
+          className={clsx(
+            "print-solto max-h-[34rem] overflow-y-auto overflow-x-auto",
+            recarregando && "refetching"
+          )}
         >
           <table className="w-full min-w-[560px] border-collapse text-sm">
             <thead className="sticky top-0 z-10 bg-surface">

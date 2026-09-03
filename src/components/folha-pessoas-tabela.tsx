@@ -21,7 +21,14 @@ export function PessoasTabela({
   recarregando?: boolean;
 }) {
   return (
-    <div className={clsx(altura, "overflow-y-auto overflow-x-auto", recarregando && "refetching")}>
+    <div
+      className={clsx(
+        "print-solto",
+        altura,
+        "overflow-y-auto overflow-x-auto",
+        recarregando && "refetching"
+      )}
+    >
       <table className="w-full min-w-[720px] border-collapse text-sm">
         <thead className="sticky top-0 z-10 bg-surface">
           <tr className="border-b border-hairline text-xs text-muted">

@@ -89,7 +89,7 @@ export function FolhaMovimentacoes({ qs, modulo = "folha" }: Props) {
         <button
           onClick={exportar}
           disabled={!visiveis || visiveis.length === 0}
-          className="flex items-center gap-1.5 rounded-lg border border-hairline bg-surface-2 px-3 py-1.5 text-xs text-ink-2 transition-colors hover:text-ink disabled:opacity-40"
+          className="no-print flex items-center gap-1.5 rounded-lg border border-hairline bg-surface-2 px-3 py-1.5 text-xs text-ink-2 transition-colors hover:text-ink disabled:opacity-40"
         >
           <Download className="size-3.5" />
           Exportar CSV
@@ -98,7 +98,7 @@ export function FolhaMovimentacoes({ qs, modulo = "folha" }: Props) {
 
       {/* Alternador de visão */}
       <Segmented<Escopo>
-        className="mb-3"
+        className="no-print mb-3"
         value={escopo}
         onChange={setEscopo}
         options={[
@@ -107,7 +107,7 @@ export function FolhaMovimentacoes({ qs, modulo = "folha" }: Props) {
         ]}
       />
 
-      <div className="mb-3 flex flex-wrap items-center gap-2">
+      <div className="no-print mb-3 flex flex-wrap items-center gap-2">
         {escopo === "movimentacoes" &&
           chips.map((c) => (
             <button
