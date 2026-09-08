@@ -4,6 +4,7 @@ import { query } from "./db";
 import { entregasPendentes, listarEmpresas, AcessoriasErro } from "./acessorias";
 import type { EmpresaAcessorias } from "./acessorias";
 import { getSessaoOpcional, empresasPermitidas } from "./sessao";
+import { guardarSetores } from "./carteira-setores";
 import type {
   EntregaFila,
   ObrigacaoFila,
@@ -243,6 +244,10 @@ export async function sincronizarObrigacoes(): Promise<ResumoSync> {
     const visto = new Date();
 
     await guardarCarteira(todasEmpresas, mapa);
+    // Os setores vêm na MESMA resposta (flag `departments`), então gravá-los aqui
+    // não custa requisição nenhuma — e mantém o responsável de cada empresa
+    // fresco todo dia, sem depender de alguém apertar o botão da outra tela.
+    await guardarSetores(todasEmpresas);
 
     // Ordem ESTÁVEL: o índice de retomada só significa alguma coisa se a mesma
     // carteira produzir sempre a mesma sequência.

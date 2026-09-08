@@ -239,11 +239,21 @@ async function get<T>(
 
 // ── Empresas ─────────────────────────────────────────────────────────────────
 
+/** Setor da empresa com o responsável, como vem na flag `departments`. */
+export interface SetorAcessorias {
+  ID: string;
+  Nome: string;
+  RespNome?: string;
+  RespEmail?: string;
+}
+
 export interface EmpresaAcessorias {
   ID: string;
   Identificador: string;
   Razao: string;
   Status: string;
+  /** Setores com responsável. Só vem com a flag `departments` (ver abaixo). */
+  Departamentos?: SetorAcessorias[];
   DtLastDH?: string;
 }
 
@@ -267,7 +277,16 @@ export async function listarEmpresas(
   let semNovidade = 0;
 
   for (let pagina = 1; pagina <= MAX_PAGINAS; pagina++) {
-    const lote = await get<EmpresaAcessorias[]>("/companies/ListAll", { Pagina: String(pagina) });
+    // `departments` traz, em cada empresa, os setores COM o responsável — o dado
+    // que diz de quem é a empresa, e que o Questor não tem. Vem na mesma
+    // chamada: não custa requisição a mais, só resposta maior (~40 KB por página
+    // contra ~25 KB). É parâmetro de PRESENÇA: com valor (`departments=1`) vira
+    // filtro e muda o que volta, por isso entra na lista de flags nuas.
+    const lote = await get<EmpresaAcessorias[]>(
+      "/companies/ListAll",
+      { Pagina: String(pagina) },
+      ["departments"]
+    );
 
     await aoProgredir?.();
 

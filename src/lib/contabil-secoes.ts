@@ -339,6 +339,15 @@ export const SECOES_CONTABIL: SecaoContabil[] = [
         execucao: "Executar",
       },
       {
+        id: "fechamento",
+        rotulo: "Fechamento",
+        path: "/contabil/produtividade/fechamento",
+        descricao:
+          "Quais empresas tiveram a competência apurada, de quem elas são e quem apurou — o Questor cruzado com a carteira do Acessórias",
+        empresaOpcional: true,
+        execucao: "Executar",
+      },
+      {
         id: "atraso",
         rotulo: "Atraso",
         path: "/contabil/produtividade/atraso",

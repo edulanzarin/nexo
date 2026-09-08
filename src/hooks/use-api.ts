@@ -66,6 +66,8 @@ import type { FiscalTempoResp } from "@/lib/fiscal-tempo-tipos";
 import type { ContabilExclusoesResp } from "@/lib/contabil-exclusoes-tipos";
 import type { ContabilAtrasoResp } from "@/lib/contabil-atraso-tipos";
 import type { ContabilCarteiraResp } from "@/lib/contabil-carteira-tipos";
+import type { ContabilFechamentoResp } from "@/lib/contabil-fechamento-tipos";
+import type { EstadoCarteira } from "@/lib/carteira-setores-tipos";
 import type { ContabilTempoResp } from "@/lib/contabil-tempo-tipos";
 import type { ProdAppResp } from "@/lib/prod-app-tipos";
 import type { FiscalApuracaoResp } from "@/lib/fiscal-apuracao-tipos";
@@ -571,6 +573,26 @@ export const useContabilCarteira = (qs: string, enabled = true) =>
     `/api/contabil/produtividade-carteira?${qs}`,
     enabled
   );
+
+export const useContabilFechamento = (qs: string, enabled = true) =>
+  useApiQuery<ContabilFechamentoResp>(
+    ["contabil-fechamento", qs],
+    `/api/contabil/produtividade-fechamento?${qs}`,
+    enabled
+  );
+
+/**
+ * Estado da carteira do Acessórias. Não passa pelo `useApiQuery` porque precisa
+ * de uma coisa que ele não oferece: enquanto a varredura roda, perguntar de três
+ * em três segundos. Dois minutos e meio sem sinal nenhum é indistinguível de
+ * tela travada, e o progresso é gravado a cada página.
+ */
+export const useCarteiraAcessorias = () =>
+  useQuery<EstadoCarteira>({
+    queryKey: ["carteira-acessorias"],
+    queryFn: () => fetchJson<EstadoCarteira>("/api/contabil/produtividade-fechamento-carteira"),
+    refetchInterval: (q) => (q.state.data?.rodando ? 3_000 : false),
+  });
 
 /** Aba No Nexo: o que o time rodou DENTRO do app (trilha de auditoria). */
 export const useContabilApp = (qs: string, enabled = true) =>
