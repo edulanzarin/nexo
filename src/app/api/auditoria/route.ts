@@ -19,7 +19,9 @@ import type { ModuloId } from "@/lib/modulos";
  * exatamente a pergunta — e é UM registro por clique, não um por requisição
  * (uma tela de seis cartões dispara seis consultas e continua sendo um gesto).
  */
-const MODULOS_VALIDOS: ModuloId[] = ["fiscal", "contabil", "folha", "rh"];
+// Módulo que exporta dado de gente ou de cliente entra aqui — fora da lista, o
+// beacon é recusado e a exportação acontece SEM deixar rastro.
+const MODULOS_VALIDOS: ModuloId[] = ["fiscal", "contabil", "folha", "rh", "postmortem"];
 const TIPOS_VALIDOS = ["export", "consulta"] as const;
 type TipoEvento = (typeof TIPOS_VALIDOS)[number];
 
