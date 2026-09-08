@@ -1,4 +1,5 @@
 import type { ModuloId } from "./modulos";
+import { SETORES_PM } from "./postmortem-setores";
 
 /**
  * Registro ÚNICO endpoint -> seção(ões) dona(s). É o que deixa o gate do
@@ -131,9 +132,6 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     "rescisoes-config": ["rescisoes"],
     "rescisoes-destinatarios": ["rescisoes"],
     // /api/folha/cron/rescisoes é público (segredo próprio) — NÃO passa por apiRoute.
-    // Relatório Post Mortem: analista (post-mortem) e gestor (post-mortem-gestao)
-    // batem no mesmo endpoint; o handler recorta por dono (meus x todos).
-    "post-mortem": ["post-mortem", "post-mortem-gestao"],
   },
   rh: {
     // Painel (home do módulo): pendências + panorama do RH interno.
@@ -185,6 +183,13 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     empresa: ["geral", "contabil", "fiscal", "dp"],
     // Carteira para o seletor: leitura do banco, recortada pelo escopo.
     empresas: ["geral", "contabil", "fiscal", "dp"],
+  },
+  postmortem: {
+    // Uma rota só serve todas as seções, como nas Obrigações: o recorte é o
+    // SETOR, e ele vem no caminho/corpo. O gate aqui garante que a pessoa
+    // acessa ALGUMA seção do módulo; se ela pode aquele setor (ou é da Geral),
+    // e se o relatório é dela, quem confere é o handler.
+    relatorios: ["geral", ...SETORES_PM.map((s) => s.id)],
   },
   // Configurações não tem rotas de API: o CRUD roda por Server Action (gateada
   // por assertSecao). Mapa vazio; nenhum endpoint /api/config existe.

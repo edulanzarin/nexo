@@ -18,7 +18,7 @@ type Handler = (req: NextRequest, ctx: RouteCtx) => Promise<unknown>;
  * exige admin.)
  */
 function moduloDaRota(pathname: string): ModuloId | undefined {
-  const m = pathname.match(/^\/api\/(fiscal|contabil|folha|rh|obrigacoes)(?:\/|$)/);
+  const m = pathname.match(/^\/api\/(fiscal|contabil|folha|rh|obrigacoes|postmortem)(?:\/|$)/);
   return m ? (m[1] as ModuloId) : undefined;
 }
 

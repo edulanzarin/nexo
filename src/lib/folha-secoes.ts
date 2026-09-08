@@ -1,5 +1,4 @@
 import {
-  ClipboardList,
   Gauge,
   HandCoins,
   LayoutDashboard,
@@ -93,25 +92,10 @@ export const SECOES_FOLHA: SecaoFiscal[] = [
     metrica: false,
     descricao: "Prazo de pagamento (CLT 477): vencidas, a vencer e avisos por e-mail",
   },
-  // Relatório Post Mortem do DP. Duas seções pela doutrina de permissão binária
-  // (restringir o que se faz = separar em outra seção): o analista preenche e vê
-  // os SEUS; o gestor tem também a de Gestão, que vê TODOS.
-  {
-    id: "post-mortem",
-    icone: ClipboardList,
-    rotulo: "Relatório Post Mortem",
-    path: "/folha/post-mortem",
-    metrica: false,
-    descricao: "Análise de incidente do DP: preencha e acompanhe os seus",
-  },
-  {
-    id: "post-mortem-gestao",
-    icone: LayoutDashboard,
-    rotulo: "Post Mortem · Gestão",
-    path: "/folha/post-mortem-gestao",
-    metrica: false,
-    descricao: "Todos os relatórios do DP: consulta, extração e indicadores",
-  },
+  // O Relatório Post Mortem morava aqui (duas seções: o analista e a gestão do
+  // DP). Em set/2026 virou plano do ESCRITÓRIO e saiu para módulo próprio, com
+  // uma seção por setor — ver [[postmortem-secoes]]. A permissão de quem tinha
+  // as duas foi convertida na migration 034.
 ];
 
 export function secaoFolhaAtual(pathname: string): SecaoFiscal | undefined {

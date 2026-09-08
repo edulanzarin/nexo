@@ -4,6 +4,7 @@ import { FilterError } from "./fiscal-filters";
 import {
   criticidadeValida,
   fatoresVazio,
+  gravidadeValida,
   impactosVazio,
   validarEnvio,
   type Criticidade,
@@ -12,20 +13,25 @@ import {
   type RelatorioPM,
   type ResumoPM,
   type StatusPM,
-} from "./folha-postmortem-tipos";
+} from "./postmortem-tipos";
 
 /**
- * Acesso a dados do Relatório Post Mortem (banco do APP, gravável). A posse é do
- * autor: as consultas de "meus" filtram por autor_id; as de "todos" (gestor) não.
- * Quem decide qual usar é o handler da rota, pela seção da sessão.
+ * Acesso a dados do Relatório Post Mortem (banco do APP, gravável). Dois
+ * recortes, e o handler da rota escolhe pela seção da sessão:
+ *
+ * - **seção do setor** — `listarMeus(autor, setor)`: a posse é do autor, dentro
+ *   do setor dele. É o que o analista preenche e acompanha.
+ * - **seção Geral** — `listarTodos()`: o escritório inteiro, para a coordenação.
  */
 
 // As colunas editáveis, na ordem em que salvar/enviar passam os valores.
 const COLS_EDITAVEIS = [
   "criticidade",
+  "gravidade",
   "grupo_id",
   "empresa_afetada",
   "funcionarios_afetados",
+  "responsavel_info",
   "processo",
   "data_ocorrido",
   "data_identificado",
@@ -49,9 +55,11 @@ function valoresEditaveis(d: DadosPM): unknown[] {
   const t = (s: string) => (s.trim() ? s.trim() : null);
   return [
     d.criticidade,
+    d.gravidade,
     d.grupoId,
     t(d.empresaAfetada),
     d.funcionariosAfetados,
+    t(d.responsavelInfo),
     t(d.processo),
     d.dataOcorrido,
     d.dataIdentificado,
@@ -75,11 +83,14 @@ interface LinhaBanco {
   status: StatusPM;
   autor_id: string;
   autor_nome: string;
+  setor: string;
   criticidade: string | null;
+  gravidade: number | null;
   grupo_id: number | null;
   grupo_nome: string | null;
   empresa_afetada: string | null;
   funcionarios_afetados: number | null;
+  responsavel_info: string | null;
   processo: string | null;
   data_ocorrido: string | null;
   data_identificado: string | null;
@@ -111,11 +122,14 @@ function paraRelatorio(r: LinhaBanco): RelatorioPM {
     status: r.status,
     autorId: r.autor_id,
     autorNome: r.autor_nome,
+    setor: r.setor,
     grupoNome: r.grupo_nome,
     criticidade: criticidadeValida(r.criticidade) ? r.criticidade : null,
+    gravidade: gravidadeValida(r.gravidade),
     grupoId: r.grupo_id,
     empresaAfetada: r.empresa_afetada ?? "",
     funcionariosAfetados: r.funcionarios_afetados,
+    responsavelInfo: r.responsavel_info ?? "",
     processo: r.processo ?? "",
     dataOcorrido: r.data_ocorrido,
     dataIdentificado: r.data_identificado,
@@ -137,7 +151,7 @@ function paraRelatorio(r: LinhaBanco): RelatorioPM {
 
 const SELECT_COMPLETO = `
   select pm.*, u.nome as autor_nome, g.nome as grupo_nome
-    from folha_postmortem pm
+    from postmortem pm
     join usuario u on u.id = pm.autor_id
     left join grupo_empresarial g on g.id = pm.grupo_id`;
 
@@ -148,16 +162,17 @@ export async function obterPostMortem(id: number): Promise<RelatorioPM | null> {
 }
 
 interface FiltroLista {
+  setor?: string | null;
   criticidade?: Criticidade | null;
   grupoId?: number | null;
   status?: StatusPM | null;
 }
 
 const SELECT_RESUMO = `
-  select pm.id, pm.numero, pm.status, pm.criticidade, pm.empresa_afetada,
-         pm.processo, pm.data_ocorrido, pm.atualizado_em,
+  select pm.id, pm.numero, pm.status, pm.setor, pm.criticidade, pm.gravidade,
+         pm.empresa_afetada, pm.processo, pm.data_ocorrido, pm.atualizado_em,
          u.nome as autor_nome, g.nome as grupo_nome
-    from folha_postmortem pm
+    from postmortem pm
     join usuario u on u.id = pm.autor_id
     left join grupo_empresarial g on g.id = pm.grupo_id`;
 
@@ -166,7 +181,9 @@ function paraResumo(r: LinhaBanco): ResumoPM {
     id: r.id,
     numero: r.numero,
     status: r.status,
+    setor: r.setor,
     criticidade: criticidadeValida(r.criticidade) ? r.criticidade : null,
+    gravidade: gravidadeValida(r.gravidade),
     empresaAfetada: r.empresa_afetada ?? "",
     grupoNome: r.grupo_nome,
     autorNome: r.autor_nome,
@@ -176,11 +193,11 @@ function paraResumo(r: LinhaBanco): ResumoPM {
   };
 }
 
-/** Os relatórios de um autor (a lista do analista). */
-export async function listarMeus(autorId: string): Promise<ResumoPM[]> {
+/** Os relatórios de um autor DENTRO de um setor (a lista da seção do setor). */
+export async function listarMeus(autorId: string, setor: string): Promise<ResumoPM[]> {
   const rows = await appQuery<LinhaBanco>(
-    `${SELECT_RESUMO} where pm.autor_id = $1 order by pm.atualizado_em desc`,
-    [autorId]
+    `${SELECT_RESUMO} where pm.autor_id = $1 and pm.setor = $2 order by pm.atualizado_em desc`,
+    [autorId, setor]
   );
   return rows.map(paraResumo);
 }
@@ -189,6 +206,10 @@ export async function listarMeus(autorId: string): Promise<ResumoPM[]> {
 export async function listarTodos(f: FiltroLista = {}): Promise<ResumoPM[]> {
   const cond: string[] = [];
   const vals: unknown[] = [];
+  if (f.setor) {
+    vals.push(f.setor);
+    cond.push(`pm.setor = $${vals.length}`);
+  }
   if (f.status) {
     vals.push(f.status);
     cond.push(`pm.status = $${vals.length}`);
@@ -210,11 +231,11 @@ export async function listarTodos(f: FiltroLista = {}): Promise<ResumoPM[]> {
   return rows.map(paraResumo);
 }
 
-/** Cria um rascunho vazio do autor e devolve o id (para abrir o formulário). */
-export async function criarPostMortem(autorId: string): Promise<number> {
+/** Cria um rascunho vazio do autor no setor e devolve o id (o form abre nele). */
+export async function criarPostMortem(autorId: string, setor: string): Promise<number> {
   const rows = await appQuery<{ id: number }>(
-    `insert into folha_postmortem (autor_id) values ($1) returning id`,
-    [autorId]
+    `insert into postmortem (autor_id, setor) values ($1, $2) returning id`,
+    [autorId, setor]
   );
   return rows[0].id;
 }
@@ -224,7 +245,7 @@ export async function salvarPostMortem(id: number, autorId: string, dados: Dados
   const sets = COLS_EDITAVEIS.map((c, i) => `${c} = $${i + 1}`).join(", ");
   const base = valoresEditaveis(dados);
   const rows = await appQuery<{ id: number }>(
-    `update folha_postmortem set ${sets}
+    `update postmortem set ${sets}
        where id = $${base.length + 1} and autor_id = $${base.length + 2} and status = 'rascunho'
        returning id`,
     [...base, id, autorId]
@@ -248,9 +269,9 @@ export async function enviarPostMortem(
   const sets = COLS_EDITAVEIS.map((c, i) => `${c} = $${i + 1}`).join(", ");
   const base = valoresEditaveis(dados);
   const rows = await appQuery<{ numero: number }>(
-    `update folha_postmortem
+    `update postmortem
         set ${sets},
-            numero = nextval('folha_postmortem_numero_seq'),
+            numero = nextval('postmortem_numero_seq'),
             status = 'enviado'
       where id = $${base.length + 1} and autor_id = $${base.length + 2} and status = 'rascunho'
       returning numero`,
@@ -263,7 +284,7 @@ export async function enviarPostMortem(
 /** Exclui um rascunho do próprio autor (relatório enviado não se apaga). */
 export async function excluirPostMortem(id: number, autorId: string): Promise<void> {
   const rows = await appQuery<{ id: number }>(
-    `delete from folha_postmortem
+    `delete from postmortem
        where id = $1 and autor_id = $2 and status = 'rascunho' returning id`,
     [id, autorId]
   );

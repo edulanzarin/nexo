@@ -10,11 +10,33 @@ import { COOKIE_SESSAO } from "@/lib/cookie-nome";
  *
  * `proxy` é a convenção nova do Next 16 (o antigo `middleware` foi renomeado).
  */
+/**
+ * O Post Mortem era seção do módulo Folha até set/2026, quando virou módulo do
+ * escritório. O redirecionamento mora AQUI, e não numa página em `/folha`,
+ * porque quem só tinha o Post Mortem lá deixou de ter qualquer seção da Folha —
+ * o layout do módulo mandaria justamente essa pessoa de volta ao launcher.
+ */
+function postMortemMudouDeCasa(pathname: string): string | null {
+  if (pathname === "/folha/post-mortem-gestao") return "/post-mortem/geral";
+  if (pathname === "/folha/post-mortem") return "/post-mortem/dp";
+  const relatorio = pathname.match(/^\/folha\/post-mortem\/(\d+)$/);
+  // Todo relatório que existia era do DP (era a única seção que havia).
+  return relatorio ? `/post-mortem/dp/${relatorio[1]}` : null;
+}
+
 export function proxy(req: NextRequest) {
-  if (req.cookies.get(COOKIE_SESSAO)) return NextResponse.next();
-  const url = req.nextUrl.clone();
-  url.pathname = "/login";
-  return NextResponse.redirect(url);
+  if (!req.cookies.get(COOKIE_SESSAO)) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+  const destino = postMortemMudouDeCasa(req.nextUrl.pathname);
+  if (destino) {
+    const url = req.nextUrl.clone();
+    url.pathname = destino;
+    return NextResponse.redirect(url);
+  }
+  return NextResponse.next();
 }
 
 export const config = {

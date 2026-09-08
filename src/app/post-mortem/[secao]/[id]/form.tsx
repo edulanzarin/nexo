@@ -11,13 +11,16 @@ import {
   CRITICIDADES,
   CRITICIDADE_DEF,
   CRITICIDADE_ROTULO,
+  GRAVIDADES,
+  rotuloGravidade,
   validarEnvio,
   type DadosPM,
   type Fatores,
   type GrupoOpcao,
   type Impactos,
   type RelatorioPM,
-} from "@/lib/folha-postmortem-tipos";
+} from "@/lib/postmortem-tipos";
+import { rotuloSetor, temCampo, type CampoPM } from "@/lib/postmortem-setores";
 
 const campo =
   "w-full rounded-lg border border-hairline bg-surface-2 px-3 py-2 text-sm text-ink outline-none transition-colors placeholder:text-muted focus:border-accent disabled:cursor-not-allowed disabled:opacity-70";
@@ -142,11 +145,21 @@ function Repetivel<T extends Record<string, string>>({
   );
 }
 
-const ROTULO_IMPACTO: { chave: keyof Impactos; label: string }[] = [
+// `campo` marca o impacto que só alguns setores enxergam — a lista de quem
+// enxerga o quê é do catálogo, não de um `if` no meio da tela.
+const ROTULO_IMPACTO: { chave: keyof Impactos; label: string; campo?: CampoPM }[] = [
   { chave: "financeiro", label: "Impacto financeiro (valores, se houver)" },
-  { chave: "trabalhista", label: "Impacto trabalhista / legal (multas, passivo, risco de ação)" },
+  {
+    chave: "trabalhista",
+    label: "Impacto trabalhista / legal (multas, passivo, risco de ação)",
+    campo: "impactoTrabalhista",
+  },
   { chave: "cliente", label: "Impacto ao cliente (relação, confiança, retrabalho)" },
-  { chave: "funcionarios", label: "Impacto ao(s) funcionário(s) afetado(s)" },
+  {
+    chave: "funcionarios",
+    label: "Impacto ao(s) funcionário(s) afetado(s)",
+    campo: "impactoFuncionarios",
+  },
   { chave: "reputacional", label: "Impacto reputacional / interno ao escritório" },
   { chave: "outros", label: "Outros impactos" },
 ];
@@ -163,16 +176,23 @@ export function FormularioPM({
   inicial,
   grupos,
   somenteLeitura,
+  voltarPara,
 }: {
   inicial: RelatorioPM;
   grupos: GrupoOpcao[];
   somenteLeitura: boolean;
+  /** Para onde o Voltar leva: a seção de onde se entrou (o setor ou a Geral). */
+  voltarPara: string;
 }) {
   const router = useRouter();
   const [d, setD] = useState<DadosPM>(inicial);
   const [salvando, setSalvando] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const ro = somenteLeitura;
+  // Quais campos esta tela mostra sai do SETOR do relatório (ver postmortem-setores).
+  const setor = inicial.setor;
+  const mostra = (c: CampoPM) => temCampo(setor, c);
+  const impactos = ROTULO_IMPACTO.filter((i) => !i.campo || mostra(i.campo));
 
   const up = <K extends keyof DadosPM>(k: K, v: DadosPM[K]) => setD((p) => ({ ...p, [k]: v }));
   const upImpacto = (k: keyof Impactos, v: string) =>
@@ -185,7 +205,7 @@ export function FormularioPM({
   async function salvar() {
     setSalvando(true);
     try {
-      await mutar(`/api/folha/post-mortem/${inicial.id}`, "PATCH", d);
+      await mutar(`/api/postmortem/relatorios/${inicial.id}`, "PATCH", d);
       toast.success("Rascunho salvo");
     } catch (e) {
       toast.error((e as Error).message);
@@ -203,12 +223,12 @@ export function FormularioPM({
     setEnviando(true);
     try {
       const { numero } = await mutar<{ numero: number }>(
-        `/api/folha/post-mortem/${inicial.id}/enviar`,
+        `/api/postmortem/relatorios/${inicial.id}/enviar`,
         "POST",
         d
       );
       toast.success(`Enviado — Relatório nº ${String(numero).padStart(4, "0")}`);
-      router.push("/folha/post-mortem");
+      router.push(voltarPara);
     } catch (e) {
       toast.error((e as Error).message);
       setEnviando(false);
@@ -224,7 +244,7 @@ export function FormularioPM({
             variant="secondary"
             size="sm"
             className="text-xs"
-            onClick={() => router.push("/folha/post-mortem")}
+            onClick={() => router.push(voltarPara)}
           >
             <ArrowLeft className="size-4" /> Voltar
           </Button>
@@ -233,6 +253,7 @@ export function FormularioPM({
               {inicial.numero ? `Nº ${String(inicial.numero).padStart(4, "0")}` : "Rascunho"}
             </span>
             <StatusPmBadge status={inicial.status} />
+            <span className="text-xs text-muted">{rotuloSetor(setor)}</span>
           </div>
         </div>
         {!ro && (
@@ -292,6 +313,26 @@ export function FormularioPM({
               ))}
             </select>
           </Campo>
+          {mostra("gravidade") && (
+            <Campo
+              label="Nota de gravidade"
+              ajuda="1 baixo … 5 gravíssimo"
+            >
+              <select
+                value={d.gravidade ?? ""}
+                disabled={ro}
+                onChange={(e) => up("gravidade", e.target.value ? Number(e.target.value) : null)}
+                className={campo}
+              >
+                <option value="">Selecione…</option>
+                {GRAVIDADES.map((n) => (
+                  <option key={n} value={n}>
+                    {rotuloGravidade(n)}
+                  </option>
+                ))}
+              </select>
+            </Campo>
+          )}
           <Campo label="Grupo">
             <select
               value={d.grupoId ?? ""}
@@ -318,18 +359,20 @@ export function FormularioPM({
               className={campo}
             />
           </Campo>
-          <Campo label="Nº de funcionários afetados">
-            <input
-              type="number"
-              min={0}
-              value={d.funcionariosAfetados ?? ""}
-              disabled={ro}
-              onChange={(e) =>
-                up("funcionariosAfetados", e.target.value === "" ? null : Number(e.target.value))
-              }
-              className={campo}
-            />
-          </Campo>
+          {mostra("funcionariosAfetados") && (
+            <Campo label="Nº de funcionários afetados">
+              <input
+                type="number"
+                min={0}
+                value={d.funcionariosAfetados ?? ""}
+                disabled={ro}
+                onChange={(e) =>
+                  up("funcionariosAfetados", e.target.value === "" ? null : Number(e.target.value))
+                }
+                className={campo}
+              />
+            </Campo>
+          )}
           <Campo label="Processo / Rotina envolvida">
             <input
               value={d.processo}
@@ -364,6 +407,19 @@ export function FormularioPM({
               className={campo}
             />
           </Campo>
+          {mostra("responsavelInfo") && (
+            <Campo
+              label="Responsável por passar a informação"
+              ajuda="Quem comunicou que o erro tinha acontecido"
+            >
+              <input
+                value={d.responsavelInfo}
+                disabled={ro}
+                onChange={(e) => up("responsavelInfo", e.target.value)}
+                className={campo}
+              />
+            </Campo>
+          )}
           <Campo label="Como foi identificado">
             <input
               value={d.comoIdentificou}
@@ -404,7 +460,7 @@ export function FormularioPM({
       {/* 3. Impacto */}
       <Secao n={3} titulo="Impacto e consequências">
         <div className="grid gap-4 sm:grid-cols-2">
-          {ROTULO_IMPACTO.map((imp) => (
+          {impactos.map((imp) => (
             <Campo key={imp.chave} label={imp.label}>
               <textarea
                 rows={2}

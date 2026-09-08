@@ -1,7 +1,10 @@
 /**
- * Relatório Post Mortem do DP — parte PURA (sem servidor). DTOs, rótulos e
- * validação compartilhados entre o formulário (client) e a submissão (server).
- * Não importa `pg` nem `server-only` para poder entrar no bundle do cliente.
+ * Relatório Post Mortem — parte PURA (sem servidor). DTOs, rótulos e validação
+ * compartilhados entre o formulário (client) e a submissão (server). Não importa
+ * `pg` nem `server-only` para poder entrar no bundle do cliente.
+ *
+ * O relatório é do ESCRITÓRIO: o `setor` diz quem o preencheu e quais campos a
+ * tela mostra — ver [[postmortem-setores]], que é a fonte dessa variação.
  */
 
 export const CRITICIDADES = ["baixa", "media", "alta", "critica"] as const;
@@ -21,6 +24,19 @@ export const CRITICIDADE_DEF: Record<Criticidade, string> = {
   alta: "Impacto financeiro relevante ou risco trabalhista",
   critica: "Autuação, passivo trabalhista, dano irreversível ao cliente",
 };
+
+/**
+ * Nota de gravidade do Societário: 1 baixo, 5 gravíssimo. Só as duas pontas têm
+ * nome porque só elas foram definidas por quem pediu — inventar rótulo para 2, 3
+ * e 4 seria escrever régua que ninguém combinou.
+ */
+export const GRAVIDADES = [1, 2, 3, 4, 5] as const;
+
+export function rotuloGravidade(n: number): string {
+  if (n === 1) return "1 — Baixo";
+  if (n === 5) return "5 — Gravíssimo";
+  return String(n);
+}
 
 export type StatusPM = "rascunho" | "enviado";
 
@@ -69,9 +85,13 @@ export interface AcaoPreventiva {
  */
 export interface DadosPM {
   criticidade: Criticidade | null;
+  /** Nota de gravidade 1–5 (setor que a usa; null nos demais). */
+  gravidade: number | null;
   grupoId: number | null;
   empresaAfetada: string;
   funcionariosAfetados: number | null;
+  /** Quem comunicou que o erro tinha acontecido. */
+  responsavelInfo: string;
   processo: string;
   dataOcorrido: string | null;
   dataIdentificado: string | null;
@@ -93,6 +113,8 @@ export interface RelatorioPM extends DadosPM {
   id: number;
   numero: number | null;
   status: StatusPM;
+  /** Setor dono do relatório — decide os campos da tela e onde ele é listado. */
+  setor: string;
   autorId: string;
   autorNome: string;
   grupoNome: string | null;
@@ -105,7 +127,9 @@ export interface ResumoPM {
   id: number;
   numero: number | null;
   status: StatusPM;
+  setor: string;
   criticidade: Criticidade | null;
+  gravidade: number | null;
   empresaAfetada: string;
   grupoNome: string | null;
   autorNome: string;
@@ -131,9 +155,11 @@ export function fatoresVazio(): Fatores {
 export function pmVazio(): DadosPM {
   return {
     criticidade: null,
+    gravidade: null,
     grupoId: null,
     empresaAfetada: "",
     funcionariosAfetados: null,
+    responsavelInfo: "",
     processo: "",
     dataOcorrido: null,
     dataIdentificado: null,
@@ -174,6 +200,10 @@ function numOuNull(v: unknown): number | null {
 function lista(v: unknown): unknown[] {
   return Array.isArray(v) ? v : [];
 }
+/** Fora de 1–5 não é nota: vira "não informado" (a coluna tem o mesmo check). */
+export function gravidadeValida(n: number | null): number | null {
+  return n !== null && Number.isInteger(n) && n >= 1 && n <= 5 ? n : null;
+}
 
 /** Sanea o corpo cru (JSON do cliente) em um `DadosPM` — o servidor nunca confia
  *  no formato de quem chama. Campo faltando ou de tipo errado vira o vazio. */
@@ -181,9 +211,11 @@ export function coerceDados(v: unknown): DadosPM {
   const dataOk = (x: unknown) => (typeof x === "string" && x ? x : null);
   return {
     criticidade: criticidadeValida(campo(v, "criticidade")) ? (campo(v, "criticidade") as Criticidade) : null,
+    gravidade: gravidadeValida(numOuNull(campo(v, "gravidade"))),
     grupoId: numOuNull(campo(v, "grupoId")),
     empresaAfetada: txt(campo(v, "empresaAfetada")),
     funcionariosAfetados: numOuNull(campo(v, "funcionariosAfetados")),
+    responsavelInfo: txt(campo(v, "responsavelInfo")),
     processo: txt(campo(v, "processo")),
     dataOcorrido: dataOk(campo(v, "dataOcorrido")),
     dataIdentificado: dataOk(campo(v, "dataIdentificado")),

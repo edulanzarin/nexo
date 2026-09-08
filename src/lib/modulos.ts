@@ -3,9 +3,17 @@ import { SECOES_CONTABIL } from "./contabil-secoes";
 import { SECOES_FISCAL, type SecaoFiscal } from "./fiscal-secoes";
 import { SECOES_FOLHA } from "./folha-secoes";
 import { SECOES_OBRIGACOES } from "./obrigacoes-secoes";
+import { SECOES_POSTMORTEM } from "./postmortem-secoes";
 import { SECOES_RH } from "./rh-secoes";
 
-export type ModuloId = "fiscal" | "contabil" | "folha" | "rh" | "obrigacoes" | "config";
+export type ModuloId =
+  | "fiscal"
+  | "contabil"
+  | "folha"
+  | "rh"
+  | "obrigacoes"
+  | "postmortem"
+  | "config";
 
 /**
  * Catálogo dos módulos do Nexo. É a fonte única: dirige o launcher, a
@@ -69,6 +77,15 @@ export const MODULOS: Modulo[] = [
     home: "/obrigacoes",
   },
   {
+    id: "postmortem",
+    titulo: "Post Mortem",
+    descricao: "Análise de incidentes do escritório, um setor por seção",
+    icone: "/images/compliance.png",
+    // Home = o índice, que redireciona pra 1ª seção visível. Quem coordena cai
+    // na Visão geral; quem preenche, na seção do próprio setor.
+    home: "/post-mortem",
+  },
+  {
     id: "config",
     titulo: "Configurações",
     descricao: "Configs de domínio do sistema, como grupos de empresa",
@@ -87,6 +104,7 @@ const SECOES: Record<ModuloId, SecaoFiscal[]> = {
   folha: SECOES_FOLHA,
   rh: SECOES_RH,
   obrigacoes: SECOES_OBRIGACOES,
+  postmortem: SECOES_POSTMORTEM,
   config: SECOES_CONFIG,
 };
 

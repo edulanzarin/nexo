@@ -85,6 +85,7 @@ import type { EnvioRegra } from "@/lib/envio-regras";
 import type { RespostaExperienciaDetalhe } from "@/lib/rh-experiencia-dados";
 import type { DenunciaDashboard, DenunciaDetalhe, DenunciaResumo } from "@/lib/denuncia-tipos";
 import type { ClimaDashboard, RodadaResumo } from "@/lib/clima-tipos";
+import type { ResumoPM } from "@/lib/postmortem-tipos";
 
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
@@ -118,6 +119,16 @@ function useApiQuery<T>(chave: unknown[], url: string, enabled = true) {
 
 export const useEmpresas = () =>
   useApiQuery<Empresa[]>(["empresas"], "/api/empresas");
+
+/**
+ * Relatórios Post Mortem de uma seção: `geral` traz o escritório inteiro (com o
+ * recorte de setor, quando escolhido); um setor traz os do próprio usuário.
+ */
+export const usePostMortens = (secao: string, setor = "") =>
+  useApiQuery<ResumoPM[]>(
+    ["postmortem", secao, setor],
+    `/api/postmortem/relatorios?secao=${secao}${setor ? `&setor=${setor}` : ""}`
+  );
 
 /** Grupos de empresa cadastrados em Configurações — o filtro "por grupo". */
 export const useGruposEmpresa = () =>
