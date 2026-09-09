@@ -308,6 +308,57 @@ export async function listarEmpresas(
   return apenasAtivas ? todas.filter((e) => e.Status === "Ativa") : todas;
 }
 
+// ── Grupos de empresa ────────────────────────────────────────────────────────
+
+/** Grupo de empresas como o Acessórias o cadastra. Os campos vêm em minúsculas. */
+export interface GrupoAcessorias {
+  id: string;
+  nome: string;
+  status: string;
+}
+
+/** Empresa dentro de um grupo. `cnpj` vem FORMATADO, igual ao `Identificador`. */
+export interface EmpresaDoGrupo {
+  id: string;
+  razao_social: string;
+  cnpj: string;
+}
+
+/**
+ * Todos os grupos, numa chamada só. Medido em set/2026: **438 grupos (425
+ * ativos) em ~22 KB**, sem paginação — é o único recurso desta API que entrega
+ * a lista inteira de uma vez.
+ *
+ * O nome vem sujo: 34 dos 438 têm espaço nas pontas. Quem apara é aqui.
+ */
+export async function listarGrupos(): Promise<GrupoAcessorias[]> {
+  const lista = await get<GrupoAcessorias[]>("/company_groups/ListAll");
+  return (lista ?? []).map((g) => ({ ...g, nome: g.nome.trim() }));
+}
+
+/**
+ * As empresas de UM grupo. Uma chamada por grupo — não existe forma de trazer
+ * todos os vínculos de uma vez, e a empresa não carrega o grupo dela: medido em
+ * set/2026, `/companies/ListAll` devolve ID, Identificador, Razao, Fantasia,
+ * Status, Telefone, UF, ClienteDesde, ClienteAte, DataDoCadastro, Honorario e
+ * DtLastDH, e nada de grupo. A flag `groups` é ACEITA E IGNORADA (resposta byte
+ * a byte igual à sem flag), a armadilha silenciosa de sempre.
+ *
+ * Custo medido: ~1,8 s por grupo, ~13 min para os 425 ativos. É job noturno.
+ *
+ * **`companies` aqui EXIGE valor** — `?companies=1` traz a lista, `?companies`
+ * nu devolve o grupo sem empresa nenhuma. É o INVERSO de `config` e
+ * `departments`, que quebram justamente quando recebem valor. Não há como
+ * adivinhar pela doc: cada parâmetro desta API tem a sua forma, e a errada não
+ * dá erro — devolve menos.
+ */
+export async function empresasDoGrupo(id: number): Promise<EmpresaDoGrupo[]> {
+  const g = await get<{ companies?: EmpresaDoGrupo[] }>(`/company_groups/${id}`, {
+    companies: "1",
+  });
+  return g?.companies ?? [];
+}
+
 // ── Entregas ─────────────────────────────────────────────────────────────────
 
 interface EntregaConfig {

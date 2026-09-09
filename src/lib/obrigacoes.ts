@@ -5,6 +5,7 @@ import { entregasPendentes, listarEmpresas, AcessoriasErro } from "./acessorias"
 import type { EmpresaAcessorias } from "./acessorias";
 import { getSessaoOpcional, empresasPermitidas } from "./sessao";
 import { guardarSetores } from "./carteira-setores";
+import { sincronizarGrupos } from "./carteira-grupos";
 import type {
   EntregaFila,
   ObrigacaoFila,
@@ -362,6 +363,14 @@ export async function sincronizarObrigacoes(): Promise<ResumoSync> {
     if (completa) {
       await appQuery(`delete from obr_entrega where visto_em < $1`, [visto]);
     }
+
+    // Os GRUPOS de empresa, no fim e só numa varredura completa. Ficam fora do
+    // laço acima porque não vêm junto de nada: a empresa não carrega o grupo
+    // dela na API, e o vínculo custa uma chamada por grupo (~13 min). Aqui é o
+    // lugar barato — a madrugada já está paga, e sair do turno com a fila e os
+    // grupos frescos evita que alguém aperte um botão de treze minutos no meio
+    // do expediente. Não é aguardado: abre e segue, com estado próprio.
+    if (completa) void sincronizarGrupos();
 
     await appQuery(
       `update obr_sync

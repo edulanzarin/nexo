@@ -19,6 +19,21 @@ export interface FiltrosState {
   metrica: Metrica;
 }
 
+/**
+ * As chaves que a barra POSSUI na URL. Reescrever a URL apaga estas e mantém o
+ * resto: uma aba pode guardar filtro próprio ali sem que a barra o atropele.
+ */
+const CHAVES_DA_BARRA = [
+  "inicio",
+  "fim",
+  "empresas",
+  "estabs",
+  "grupos",
+  "especies",
+  "metrica",
+  "ap",
+] as const;
+
 /** Assinatura estável de um conjunto de filtros — para comparar aplicado × rascunho. */
 function assinatura(f: FiltrosState): string {
   return [
@@ -56,7 +71,12 @@ export function useFiltros() {
   const atualizar = useCallback(
     (mudancas: Partial<FiltrosState>) => {
       const novo = { ...filtros, ...mudancas };
-      const params = new URLSearchParams();
+      // Parte da URL ATUAL e reescreve só o que é da barra. Montar do zero
+      // apagava qualquer parâmetro de aba (o grupo do Acessórias, no
+      // Fechamento) toda vez que alguém clicasse em Executar — o filtro sumia
+      // sozinho e a tela voltava ao escritório inteiro sem avisar.
+      const params = new URLSearchParams(sp.toString());
+      for (const k of CHAVES_DA_BARRA) params.delete(k);
       params.set("inicio", novo.inicio);
       params.set("fim", novo.fim);
       if (novo.empresas.length) params.set("empresas", novo.empresas.join(","));
@@ -68,7 +88,7 @@ export function useFiltros() {
       // replaceState nativo: o Next sincroniza useSearchParams e não refaz RSC
       window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
     },
-    [filtros, pathname]
+    [filtros, pathname, sp]
   );
 
   /** Query string dos filtros de dados enviada às APIs. */

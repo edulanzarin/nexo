@@ -68,6 +68,7 @@ import type { ContabilAtrasoResp } from "@/lib/contabil-atraso-tipos";
 import type { ContabilCarteiraResp } from "@/lib/contabil-carteira-tipos";
 import type { ContabilFechamentoResp } from "@/lib/contabil-fechamento-tipos";
 import type { EstadoCarteira } from "@/lib/carteira-setores-tipos";
+import type { EstadoGrupos, GrupoCarteira } from "@/lib/carteira-grupos-tipos";
 import type { ContabilTempoResp } from "@/lib/contabil-tempo-tipos";
 import type { ProdAppResp } from "@/lib/prod-app-tipos";
 import type { FiscalApuracaoResp } from "@/lib/fiscal-apuracao-tipos";
@@ -593,6 +594,22 @@ export const useCarteiraAcessorias = () =>
     queryKey: ["carteira-acessorias"],
     queryFn: () => fetchJson<EstadoCarteira>("/api/contabil/produtividade-fechamento-carteira"),
     refetchInterval: (q) => (q.state.data?.rodando ? 3_000 : false),
+  });
+
+/**
+ * Grupos de empresa do ACESSÓRIAS (a lista do filtro) e o estado da varredura.
+ * Fora do `useApiQuery` pela mesma razão da carteira: enquanto os treze minutos
+ * de varredura correm, é preciso perguntar de três em três segundos — sem isso
+ * a tela fica indistinguível de travada.
+ */
+export const useGruposAcessorias = () =>
+  useQuery<{ grupos: GrupoCarteira[]; estado: EstadoGrupos }>({
+    queryKey: ["grupos-acessorias"],
+    queryFn: () =>
+      fetchJson<{ grupos: GrupoCarteira[]; estado: EstadoGrupos }>(
+        "/api/contabil/produtividade-fechamento-grupos"
+      ),
+    refetchInterval: (q) => (q.state.data?.estado.rodando ? 3_000 : false),
   });
 
 /** Aba No Nexo: o que o time rodou DENTRO do app (trilha de auditoria). */

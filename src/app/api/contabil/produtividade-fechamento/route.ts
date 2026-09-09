@@ -11,6 +11,14 @@ import { montarFechamentoContabil } from "@/lib/contabil-fechamento";
  * sincroniza.
  */
 export const GET = apiRoute(async (req) => {
-  const f = parseProdFiltros(req.nextUrl.searchParams);
-  return montarFechamentoContabil(f);
+  const sp = req.nextUrl.searchParams;
+  const f = parseProdFiltros(sp);
+  // Grupo do ACESSÓRIAS, filtro próprio desta aba — não confundir com `grupos`,
+  // que é o cadastro do Nexo e já entra pelo escopo em `parseProdFiltros`.
+  const gruposAcess = (sp.get("grupos_acess") ?? "")
+    .split(",")
+    .filter(Boolean)
+    .map(Number)
+    .filter(Number.isInteger);
+  return montarFechamentoContabil(f, gruposAcess);
 });

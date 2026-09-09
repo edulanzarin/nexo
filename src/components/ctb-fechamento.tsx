@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import { Badge, type BadgeTone } from "@/components/ui";
 import { mesBR } from "@/lib/format";
 import type { SituacaoFechamento } from "@/lib/contabil-fechamento-tipos";
@@ -25,32 +26,60 @@ export function SeloFechamento({ situacao }: { situacao: SituacaoFechamento }) {
 }
 
 /**
- * Um quadrado por competência, na ordem do período.
+ * Uma coluna por competência, na ordem do período: a barra colorida diz a
+ * situação, e o MÊS vai escrito embaixo.
  *
- * Com doze meses na linha, um selo por competência vira parede de texto e a
- * tabela deixa de ser lida. A fita mostra a SEQUÊNCIA — três meses fechados
- * seguidos de dois abertos é um padrão que se vê de longe. Cor sozinha não é
- * estado: mês e situação vão por escrito no rótulo acessível de cada quadrado.
+ * Nasceu como fita de quadrados sem rótulo, e a primeira pessoa a usar a tela
+ * pediu exatamente o que faltava — "queria saber quais meses estão fechados".
+ * Cor sozinha não responde "quais": ela mostra o padrão (três fechados, dois
+ * abertos) e obriga a contar quadrados a partir da ponta para nomear o mês.
+ * Escrever o mês custa 10 px de altura e devolve a pergunta respondida.
+ *
+ * O ano entra no rótulo só quando o período atravessa a virada — dentro de um
+ * ano ele é ruído, e "jan" contra "jan/26" é a diferença entre ler e decifrar.
  */
 export function FitaCompetencias({
   meses,
   situacoes,
+  /** Competência de referência (a última do período); ganha marca de foco. */
+  referencia,
 }: {
   meses: string[];
   situacoes: SituacaoFechamento[];
+  referencia?: string;
 }) {
+  const variosAnos = new Set(meses.map((m) => m.slice(0, 4))).size > 1;
+
   return (
-    <div className="flex items-center gap-0.5">
+    <div className="flex items-end gap-1">
       {meses.map((mes, i) => {
         const cfg = ESCADA[situacoes[i] ?? "sem-movimento"];
         const texto = `${mesBR(mes)}: ${cfg.rotulo}`;
+        const rotulo = variosAnos ? mesBR(mes) : mesBR(mes).slice(0, 3);
+        const ehRef = mes === referencia;
         return (
           <span
             key={mes}
             title={texto}
             aria-label={texto}
-            className={`h-4 w-3 rounded-[2px] border border-hairline ${cfg.cor}`}
-          />
+            className="flex flex-col items-center gap-0.5"
+          >
+            <span
+              className={clsx(
+                "h-4 w-full min-w-4 rounded-[2px] border",
+                cfg.cor,
+                ehRef ? "border-ink-2" : "border-hairline"
+              )}
+            />
+            <span
+              className={clsx(
+                "tnum text-[10px] leading-none",
+                ehRef ? "font-medium text-ink" : "text-muted"
+              )}
+            >
+              {rotulo}
+            </span>
+          </span>
         );
       })}
     </div>

@@ -1,39 +1,37 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
-import { Check, FolderKanban, Search, Settings2 } from "lucide-react";
+import { Check, Network, Search } from "lucide-react";
 import clsx from "clsx";
 import { Button } from "@/components/ui";
 import { Dropdown, ItemLista } from "@/components/ui/dropdown";
-import { useGruposEmpresa } from "@/hooks/use-api";
+import { useGruposAcessorias } from "@/hooks/use-api";
 
 /**
- * Filtro por GRUPO de empresa — os grupos cadastrados em Configurações, os
- * mesmos para todo mundo. Manda só os IDs: quem traduz grupo em lista de
- * empresas é o servidor ([[escopo-no-funil-da-query]]), então marcar um grupo
- * não vaza a carteira dele para a URL nem depende do que o navegador sabe.
+ * Filtro por GRUPO DE EMPRESA DO ACESSÓRIAS — o cadastro que o escritório já
+ * mantém lá, no mesmo lugar em que mantém o cliente.
  *
- * Multi-seleção porque grupos se somam (união): "Comércio + Serviço" é uma
- * pergunta legítima. Vazio = sem recorte por grupo.
+ * Existe ao lado do [[GrupoDropdown]], que é o grupo do PRÓPRIO Nexo
+ * (Configurações). Os dois são cadastros diferentes com o mesmo nome, e é por
+ * isso que cada um se apresenta dizendo de onde vem: um dropdown escrito só
+ * "Grupo" numa tela onde há dois é um convite a filtrar pelo errado e concluir
+ * que o sistema perdeu empresa.
  *
- * Não confundir com dois vizinhos de nome parecido: os grupos LOCAIS do Fiscal
- * (atalho pessoal no navegador, que expande em empresas na hora) e o GRUPO DO
- * ACESSÓRIAS ([[GrupoAcessoriasDropdown]]), que é o cadastro do outro sistema.
- * Por isso o rótulo diz de onde vem em vez de só "Todos os grupos": numa tela
- * onde há dois, "Grupo" sozinho faz filtrar pelo errado e culpar o sistema.
+ * Manda só os IDS: quem traduz grupo em CNPJs é o servidor, então marcar um
+ * grupo não vaza a carteira dele para a URL.
+ *
+ * Multi-seleção porque grupos se somam (união). Vazio = sem recorte.
  */
-export function GrupoDropdown({
+export function GrupoAcessoriasDropdown({
   grupos,
   onChange,
-  rotuloVazio = "Grupo do Nexo",
 }: {
   grupos: number[];
   onChange: (grupos: number[]) => void;
-  rotuloVazio?: string;
 }) {
-  const { data: lista } = useGruposEmpresa();
+  const { data } = useGruposAcessorias();
   const [busca, setBusca] = useState("");
+  const lista = data?.grupos;
 
   const filtrados = useMemo(() => {
     if (!lista) return [];
@@ -43,7 +41,7 @@ export function GrupoDropdown({
 
   const rotulo =
     grupos.length === 0
-      ? rotuloVazio
+      ? "Grupo do Acessórias"
       : grupos.length === 1
         ? (lista?.find((g) => g.id === grupos[0])?.nome ?? "1 grupo")
         : `${grupos.length} grupos`;
@@ -57,10 +55,10 @@ export function GrupoDropdown({
 
   return (
     <Dropdown
-      icone={<FolderKanban className="size-4" />}
+      icone={<Network className="size-4" />}
       rotulo={rotulo}
       ativo={grupos.length > 0}
-      largura="w-72"
+      largura="w-80"
     >
       {() => (
         <div>
@@ -83,7 +81,7 @@ export function GrupoDropdown({
             {!lista && <p className="px-3 py-2 text-sm text-muted">Carregando grupos…</p>}
             {lista && lista.length === 0 && (
               <p className="px-3 py-3 text-sm text-muted">
-                Nenhum grupo com empresas no seu acesso
+                Nenhum grupo sincronizado ainda — atualize os grupos no painel da carteira.
               </p>
             )}
             {lista && lista.length > 0 && filtrados.length === 0 && (
@@ -101,19 +99,14 @@ export function GrupoDropdown({
                   >
                     {marcado && <Check className="size-3 stroke-[3]" />}
                   </span>
-                  <span className="flex-1 truncate">{g.nome}</span>
+                  <span className="flex-1 truncate">
+                    {g.nome}
+                    {!g.ativo && <span className="ml-1.5 text-xs text-muted">(inativo)</span>}
+                  </span>
                   <span className="tnum text-xs text-muted">{g.empresas} emp.</span>
                 </ItemLista>
               );
             })}
-          </div>
-          <div className="border-t border-hairline p-2">
-            <Button asChild variant="ghost" className="w-full justify-start px-2.5 text-ink-2">
-              <Link href="/config/grupos-empresa">
-                <Settings2 className="size-4" />
-                Gerenciar em Configurações
-              </Link>
-            </Button>
           </div>
         </div>
       )}

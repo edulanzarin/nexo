@@ -2,6 +2,7 @@ import "server-only";
 import { query } from "./db";
 import { buckets, carregarCadastros, escopoEmpresas, type ProdFiltros } from "./contabil-prod-comum";
 import { carteiraDoSetor, estadoCarteira, SETOR_CONTABIL } from "./carteira-setores";
+import { cnpjsDosGrupos, gruposPorCnpj } from "./carteira-grupos";
 import type {
   ContabilFechamentoResp,
   CtbFechamentoAnalista,
@@ -92,17 +93,29 @@ function distanciaEmMeses(de: string, ate: string): number {
   return (a2 - a1) * 12 + (m2 - m1);
 }
 
-export async function montarFechamentoContabil(f: ProdFiltros): Promise<ContabilFechamentoResp> {
+export async function montarFechamentoContabil(
+  f: ProdFiltros,
+  /**
+   * Grupos de empresa do ACESSÓRIAS a exibir. Vazio = sem recorte. O filtro
+   * corta a carteira ANTES de qualquer contagem, então totais, ranking por
+   * analista e série por competência falam todos do mesmo conjunto — filtro que
+   * só recorta a tabela e deixa os cartões falando do escritório inteiro é o
+   * jeito mais rápido de alguém ler o número errado.
+   */
+  gruposAcess: number[] = []
+): Promise<ContabilFechamentoResp> {
   // As competências do recorte. Período que começa ou termina no meio do mês
   // inclui o mês inteiro: fechamento é do mês, não do intervalo.
   const meses = buckets(f.inicio, f.fim, "mes");
   const referencia = meses[meses.length - 1];
   const referenciaEmCurso = referencia >= mesDe(new Date().toISOString().slice(0, 10));
 
-  const [carteira, estado, escopo] = await Promise.all([
+  const [carteira, estado, escopo, nomesDeGrupo, cnpjsDoFiltro] = await Promise.all([
     carteiraDoSetor(SETOR_CONTABIL),
     estadoCarteira(),
     escopoEmpresas(f),
+    gruposPorCnpj(),
+    cnpjsDosGrupos(gruposAcess),
   ]);
 
   // O recorte de empresa da barra e o alcance da sessão valem aqui como em
@@ -111,8 +124,17 @@ export async function montarFechamentoContabil(f: ProdFiltros): Promise<Contabil
   const permitida = (codigo: number | null) =>
     codigo !== null && (escopo === "todas" || escopo.includes(codigo));
 
-  const noEscopo = carteira.filter((c) => c.codigoempresa === null || permitida(c.codigoempresa));
-  const foraDoEscopo = carteira.length - noEscopo.length;
+  const permitidas = carteira.filter((c) => c.codigoempresa === null || permitida(c.codigoempresa));
+  const foraDoEscopo = carteira.length - permitidas.length;
+
+  // O grupo recorta DEPOIS da permissão e é contado à parte: "fora do seu
+  // escopo" é cadastro/permissão a resolver, "fora do grupo" é escolha de quem
+  // está olhando. Somar os dois num número só faria a tela acusar um problema
+  // que não existe toda vez que alguém filtrasse.
+  const noEscopo = gruposAcess.length
+    ? permitidas.filter((c) => cnpjsDoFiltro.has(c.cnpj))
+    : permitidas;
+  const foraDoGrupo = permitidas.length - noEscopo.length;
   const codigos = noEscopo.map((c) => c.codigoempresa).filter((c): c is number => c !== null);
 
   const [fechamentos, ultimas, movimento] = codigos.length
@@ -202,6 +224,7 @@ export async function montarFechamentoContabil(f: ProdFiltros): Promise<Contabil
         cnpj: c.cnpj,
         nome: c.fantasia || c.razao,
         analista,
+        grupos: nomesDeGrupo.get(c.cnpj) ?? [],
         situacoes: meses.map(() => "sem-par" as SituacaoFechamento),
         registradoEm: null,
         fechadoPor: null,
@@ -271,6 +294,7 @@ export async function montarFechamentoContabil(f: ProdFiltros): Promise<Contabil
       cnpj: c.cnpj,
       nome: c.fantasia || c.razao,
       analista,
+      grupos: nomesDeGrupo.get(c.cnpj) ?? [],
       situacoes,
       registradoEm: registro?.registrado ?? null,
       fechadoPor: registro ? cadastros.nomeUsuario(registro.usuario) : null,
@@ -310,6 +334,7 @@ export async function montarFechamentoContabil(f: ProdFiltros): Promise<Contabil
       empresas: carteira.length,
       semPar,
       foraDoEscopo,
+      foraDoGrupo,
       sincronizando: estado.rodando !== null,
     },
     totais: {

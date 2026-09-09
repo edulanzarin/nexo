@@ -35,6 +35,13 @@ export interface CtbFechamentoEmpresa {
   nome: string;
   /** Responsável pelo setor Contábil no Acessórias; null = sem dono. */
   analista: string | null;
+  /**
+   * Grupos de empresa do ACESSÓRIAS a que ela pertence (nome, já aparado).
+   * Vazio é o normal — a maioria das empresas não é de grupo nenhum. Lista, e
+   * não campo único, porque o modelo de lá é grupo -> empresas e nada impede a
+   * segunda ligação. Não confundir com o grupo de Configurações do Nexo.
+   */
+  grupos: string[];
   /** Uma situação por competência, na ordem de `meses`. */
   situacoes: SituacaoFechamento[];
   /** Quando o fechamento mais recente do período foi REGISTRADO (não a
@@ -86,6 +93,8 @@ export interface ContabilFechamentoResp {
     semPar: number;
     /** Quantas o recorte de empresa/permissão deixou de fora. */
     foraDoEscopo: number;
+    /** Quantas o filtro de grupo do Acessórias deixou de fora (0 sem filtro). */
+    foraDoGrupo: number;
     /** Uma varredura está em curso agora. */
     sincronizando: boolean;
   };
