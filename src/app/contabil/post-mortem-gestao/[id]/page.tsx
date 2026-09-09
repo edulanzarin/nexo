@@ -1,0 +1,5 @@
+import { PaginaRelatorio } from "@/components/postmortem/paginas";
+
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  return <PaginaRelatorio modulo="contabil" secao="post-mortem-gestao" id={(await params).id} />;
+}

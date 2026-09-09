@@ -123,13 +123,14 @@ export const useEmpresas = () =>
   useApiQuery<Empresa[]>(["empresas"], "/api/empresas");
 
 /**
- * Relatórios Post Mortem de uma seção: `geral` traz o escritório inteiro (com o
- * recorte de setor, quando escolhido); um setor traz os do próprio usuário.
+ * Relatórios Post Mortem do módulo do setor. A seção decide o recorte:
+ * `post-mortem-gestao` traz o setor inteiro; `post-mortem`, só os do próprio
+ * usuário. O setor não vai no parâmetro — ele sai do módulo, no caminho.
  */
-export const usePostMortens = (secao: string, setor = "") =>
+export const usePostMortens = (modulo: string, secao: string) =>
   useApiQuery<ResumoPM[]>(
-    ["postmortem", secao, setor],
-    `/api/postmortem/relatorios?secao=${secao}${setor ? `&setor=${setor}` : ""}`
+    ["postmortem", modulo, secao],
+    `/api/${modulo}/post-mortem?secao=${secao}`
   );
 
 /** Grupos de empresa cadastrados em Configurações — o filtro "por grupo". */

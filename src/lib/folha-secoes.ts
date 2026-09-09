@@ -9,6 +9,7 @@ import {
   Wallet,
 } from "lucide-react";
 import type { SecaoFiscal } from "./fiscal-secoes";
+import { secoesPostMortem } from "./postmortem-secoes";
 
 /**
  * Seções do módulo Folha. Mesmo recorte `SecaoFiscal` do Fiscal (uma seção =
@@ -92,10 +93,10 @@ export const SECOES_FOLHA: SecaoFiscal[] = [
     metrica: false,
     descricao: "Prazo de pagamento (CLT 477): vencidas, a vencer e avisos por e-mail",
   },
-  // O Relatório Post Mortem morava aqui (duas seções: o analista e a gestão do
-  // DP). Em set/2026 virou plano do ESCRITÓRIO e saiu para módulo próprio, com
-  // uma seção por setor — ver [[postmortem-secoes]]. A permissão de quem tinha
-  // as duas foi convertida na migration 034.
+  // Post Mortem do DP: o analista (os seus) e a gestão (o DP inteiro). Vem do
+  // catálogo comum — as duas seções são as mesmas em todo módulo de setor, e o
+  // que muda entre eles é só o setor dono. Ver [[postmortem-secoes]].
+  ...secoesPostMortem("folha"),
 ];
 
 export function secaoFolhaAtual(pathname: string): SecaoFiscal | undefined {

@@ -1,5 +1,6 @@
 import { ClipboardCheck, FileSpreadsheet, Gauge, Import, Landmark, LayoutDashboard, LayoutGrid, ListChecks, Scale, ScanSearch, Table2, Users } from "lucide-react";
 import type { SecaoFiscal } from "./fiscal-secoes";
+import { secoesPostMortem } from "./postmortem-secoes";
 
 /**
  * Uma aba dentro de uma seção. Vira aba, e não item de sidebar, quando as telas
@@ -390,6 +391,12 @@ export const SECOES_CONTABIL: SecaoContabil[] = [
       },
     ],
   },
+  // Post Mortem: o analista (os seus) e a gestão (o setor inteiro). Vem do
+  // catálogo comum — as duas seções são as mesmas em todo módulo de setor, e o
+  // que muda entre eles é só o setor dono. Ver [[postmortem-secoes]].
+  // `abas: []` porque a seção do Contábil declara abas sempre (o tipo cobra), e
+  // o Post Mortem não tem nenhuma — é uma tela só.
+  ...secoesPostMortem("contabil").map((s) => ({ ...s, abas: [] })),
 ];
 
 const TODAS_ABAS: { aba: AbaContabil; secao: SecaoContabil }[] = SECOES_CONTABIL.flatMap((secao) =>

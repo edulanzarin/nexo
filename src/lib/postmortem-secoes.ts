@@ -1,53 +1,55 @@
-import { Calculator, ClipboardList, LayoutGrid, Receipt, Scale, Users } from "lucide-react";
+import { ClipboardList, ClipboardCheck } from "lucide-react";
 import type { SecaoFiscal } from "./fiscal-secoes";
-import { SETORES_PM } from "./postmortem-setores";
+import { setorDoModulo } from "./postmortem-setores";
 
 /**
- * Seções do módulo Post Mortem — uma por SETOR, mais a Geral.
+ * As duas seções de Post Mortem que um módulo de setor ganha. Não há módulo
+ * "Post Mortem": o relatório mora DENTRO do setor que o preenche, e cada
+ * módulo de setor (Fiscal, Contábil, DP, Societário) espalha estas duas na sua
+ * lista de seções.
  *
- * O recorte é o mesmo das Obrigações e pelo mesmo motivo: o trabalho do
- * escritório se divide por setor, e uma seção por área é o que deixa a permissão
- * significar alguma coisa (o Fiscal preenche o do Fiscal e não lê o do
- * Societário). Dentro da seção do setor, cada pessoa vê os SEUS relatórios — a
- * posse por linha é do autor.
+ * São DUAS, e não uma com filtro, porque a permissão aqui é binária: restringir
+ * o que se enxerga numa tela é separar em outra seção e não concedê-la (ver
+ * [[Posse numa permissão binária é duas seções e recorte por linha]]). O mesmo
+ * par que o Painel do DP e do Contábil já usam.
  *
- * A **Geral** é a leitura de coordenação: todos os relatórios, de todos os
- * setores. Seção separada porque a doutrina de permissão é binária — restringir
- * o que se enxerga numa tela é separar em outra seção e não concedê-la.
- *
- * As seções de setor saem de `SETORES_PM`: setor novo aparece na sidebar, no
- * cadastro de cargo e na matriz de permissão sozinho.
+ * - `post-mortem` — o analista: preenche e acompanha OS SEUS. Recorte por linha
+ *   (autor), dentro do setor.
+ * - `post-mortem-gestao` — o gestor DAQUELE setor: lê todos os relatórios do
+ *   setor, de qualquer autor. Não alcança setor nenhum além do seu, porque a
+ *   seção vive no módulo dele.
  */
-const ICONE: Record<string, SecaoFiscal["icone"]> = {
-  dp: Users,
-  fiscal: Receipt,
-  contabil: Calculator,
-  societario: Scale,
-};
+export const SECAO_PM = "post-mortem";
+export const SECAO_PM_GESTAO = "post-mortem-gestao";
 
-export const SECOES_POSTMORTEM: SecaoFiscal[] = [
-  // A Geral vem primeiro: é a home de quem coordena, e `primeiraSecaoPath`
-  // entrega a 1ª visível — quem só tem o próprio setor cai nele do mesmo jeito.
-  {
-    id: "geral",
-    icone: LayoutGrid,
-    rotulo: "Visão geral",
-    path: "/post-mortem/geral",
-    metrica: false,
-    descricao: "Todos os relatórios do escritório, de todos os setores",
-  },
-  ...SETORES_PM.map(
-    (s): SecaoFiscal => ({
-      id: s.id,
-      icone: ICONE[s.id] ?? ClipboardList,
-      rotulo: s.rotulo,
-      path: `/post-mortem/${s.id}`,
+/**
+ * As seções de Post Mortem do módulo, ou vazio se o módulo não tem setor que
+ * preencha relatório (RH, Obrigações, Configurações).
+ */
+export function secoesPostMortem(modulo: string): SecaoFiscal[] {
+  const setor = setorDoModulo(modulo);
+  if (!setor) return [];
+  return [
+    {
+      id: SECAO_PM,
+      icone: ClipboardList,
+      rotulo: "Post Mortem",
+      path: `/${modulo}/${SECAO_PM}`,
       metrica: false,
-      descricao: `Relatórios do ${s.rotulo}: preencha e acompanhe os seus`,
-    })
-  ),
-];
+      descricao: "Análise de incidente: preencha e acompanhe os seus relatórios",
+    },
+    {
+      id: SECAO_PM_GESTAO,
+      icone: ClipboardCheck,
+      rotulo: "Post Mortem · Gestão",
+      path: `/${modulo}/${SECAO_PM_GESTAO}`,
+      metrica: false,
+      descricao: `Todos os relatórios do ${setor.rotulo}, de qualquer analista`,
+    },
+  ];
+}
 
-export function secaoPostMortemAtual(pathname: string): SecaoFiscal | undefined {
-  return SECOES_POSTMORTEM.find((s) => pathname === s.path || pathname.startsWith(s.path + "/"));
+/** A seção de Post Mortem é self-contained: não lê o Questor, não usa filtro. */
+export function ehSecaoPostMortem(secaoId: string | undefined): boolean {
+  return secaoId === SECAO_PM || secaoId === SECAO_PM_GESTAO;
 }

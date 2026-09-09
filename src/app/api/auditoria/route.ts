@@ -21,7 +21,7 @@ import type { ModuloId } from "@/lib/modulos";
  */
 // Módulo que exporta dado de gente ou de cliente entra aqui — fora da lista, o
 // beacon é recusado e a exportação acontece SEM deixar rastro.
-const MODULOS_VALIDOS: ModuloId[] = ["fiscal", "contabil", "folha", "rh", "postmortem"];
+const MODULOS_VALIDOS: ModuloId[] = ["fiscal", "contabil", "folha", "societario", "rh"];
 const TIPOS_VALIDOS = ["export", "consulta"] as const;
 type TipoEvento = (typeof TIPOS_VALIDOS)[number];
 

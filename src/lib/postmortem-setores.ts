@@ -1,8 +1,15 @@
+import type { ModuloId } from "./modulos";
+
 /**
  * Os setores que preenchem o Relatório Post Mortem, e o que muda de um para o
- * outro. É a FONTE de quais setores existem: a seção do módulo, o gate da API e
- * o formulário partem daqui, então setor novo é uma entrada nesta lista (não uma
- * migration — a coluna `setor` do banco é texto livre de propósito).
+ * outro. É a FONTE de quais setores existem: as seções do módulo do setor, o
+ * gate da API e o formulário partem daqui.
+ *
+ * O relatório NÃO tem módulo próprio: ele mora dentro do módulo do setor que o
+ * preenche (`modulo`), e é isso que deixa o gestor de cada área ler a área dele
+ * sem ler a do vizinho — a permissão já é por módulo/seção. Setor novo, por
+ * isso, precisa de um módulo onde morar; enquanto ele não existir, não há onde
+ * pendurar a seção.
  *
  * O tronco do relatório é o mesmo para todo mundo (identificação, descrição,
  * impactos, causa raiz, ações, lições): o que um post mortem faz não muda com o
@@ -24,6 +31,8 @@ export interface SetorPM {
   id: string;
   rotulo: string;
   descricao: string;
+  /** Módulo do Nexo onde as seções deste setor moram. */
+  modulo: ModuloId;
   /** Campos opcionais que ESTE setor mostra, além do tronco comum. */
   campos: CampoPM[];
 }
@@ -45,33 +54,48 @@ export const SETORES_PM: SetorPM[] = [
     id: "dp",
     rotulo: "DP",
     descricao: "Departamento Pessoal: folha, admissão, rescisão e eSocial",
+    // O módulo do DP se chama `folha` (o id é antigo, o rótulo é "DP").
+    modulo: "folha",
     campos: CAMPOS_PESSOAL,
   },
   {
     id: "fiscal",
     rotulo: "Fiscal",
     descricao: "Notas, apurações, guias e declarações",
+    modulo: "fiscal",
     campos: CAMPOS_PESSOAL,
   },
   {
     id: "contabil",
     rotulo: "Contábil",
     descricao: "Lançamentos, balancetes e conciliação",
+    modulo: "contabil",
     campos: CAMPOS_PESSOAL,
   },
   // Pedido do Societário (set/2026): sai o recorte de pessoal, que não é o erro
   // deles, e entram a nota de gravidade (1 baixo … 5 gravíssimo) e quem avisou
-  // que o erro aconteceu.
+  // que o erro aconteceu. O módulo Societário nasceu junto, e por ora só tem o
+  // post mortem dentro.
   {
     id: "societario",
     rotulo: "Societário",
     descricao: "Contratos, alterações, aberturas e baixas",
+    modulo: "societario",
     campos: ["gravidade", "responsavelInfo"],
   },
 ];
 
 export function setorPM(id: string): SetorPM | undefined {
   return SETORES_PM.find((s) => s.id === id);
+}
+
+/**
+ * O setor que preenche o post mortem DESTE módulo. É a volta que as telas e as
+ * rotas fazem: elas sabem em que módulo estão (o caminho diz), e precisam do
+ * setor para recortar a lista.
+ */
+export function setorDoModulo(modulo: string): SetorPM | undefined {
+  return SETORES_PM.find((s) => s.modulo === modulo);
 }
 
 export function setorValido(id: string): boolean {

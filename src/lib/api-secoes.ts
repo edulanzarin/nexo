@@ -1,5 +1,5 @@
 import type { ModuloId } from "./modulos";
-import { SETORES_PM } from "./postmortem-setores";
+import { SECAO_PM, SECAO_PM_GESTAO } from "./postmortem-secoes";
 
 /**
  * Registro ÚNICO endpoint -> seção(ões) dona(s). É o que deixa o gate do
@@ -61,6 +61,10 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     "notas-lista": ["dados"],
     "nota-itens": ["dados"],
     contrapartes: ["dados"],
+    // Post Mortem: uma rota para as duas seções (o analista e a gestão do setor).
+    // O gate aqui garante que a pessoa alcança ALGUMA das duas; qual lista ela
+    // pode ver, e se o relatório é dela, quem confere é o handler.
+    "post-mortem": [SECAO_PM, SECAO_PM_GESTAO],
   },
   contabil: {
     // Painéis (home do módulo), separados por cargo e por permissão: o
@@ -107,6 +111,10 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     funcionarios: ["funcionarios"],
     // Lookup de contas: usado na Configuração, na Conciliação e na Implantação
     contas: ["conferencia", "conciliacao", "implantacao"],
+    // Post Mortem: uma rota para as duas seções (o analista e a gestão do setor).
+    // O gate aqui garante que a pessoa alcança ALGUMA das duas; qual lista ela
+    // pode ver, e se o relatório é dela, quem confere é o handler.
+    "post-mortem": [SECAO_PM, SECAO_PM_GESTAO],
   },
   folha: {
     // Painéis (home do módulo), separados por cargo e por permissão: o
@@ -134,6 +142,10 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     "rescisoes-config": ["rescisoes"],
     "rescisoes-destinatarios": ["rescisoes"],
     // /api/folha/cron/rescisoes é público (segredo próprio) — NÃO passa por apiRoute.
+    // Post Mortem: uma rota para as duas seções (o analista e a gestão do setor).
+    // O gate aqui garante que a pessoa alcança ALGUMA das duas; qual lista ela
+    // pode ver, e se o relatório é dela, quem confere é o handler.
+    "post-mortem": [SECAO_PM, SECAO_PM_GESTAO],
   },
   rh: {
     // Painel (home do módulo): pendências + panorama do RH interno.
@@ -171,8 +183,8 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
   obrigacoes: {
     // Uma rota só serve as quatro seções: o recorte é o SETOR, e ele vem no
     // parâmetro `secao`. O gate aqui só garante que a pessoa acessa ALGUMA das
-    // seções; qual ela pediu, quem confere é o handler (como no Post Mortem do
-    // DP, que também compartilha endpoint entre analista e gestão).
+    // seções; qual ela pediu, quem confere é o handler (como no Post Mortem,
+    // que também compartilha endpoint entre analista e gestão).
     fila: ["geral", "contabil", "fiscal", "dp"],
     // Operar a varredura (disparar, parar, ver progresso) é da seção
     // Configurações, não das telas de fila — quem consulta obrigação não
@@ -186,12 +198,11 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     // Carteira para o seletor: leitura do banco, recortada pelo escopo.
     empresas: ["geral", "contabil", "fiscal", "dp"],
   },
-  postmortem: {
-    // Uma rota só serve todas as seções, como nas Obrigações: o recorte é o
-    // SETOR, e ele vem no caminho/corpo. O gate aqui garante que a pessoa
-    // acessa ALGUMA seção do módulo; se ela pode aquele setor (ou é da Geral),
-    // e se o relatório é dela, quem confere é o handler.
-    relatorios: ["geral", ...SETORES_PM.map((s) => s.id)],
+  societario: {
+    // Post Mortem: uma rota para as duas seções (o analista e a gestão do setor).
+    // O gate aqui garante que a pessoa alcança ALGUMA das duas; qual lista ela
+    // pode ver, e se o relatório é dela, quem confere é o handler.
+    "post-mortem": [SECAO_PM, SECAO_PM_GESTAO],
   },
   // Configurações não tem rotas de API: o CRUD roda por Server Action (gateada
   // por assertSecao). Mapa vazio; nenhum endpoint /api/config existe.

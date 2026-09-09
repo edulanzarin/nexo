@@ -11,6 +11,7 @@ import { useFiltros } from "@/hooks/use-filters";
 import { limparEstadoDoModulo } from "@/lib/estado-secao";
 import { limparFiltrosDoModulo } from "@/lib/estado-filtros-secao";
 import { secaoFolhaAtual } from "@/lib/folha-secoes";
+import { ehSecaoPostMortem } from "@/lib/postmortem-secoes";
 import { dataBR } from "@/lib/format";
 
 export function FolhaShell({ children }: { children: React.ReactNode }) {
@@ -34,9 +35,8 @@ export function FolhaShell({ children }: { children: React.ReactNode }) {
   const empresaOpcional = ehProdutividade || secao?.id === "rescisoes";
   // Self-contained (não lê o Questor por empresa/período): não mostra a barra de
   // filtro nem espera "aplicar". O Painel (home) carrega sozinho com janelas
-  // próprias; o Post Mortem é como as telas internas do RH.
-  const semFiltro =
-    (secao?.id?.startsWith("painel") || secao?.id?.startsWith("post-mortem")) ?? false;
+  // próprias; o Post Mortem mora inteiro no banco do app.
+  const semFiltro = (secao?.id?.startsWith("painel") ?? false) || ehSecaoPostMortem(secao?.id);
 
   return (
     <ProdutividadeTabsProvider>

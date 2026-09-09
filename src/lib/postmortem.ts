@@ -7,7 +7,6 @@ import {
   gravidadeValida,
   impactosVazio,
   validarEnvio,
-  type Criticidade,
   type DadosPM,
   type GrupoOpcao,
   type RelatorioPM,
@@ -17,11 +16,13 @@ import {
 
 /**
  * Acesso a dados do Relatório Post Mortem (banco do APP, gravável). Dois
- * recortes, e o handler da rota escolhe pela seção da sessão:
+ * recortes, e o handler da rota escolhe pela seção da sessão — ambos DENTRO de
+ * um setor, porque o relatório mora no módulo do setor que o preenche:
  *
- * - **seção do setor** — `listarMeus(autor, setor)`: a posse é do autor, dentro
- *   do setor dele. É o que o analista preenche e acompanha.
- * - **seção Geral** — `listarTodos()`: o escritório inteiro, para a coordenação.
+ * - **seção `post-mortem`** — `listarMeus(autor, setor)`: a posse é do autor,
+ *   dentro do setor dele. É o que o analista preenche e acompanha.
+ * - **seção `post-mortem-gestao`** — `listarDoSetor(setor)`: todos os
+ *   relatórios daquele setor, de qualquer autor, para o gestor da área.
  */
 
 // As colunas editáveis, na ordem em que salvar/enviar passam os valores.
@@ -161,13 +162,6 @@ export async function obterPostMortem(id: number): Promise<RelatorioPM | null> {
   return rows[0] ? paraRelatorio(rows[0]) : null;
 }
 
-interface FiltroLista {
-  setor?: string | null;
-  criticidade?: Criticidade | null;
-  grupoId?: number | null;
-  status?: StatusPM | null;
-}
-
 const SELECT_RESUMO = `
   select pm.id, pm.numero, pm.status, pm.setor, pm.criticidade, pm.gravidade,
          pm.empresa_afetada, pm.processo, pm.data_ocorrido, pm.atualizado_em,
@@ -202,31 +196,20 @@ export async function listarMeus(autorId: string, setor: string): Promise<Resumo
   return rows.map(paraResumo);
 }
 
-/** Todos os relatórios (a lista do gestor), com filtros opcionais. */
-export async function listarTodos(f: FiltroLista = {}): Promise<ResumoPM[]> {
-  const cond: string[] = [];
-  const vals: unknown[] = [];
-  if (f.setor) {
-    vals.push(f.setor);
-    cond.push(`pm.setor = $${vals.length}`);
-  }
-  if (f.status) {
-    vals.push(f.status);
-    cond.push(`pm.status = $${vals.length}`);
-  }
-  if (f.criticidade) {
-    vals.push(f.criticidade);
-    cond.push(`pm.criticidade = $${vals.length}`);
-  }
-  if (f.grupoId) {
-    vals.push(f.grupoId);
-    cond.push(`pm.grupo_id = $${vals.length}`);
-  }
-  const where = cond.length ? `where ${cond.join(" and ")}` : "";
+/**
+ * Todos os relatórios de UM setor — a lista da gestão daquele setor. O setor é
+ * obrigatório e vem da seção (nunca do cliente): não existe leitura de
+ * escritório inteiro desde que o relatório voltou para dentro do setor.
+ *
+ * Criticidade, situação e busca ficam no cliente, sobre a lista já carregada:
+ * são recortes de uma lista de setor, que é curta, e não valem uma ida ao banco.
+ */
+export async function listarDoSetor(setor: string): Promise<ResumoPM[]> {
   // Enviados primeiro por nº decrescente; rascunhos (numero null) ao fim.
   const rows = await appQuery<LinhaBanco>(
-    `${SELECT_RESUMO} ${where} order by pm.numero desc nulls last, pm.atualizado_em desc`,
-    vals
+    `${SELECT_RESUMO} where pm.setor = $1
+      order by pm.numero desc nulls last, pm.atualizado_em desc`,
+    [setor]
   );
   return rows.map(paraResumo);
 }
@@ -240,15 +223,27 @@ export async function criarPostMortem(autorId: string, setor: string): Promise<n
   return rows[0].id;
 }
 
-/** Salva o rascunho (só o dono, só enquanto rascunho). Lança se não aplicou. */
-export async function salvarPostMortem(id: number, autorId: string, dados: DadosPM): Promise<void> {
+/**
+ * Salva o rascunho (só o dono, só enquanto rascunho). Lança se não aplicou.
+ *
+ * O `setor` entra no WHERE junto com o autor: quem chega pelo caminho de um
+ * módulo não escreve num relatório de outro setor, e isso fica garantido pela
+ * própria consulta em vez de por uma leitura extra antes dela.
+ */
+export async function salvarPostMortem(
+  id: number,
+  autorId: string,
+  setor: string,
+  dados: DadosPM
+): Promise<void> {
   const sets = COLS_EDITAVEIS.map((c, i) => `${c} = $${i + 1}`).join(", ");
   const base = valoresEditaveis(dados);
   const rows = await appQuery<{ id: number }>(
     `update postmortem set ${sets}
-       where id = $${base.length + 1} and autor_id = $${base.length + 2} and status = 'rascunho'
+       where id = $${base.length + 1} and autor_id = $${base.length + 2}
+         and setor = $${base.length + 3} and status = 'rascunho'
        returning id`,
-    [...base, id, autorId]
+    [...base, id, autorId, setor]
   );
   if (!rows[0]) throw new FilterError("Relatório não encontrado ou já enviado");
 }
@@ -260,6 +255,7 @@ export async function salvarPostMortem(id: number, autorId: string, dados: Dados
 export async function enviarPostMortem(
   id: number,
   autorId: string,
+  setor: string,
   dados: DadosPM
 ): Promise<number> {
   const faltando = validarEnvio(dados);
@@ -273,20 +269,25 @@ export async function enviarPostMortem(
         set ${sets},
             numero = nextval('postmortem_numero_seq'),
             status = 'enviado'
-      where id = $${base.length + 1} and autor_id = $${base.length + 2} and status = 'rascunho'
+      where id = $${base.length + 1} and autor_id = $${base.length + 2}
+        and setor = $${base.length + 3} and status = 'rascunho'
       returning numero`,
-    [...base, id, autorId]
+    [...base, id, autorId, setor]
   );
   if (!rows[0]) throw new FilterError("Relatório não encontrado ou já enviado");
   return rows[0].numero;
 }
 
 /** Exclui um rascunho do próprio autor (relatório enviado não se apaga). */
-export async function excluirPostMortem(id: number, autorId: string): Promise<void> {
+export async function excluirPostMortem(
+  id: number,
+  autorId: string,
+  setor: string
+): Promise<void> {
   const rows = await appQuery<{ id: number }>(
     `delete from postmortem
-       where id = $1 and autor_id = $2 and status = 'rascunho' returning id`,
-    [id, autorId]
+       where id = $1 and autor_id = $2 and setor = $3 and status = 'rascunho' returning id`,
+    [id, autorId, setor]
   );
   if (!rows[0]) throw new FilterError("Rascunho não encontrado (enviado não se exclui)");
 }

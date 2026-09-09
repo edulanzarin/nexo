@@ -7,6 +7,7 @@ import {
   TrendingUp,
   type LucideIcon,
 } from "lucide-react";
+import { secoesPostMortem } from "./postmortem-secoes";
 
 /** Seções do módulo Fiscal — dirigem a sidebar, o header e a visibilidade da métrica. */
 export interface SecaoFiscal {
@@ -153,6 +154,10 @@ export const SECOES_FISCAL: SecaoFiscal[] = [
     metrica: false,
     descricao: "Todas as notas, com filtros",
   },
+  // Post Mortem: o analista (os seus) e a gestão (o setor inteiro). Vem do
+  // catálogo comum — as duas seções são as mesmas em todo módulo de setor, e o
+  // que muda entre eles é só o setor dono. Ver [[postmortem-secoes]].
+  ...secoesPostMortem("fiscal"),
 ];
 
 export function secaoAtual(pathname: string): SecaoFiscal | undefined {

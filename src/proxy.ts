@@ -11,18 +11,37 @@ import { COOKIE_SESSAO } from "@/lib/cookie-nome";
  * `proxy` é a convenção nova do Next 16 (o antigo `middleware` foi renomeado).
  */
 /**
- * O Post Mortem era seção do módulo Folha até set/2026, quando virou módulo do
- * escritório. O redirecionamento mora AQUI, e não numa página em `/folha`,
- * porque quem só tinha o Post Mortem lá deixou de ter qualquer seção da Folha —
- * o layout do módulo mandaria justamente essa pessoa de volta ao launcher.
+ * O Post Mortem foi módulo do escritório por duas semanas (set/2026) e voltou
+ * para dentro do setor, que é onde ele nasceu: cada módulo de área tem as suas
+ * duas seções, e o gestor de cada área lê a área dele.
+ *
+ * O redirecionamento mora AQUI, e não numa página em `/post-mortem`, porque a
+ * pasta do módulo antigo deixou de existir — não há layout onde pendurá-lo.
+ *
+ * A Visão geral não tem para onde ir: ela cruzava setor, e é justamente o que
+ * deixou de existir. Cai no launcher, que mostra os módulos que a pessoa tem.
  */
-function postMortemMudouDeCasa(pathname: string): string | null {
-  if (pathname === "/folha/post-mortem-gestao") return "/post-mortem/geral";
-  if (pathname === "/folha/post-mortem") return "/post-mortem/dp";
-  const relatorio = pathname.match(/^\/folha\/post-mortem\/(\d+)$/);
-  // Todo relatório que existia era do DP (era a única seção que havia).
-  return relatorio ? `/post-mortem/dp/${relatorio[1]}` : null;
+function postMortemVoltouProSetor(pathname: string): string | null {
+  if (pathname !== "/post-mortem" && !pathname.startsWith("/post-mortem/")) return null;
+  // Índice, Visão geral e qualquer caminho que não seja de setor caem no
+  // launcher: não sobrou tela equivalente para eles.
+  const m = pathname.match(/^\/post-mortem\/([a-z]+)(?:\/(\d+))?$/);
+  const modulo = m && MODULO_DO_SETOR[m[1]];
+  if (!m || !modulo) return "/";
+  return m[2] ? `/${modulo}/post-mortem/${m[2]}` : `/${modulo}/post-mortem`;
 }
+
+/**
+ * O setor -> o módulo onde ele mora. Cópia rasa de `postmortem-setores` de
+ * propósito: o proxy roda na edge e não deve arrastar o catálogo (nem o que ele
+ * importa) para lá por causa de um redirecionamento de compatibilidade.
+ */
+const MODULO_DO_SETOR: Record<string, string> = {
+  dp: "folha",
+  fiscal: "fiscal",
+  contabil: "contabil",
+  societario: "societario",
+};
 
 export function proxy(req: NextRequest) {
   if (!req.cookies.get(COOKIE_SESSAO)) {
@@ -30,7 +49,7 @@ export function proxy(req: NextRequest) {
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
-  const destino = postMortemMudouDeCasa(req.nextUrl.pathname);
+  const destino = postMortemVoltouProSetor(req.nextUrl.pathname);
   if (destino) {
     const url = req.nextUrl.clone();
     url.pathname = destino;

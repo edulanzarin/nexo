@@ -12,6 +12,7 @@ import { useFiltros } from "@/hooks/use-filters";
 import { limparEstadoDoModulo } from "@/lib/estado-secao";
 import { limparFiltrosDoModulo } from "@/lib/estado-filtros-secao";
 import { abaFiscalAtual, abasFiscalDaSecao, secaoAtual } from "@/lib/fiscal-secoes";
+import { ehSecaoPostMortem } from "@/lib/postmortem-secoes";
 import { dataBR } from "@/lib/format";
 
 export function FiscalShell({ children }: { children: React.ReactNode }) {
@@ -22,6 +23,9 @@ export function FiscalShell({ children }: { children: React.ReactNode }) {
   const abas = abasFiscalDaSecao(pathname);
   const aba = abaFiscalAtual(pathname);
   const carregando = useIsFetching() > 0;
+  // O Post Mortem é self-contained: mora no banco do app e não se lê por
+  // empresa e período, então não mostra a barra de filtro nem espera "aplicar".
+  const semFiltro = ehSecaoPostMortem(secao?.id);
 
   // Trocar de aba leva os filtros junto (eles estão na URL), menos o marcador de
   // executado: cada aba tem a sua varredura e só roda quando o usuário mandar —
@@ -47,9 +51,11 @@ export function FiscalShell({ children }: { children: React.ReactNode }) {
         titulo={secao?.rotulo ?? "Fiscal"}
         carregando={carregando}
         direita={
-          <p className="hidden text-xs text-muted sm:block">
-            {dataBR(filtros.inicio)} – {dataBR(filtros.fim)}
-          </p>
+          semFiltro ? undefined : (
+            <p className="hidden text-xs text-muted sm:block">
+              {dataBR(filtros.inicio)} – {dataBR(filtros.fim)}
+            </p>
+          )
         }
       />
 
@@ -76,9 +82,15 @@ export function FiscalShell({ children }: { children: React.ReactNode }) {
         </nav>
       )}
 
-      <FilterBar mostrarMetrica={secao?.metrica ?? false} />
+      {semFiltro ? (
+        <div className="mt-5 space-y-4">{children}</div>
+      ) : (
+        <>
+          <FilterBar mostrarMetrica={secao?.metrica ?? false} />
 
-      <div className="mt-5 space-y-4">{aplicado ? children : <FiltroPendente />}</div>
+          <div className="mt-5 space-y-4">{aplicado ? children : <FiltroPendente />}</div>
+        </>
+      )}
     </div>
   );
 }

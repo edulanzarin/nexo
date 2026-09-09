@@ -12,6 +12,7 @@ import { ImportarControles } from "@/components/importar-controles";
 import { ImplantacaoControles } from "@/components/implantacao-controles";
 import { RegrasControles } from "@/components/regras-controles";
 import { useFiltros } from "@/hooks/use-filters";
+import { ehSecaoPostMortem } from "@/lib/postmortem-secoes";
 import {
   abaContabilAtual,
   abasDaSecao,
@@ -42,10 +43,10 @@ export function ContabilShell({ children }: { children: React.ReactNode }) {
   const aba = abaContabilAtual(pathname);
   const abas = abasDaSecao(pathname);
   const carregando = useIsFetching() > 0;
-  // Painel é self-contained (home do módulo): carrega sozinho, sem barra de
-  // filtro nem abas — como o Post Mortem/Painel no DP. Casa por PREFIXO porque
-  // são dois (`painel` e `painel-gestao`), liberados por cargo.
-  const ehPainel = secao?.id?.startsWith("painel") ?? false;
+  // Painel e Post Mortem são self-contained: carregam sozinhos, sem barra de
+  // filtro nem abas. O Painel casa por PREFIXO porque são dois (`painel` e
+  // `painel-gestao`), liberados por cargo; o Post Mortem, pelo mesmo motivo.
+  const semFiltro = (secao?.id?.startsWith("painel") ?? false) || ehSecaoPostMortem(secao?.id);
 
   // Busca, extrato carregado e memória de filtro valem pelo MÓDULO inteiro:
   // trocar de seção (ou de aba) mantém, e só "Trocar módulo" — quando este shell
@@ -94,7 +95,7 @@ export function ContabilShell({ children }: { children: React.ReactNode }) {
         }
       />
 
-      {ehPainel ? (
+      {semFiltro ? (
         <div className="mt-5 space-y-4">{children}</div>
       ) : (
         <ConteudoComFiltro

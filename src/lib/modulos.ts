@@ -3,16 +3,16 @@ import { SECOES_CONTABIL } from "./contabil-secoes";
 import { SECOES_FISCAL, type SecaoFiscal } from "./fiscal-secoes";
 import { SECOES_FOLHA } from "./folha-secoes";
 import { SECOES_OBRIGACOES } from "./obrigacoes-secoes";
-import { SECOES_POSTMORTEM } from "./postmortem-secoes";
 import { SECOES_RH } from "./rh-secoes";
+import { SECOES_SOCIETARIO } from "./societario-secoes";
 
 export type ModuloId =
   | "fiscal"
   | "contabil"
   | "folha"
+  | "societario"
   | "rh"
   | "obrigacoes"
-  | "postmortem"
   | "config";
 
 /**
@@ -58,6 +58,17 @@ export const MODULOS: Modulo[] = [
     // Analista do DP (só Post Mortem) cai direto na dele; quem tem tudo, na 1ª.
     home: "/folha",
   },
+  // Societário nasceu (set/2026) para receber o post mortem do setor: sem módulo
+  // da área não existe gestor da área, e o relatório acabaria lido por quem não
+  // é dela. Começa com uma seção só, e é assim que um módulo começa.
+  {
+    id: "societario",
+    titulo: "Societário",
+    descricao: "Contratos, alterações, aberturas e baixas",
+    icone: "/images/societario.png",
+    // Home = o índice, que redireciona pra 1ª seção visível.
+    home: "/societario",
+  },
   {
     id: "rh",
     titulo: "RH",
@@ -75,15 +86,6 @@ export const MODULOS: Modulo[] = [
     // Home = o índice, que redireciona pra 1ª seção visível. Quem só tem a
     // seção do seu setor cai nela; quem tem tudo, na Visão geral.
     home: "/obrigacoes",
-  },
-  {
-    id: "postmortem",
-    titulo: "Post Mortem",
-    descricao: "Análise de incidentes do escritório, um setor por seção",
-    icone: "/images/compliance.png",
-    // Home = o índice, que redireciona pra 1ª seção visível. Quem coordena cai
-    // na Visão geral; quem preenche, na seção do próprio setor.
-    home: "/post-mortem",
   },
   {
     id: "config",
@@ -104,7 +106,7 @@ const SECOES: Record<ModuloId, SecaoFiscal[]> = {
   folha: SECOES_FOLHA,
   rh: SECOES_RH,
   obrigacoes: SECOES_OBRIGACOES,
-  postmortem: SECOES_POSTMORTEM,
+  societario: SECOES_SOCIETARIO,
   config: SECOES_CONFIG,
 };
 
