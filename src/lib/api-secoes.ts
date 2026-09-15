@@ -52,6 +52,7 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     "produtividade-atraso": ["produtividade"],
     "produtividade-carteira": ["produtividade"],
     "produtividade-fechamento": ["produtividade"],
+    "produtividade-fechamento-analistas": ["produtividade"],
     "produtividade-fechamento-carteira": ["produtividade"],
     "produtividade-fechamento-grupos": ["produtividade"],
     "produtividade-tempo": ["produtividade"],

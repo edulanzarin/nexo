@@ -2,6 +2,7 @@ import "server-only";
 import { query } from "./db";
 import { buckets, carregarCadastros, escopoEmpresas, type ProdFiltros } from "./contabil-prod-comum";
 import { carteiraDoSetor, estadoCarteira, SETOR_CONTABIL } from "./carteira-setores";
+import { SEM_RESPONSAVEL } from "./carteira-setores-tipos";
 import { cnpjsDosGrupos, gruposPorCnpj } from "./carteira-grupos";
 import type {
   ContabilFechamentoResp,
@@ -93,16 +94,26 @@ function distanciaEmMeses(de: string, ate: string): number {
   return (a2 - a1) * 12 + (m2 - m1);
 }
 
+/**
+ * Os recortes próprios da aba. Os dois cortam a carteira ANTES de qualquer
+ * contagem, então totais, ranking por analista e série por competência falam
+ * todos do mesmo conjunto — filtro que só recorta a tabela e deixa os cartões
+ * falando do escritório inteiro é o jeito mais rápido de alguém ler o número
+ * errado.
+ */
+export interface RecorteFechamento {
+  /** Grupos de empresa do ACESSÓRIAS. Vazio = sem recorte. */
+  gruposAcess?: number[];
+  /**
+   * Responsáveis do setor, pelo nome como o Acessórias escreve; `SEM_RESPONSAVEL`
+   * pega as empresas sem dono. Vazio = sem recorte.
+   */
+  analistas?: string[];
+}
+
 export async function montarFechamentoContabil(
   f: ProdFiltros,
-  /**
-   * Grupos de empresa do ACESSÓRIAS a exibir. Vazio = sem recorte. O filtro
-   * corta a carteira ANTES de qualquer contagem, então totais, ranking por
-   * analista e série por competência falam todos do mesmo conjunto — filtro que
-   * só recorta a tabela e deixa os cartões falando do escritório inteiro é o
-   * jeito mais rápido de alguém ler o número errado.
-   */
-  gruposAcess: number[] = []
+  { gruposAcess = [], analistas: analistasFiltro = [] }: RecorteFechamento = {}
 ): Promise<ContabilFechamentoResp> {
   // As competências do recorte. Período que começa ou termina no meio do mês
   // inclui o mês inteiro: fechamento é do mês, não do intervalo.
@@ -131,10 +142,17 @@ export async function montarFechamentoContabil(
   // escopo" é cadastro/permissão a resolver, "fora do grupo" é escolha de quem
   // está olhando. Somar os dois num número só faria a tela acusar um problema
   // que não existe toda vez que alguém filtrasse.
-  const noEscopo = gruposAcess.length
+  const doGrupo = gruposAcess.length
     ? permitidas.filter((c) => cnpjsDoFiltro.has(c.cnpj))
     : permitidas;
-  const foraDoGrupo = permitidas.length - noEscopo.length;
+  const foraDoGrupo = permitidas.length - doGrupo.length;
+
+  // O analista recorta por último e também é contado à parte, pela mesma razão.
+  const escolhidos = new Set(analistasFiltro);
+  const noEscopo = escolhidos.size
+    ? doGrupo.filter((c) => escolhidos.has(c.respNome ?? SEM_RESPONSAVEL))
+    : doGrupo;
+  const foraDoAnalista = doGrupo.length - noEscopo.length;
   const codigos = noEscopo.map((c) => c.codigoempresa).filter((c): c is number => c !== null);
 
   const [fechamentos, ultimas, movimento] = codigos.length
@@ -335,6 +353,7 @@ export async function montarFechamentoContabil(
       semPar,
       foraDoEscopo,
       foraDoGrupo,
+      foraDoAnalista,
       sincronizando: estado.rodando !== null,
     },
     totais: {

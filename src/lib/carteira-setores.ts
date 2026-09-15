@@ -2,7 +2,7 @@ import "server-only";
 import { appQuery } from "./app-db";
 import { query } from "./db";
 import { listarEmpresas, type EmpresaAcessorias } from "./acessorias";
-import type { EstadoCarteira, ItemCarteira } from "./carteira-setores-tipos";
+import type { AnalistaCarteira, EstadoCarteira, ItemCarteira } from "./carteira-setores-tipos";
 
 /**
  * DE QUEM É A EMPRESA — o responsável por setor, vindo do Acessórias.
@@ -53,6 +53,38 @@ export async function carteiraDoSetor(setorId: number): Promise<ItemCarteira[]> 
       where e.status = 'Ativa'
       order by e.razao`,
     [setorId]
+  );
+}
+
+/**
+ * Os responsáveis de um setor, com quantas empresas ativas cada um carrega: a
+ * lista do filtro por analista.
+ *
+ * Recortada pelo escopo como a lista de grupos, porque analista cuja carteira o
+ * usuário não alcança é opção que devolve vazio. Empresa sem par no Questor conta
+ * sempre, pelo mesmo motivo de lá ([[Dado externo sem par no cadastro local não
+ * tem escopo]]). `escopo` null = vê todas.
+ */
+export async function analistasDaCarteira(
+  setorId: number,
+  escopo: number[] | null
+): Promise<AnalistaCarteira[]> {
+  const filtro = escopo
+    ? `and (e.codigoempresa is null or e.codigoempresa = any($2::int[]))`
+    : "";
+  const linhas = await appQuery<AnalistaCarteira>(
+    `select nullif(btrim(coalesce(s.resp_nome, '')), '') as nome,
+            count(*)::int as empresas
+       from obr_empresa e
+       left join obr_empresa_setor s on s.cnpj = e.cnpj and s.setor_id = $1
+      where e.status = 'Ativa' ${filtro}
+      group by 1`,
+    escopo ? [setorId, escopo] : [setorId]
+  );
+  // Ordem de gente, não de byte: o collation do banco não garante o acento no
+  // lugar certo. As sem responsável vão para o fim.
+  return linhas.sort((a, b) =>
+    a.nome === null ? 1 : b.nome === null ? -1 : a.nome.localeCompare(b.nome, "pt-BR")
   );
 }
 

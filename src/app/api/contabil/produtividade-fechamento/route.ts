@@ -20,5 +20,11 @@ export const GET = apiRoute(async (req) => {
     .filter(Boolean)
     .map(Number)
     .filter(Number.isInteger);
-  return montarFechamentoContabil(f, gruposAcess);
+  // Um `analista` por nome, repetido: nome de pessoa pode ter vírgula, e
+  // juntar com separador faria um nome virar dois.
+  const analistas = sp
+    .getAll("analista")
+    .map((a) => a.trim())
+    .filter(Boolean);
+  return montarFechamentoContabil(f, { gruposAcess, analistas });
 });

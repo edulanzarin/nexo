@@ -95,6 +95,8 @@ export interface ContabilFechamentoResp {
     foraDoEscopo: number;
     /** Quantas o filtro de grupo do Acessórias deixou de fora (0 sem filtro). */
     foraDoGrupo: number;
+    /** Quantas o filtro por analista deixou de fora, depois do grupo (0 sem filtro). */
+    foraDoAnalista: number;
     /** Uma varredura está em curso agora. */
     sincronizando: boolean;
   };

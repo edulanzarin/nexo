@@ -14,6 +14,7 @@ import {
 } from "@/components/ctb-fechamento";
 import { useFiltros } from "@/hooks/use-filters";
 import { GrupoAcessoriasDropdown } from "@/components/filters/grupo-acessorias-dropdown";
+import { AnalistaDropdown } from "@/components/filters/analista-dropdown";
 import { useCarteiraAcessorias, useContabilFechamento, useGruposAcessorias } from "@/hooks/use-api";
 import { mutar } from "@/hooks/mutar";
 import { dataBR, dataHoraBR, mesBR, num } from "@/lib/format";
@@ -33,9 +34,14 @@ import { pctBR } from "@/lib/prod-formato";
 export default function FechamentoContabilPage() {
   const { qs, filtros } = useFiltros();
   const [gruposAcess, setGruposAcess] = useFiltroGrupo();
-  const consulta = useContabilFechamento(
-    gruposAcess.length ? `${qs}&grupos_acess=${gruposAcess.join(",")}` : qs
-  );
+  const [analistas, setAnalistas] = useFiltroAnalista();
+  const consultaQs = useMemo(() => {
+    const params = new URLSearchParams(qs);
+    if (gruposAcess.length) params.set("grupos_acess", gruposAcess.join(","));
+    for (const a of analistas) params.append("analista", a);
+    return params.toString();
+  }, [qs, gruposAcess, analistas]);
+  const consulta = useContabilFechamento(consultaQs);
   const d = consulta.data;
   const carregando = consulta.isLoading;
 
@@ -93,6 +99,21 @@ export default function FechamentoContabilPage() {
 
   const semCarteira = !!d && d.carteira.empresas === 0;
 
+  // O que o recorte da aba deixa de pé. Sai das contagens do servidor, e não do
+  // tamanho da tabela, para bater com os cartões mesmo que a tabela um dia pagine.
+  const recortada = gruposAcess.length > 0 || analistas.length > 0;
+  const visiveis = d ? d.carteira.empresas - d.carteira.foraDoEscopo : 0;
+  const noRecorte = d ? visiveis - d.carteira.foraDoGrupo - d.carteira.foraDoAnalista : 0;
+  const descricaoRecorte = [
+    gruposAcess.length &&
+      (gruposAcess.length === 1
+        ? "1 grupo do Acessórias"
+        : `${gruposAcess.length} grupos do Acessórias`),
+    analistas.length && (analistas.length === 1 ? "1 analista" : `${analistas.length} analistas`),
+  ]
+    .filter(Boolean)
+    .join(" e ");
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center gap-2">
@@ -101,20 +122,19 @@ export default function FechamentoContabilPage() {
           o analista responsável vem da carteira do Acessórias, não do Questor
         </span>
         <div className="ml-auto flex items-center gap-2">
-          {/* O grupo recorta a aba INTEIRA — cartões, ranking e tabela. Fica
-              aqui em cima, e não sobre a tabela, para não sugerir que só a
-              lista obedece a ele. */}
+          {/* Analista e grupo recortam a aba INTEIRA — cartões, ranking e
+              tabela. Ficam aqui em cima, e não sobre a tabela, para não sugerir
+              que só a lista obedece a eles. */}
+          <AnalistaDropdown analistas={analistas} onChange={setAnalistas} />
           <GrupoAcessoriasDropdown grupos={gruposAcess} onChange={setGruposAcess} />
           <ExportarMenu modulo="contabil" cortes={cortes} desabilitado={!d || carregando} />
         </div>
       </div>
 
-      {gruposAcess.length > 0 && d && (
+      {recortada && d && (
         <Card padding="sm" className="text-sm text-muted">
-          Recortado por {gruposAcess.length === 1 ? "1 grupo" : `${gruposAcess.length} grupos`} do
-          Acessórias: {num(d.carteira.empresas - d.carteira.foraDoGrupo)} de{" "}
-          {num(d.carteira.empresas)} empresas da carteira. Todos os números desta aba falam só
-          desse recorte.
+          Recortado por {descricaoRecorte}: {num(noRecorte)} de {num(visiveis)} empresas da
+          carteira. Todos os números desta aba falam só desse recorte.
         </Card>
       )}
 
@@ -148,12 +168,18 @@ export default function FechamentoContabilPage() {
                 secundario="escrituraram na competência e ninguém apurou"
                 alerta={d.totais.abertas > 0}
               />
+              {/* Com recorte, o cartão fala do recorte como os vizinhos: "1.641"
+                  ao lado dos números de um analista só parece a carteira dele. */}
               <StatTile
-                rotulo="Carteira do Contábil"
+                rotulo={recortada ? "Carteira no recorte" : "Carteira do Contábil"}
                 icon={<Building2 className="size-4 text-ent" />}
                 iconTint="bg-ent/12"
-                valor={num(d.carteira.empresas)}
-                secundario={`${num(d.carteira.semPar)} sem par no Questor · ${num(d.carteira.foraDoEscopo)} fora do seu escopo`}
+                valor={num(recortada ? noRecorte : d.carteira.empresas)}
+                secundario={
+                  recortada
+                    ? `de ${num(visiveis)} da carteira · ${num(d.carteira.semPar)} sem par no Questor`
+                    : `${num(d.carteira.semPar)} sem par no Questor · ${num(d.carteira.foraDoEscopo)} fora do seu escopo`
+                }
               />
               <StatTile
                 rotulo="Sem movimento"
@@ -318,8 +344,9 @@ function PainelCarteira({ semCarteira }: { semCarteira: boolean }) {
     estavaRodando.current = false;
     // A varredura terminou: o relatório inteiro depende dela, então ele recarrega
     // sozinho — pedir que a pessoa aperte Executar de novo seria esconder que o
-    // que ela está vendo já é o dado velho.
+    // que ela está vendo já é o dado velho. A lista do filtro por analista também.
     qc.invalidateQueries({ queryKey: ["contabil-fechamento"] });
+    qc.invalidateQueries({ queryKey: ["analistas-carteira"] });
     toast.success("Carteira do Acessórias atualizada");
   }, [rodando, qc]);
 
@@ -539,6 +566,29 @@ function useFiltroGrupo(): [number[], (grupos: number[]) => void] {
   );
 
   return [grupos, definir];
+}
+
+/**
+ * O filtro por analista, na URL pelo mesmo motivo do de grupo. Um `analista` por
+ * nome, repetido, e não uma lista com vírgula: nome de pessoa pode ter vírgula.
+ */
+function useFiltroAnalista(): [string[], (analistas: string[]) => void] {
+  const pathname = usePathname();
+  const sp = useSearchParams();
+
+  const analistas = useMemo(() => sp.getAll("analista").filter(Boolean), [sp]);
+
+  const definir = useCallback(
+    (novos: string[]) => {
+      const params = new URLSearchParams(sp.toString());
+      params.delete("analista");
+      for (const a of novos) params.append("analista", a);
+      window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
+    },
+    [pathname, sp]
+  );
+
+  return [analistas, definir];
 }
 
 function Medida({

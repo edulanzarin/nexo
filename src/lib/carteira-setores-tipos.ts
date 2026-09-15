@@ -18,6 +18,22 @@ export interface ItemCarteira {
   respEmail: string | null;
 }
 
+/**
+ * Um responsável do setor como opção de filtro. `nome` null = as empresas sem
+ * dono, que entram na lista como qualquer analista: "de ninguém" é justamente o
+ * recorte que alguém vai querer cobrar.
+ */
+export interface AnalistaCarteira {
+  nome: string | null;
+  empresas: number;
+}
+
+/**
+ * Como "sem responsável" viaja na URL. Valor vazio não serve (some em qualquer
+ * limpeza de query string), e o Acessórias não grava "-" como nome de gente.
+ */
+export const SEM_RESPONSAVEL = "-";
+
 export interface EstadoCarteira {
   empresas: number;
   casadas: number;

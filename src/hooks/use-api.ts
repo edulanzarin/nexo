@@ -67,7 +67,7 @@ import type { ContabilExclusoesResp } from "@/lib/contabil-exclusoes-tipos";
 import type { ContabilAtrasoResp } from "@/lib/contabil-atraso-tipos";
 import type { ContabilCarteiraResp } from "@/lib/contabil-carteira-tipos";
 import type { ContabilFechamentoResp } from "@/lib/contabil-fechamento-tipos";
-import type { EstadoCarteira } from "@/lib/carteira-setores-tipos";
+import type { AnalistaCarteira, EstadoCarteira } from "@/lib/carteira-setores-tipos";
 import type { EstadoGrupos, GrupoCarteira } from "@/lib/carteira-grupos-tipos";
 import type { ContabilTempoResp } from "@/lib/contabil-tempo-tipos";
 import type { ProdAppResp } from "@/lib/prod-app-tipos";
@@ -610,6 +610,16 @@ export const useGruposAcessorias = () =>
         "/api/contabil/produtividade-fechamento-grupos"
       ),
     refetchInterval: (q) => (q.state.data?.estado.rodando ? 3_000 : false),
+  });
+
+/** Analistas da carteira do Contábil (a lista do filtro por analista do Fechamento). */
+export const useAnalistasCarteira = () =>
+  useQuery<{ analistas: AnalistaCarteira[] }>({
+    queryKey: ["analistas-carteira"],
+    queryFn: () =>
+      fetchJson<{ analistas: AnalistaCarteira[] }>(
+        "/api/contabil/produtividade-fechamento-analistas"
+      ),
   });
 
 /** Aba No Nexo: o que o time rodou DENTRO do app (trilha de auditoria). */
