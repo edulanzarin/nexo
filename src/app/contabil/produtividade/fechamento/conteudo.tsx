@@ -32,7 +32,7 @@ import { pctBR } from "@/lib/prod-formato";
  * responsável vem da carteira do Acessórias — o ERP não sabe de quem é a empresa.
  */
 export default function FechamentoContabilPage() {
-  const { qs, filtros } = useFiltros();
+  const { qs } = useFiltros();
   const [gruposAcess, setGruposAcess] = useFiltroGrupo();
   const [analistas, setAnalistas] = useFiltroAnalista();
   const consultaQs = useMemo(() => {
@@ -138,12 +138,13 @@ export default function FechamentoContabilPage() {
         </Card>
       )}
 
-      {d?.referenciaEmCurso && !semCarteira && (
+      {d && d.naoEncerradas.length > 0 && !semCarteira && (
         <Card padding="sm" className="text-sm text-muted">
-          <strong className="text-ink">{mesBR(d.referencia)} ainda está em curso.</strong> O
-          encerramento é lançado depois que a competência termina, em geral no mês seguinte —
-          números baixos aqui são o esperado. Para cobrar fechamento, recue o período para a
-          competência anterior.
+          <strong className="text-ink">Os números são de {mesBR(d.referencia)}</strong>, a última
+          competência encerrada. {d.naoEncerradas.map(mesBR).join(", ")}{" "}
+          {d.naoEncerradas.length === 1 ? "ainda não fechou" : "ainda não fecharam"} — o
+          encerramento é lançado depois que a competência termina, em geral no mês seguinte. Esses
+          meses aparecem na fita de competências, fora dos indicadores.
         </Card>
       )}
 
@@ -309,7 +310,8 @@ export default function FechamentoContabilPage() {
 
           {d && (
             <p className="text-center text-xs text-muted">
-              {dataBR(filtros.inicio)} a {dataBR(filtros.fim)} · {d.meses.length} competência(s) ·
+              {dataBR(d.periodo.inicio)} a {dataBR(d.periodo.fim)} · {d.meses.length}{" "}
+              competência(s) ·
               carteira do Acessórias atualizada em{" "}
               {d.carteira.atualizadoEm ? dataHoraBR(d.carteira.atualizadoEm) : "nunca"}
             </p>

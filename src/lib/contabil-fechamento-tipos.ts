@@ -76,14 +76,17 @@ export interface ContabilFechamentoResp {
   periodo: { inicio: string; fim: string };
   /** Competências abrangidas pelo período (YYYY-MM-01). */
   meses: string[];
-  /** Competência dos indicadores: a mais recente do período. */
+  /**
+   * Competência dos indicadores: a mais recente do período que JÁ ENCERROU.
+   * Nunca o mês corrente — o encerramento é lançado depois de o mês terminar, e
+   * medir o corrente mostraria o escritório inteiro "em aberto" com 0% fechado.
+   */
   referencia: string;
   /**
-   * A referência ainda está em curso (é o mês corrente). O fechamento acontece
-   * DEPOIS do mês terminar, então aqui o número baixo é o esperado — sem esse
-   * aviso, abrir a tela no dia 3 mostra o escritório inteiro "em aberto".
+   * Competências do período que ainda não encerraram (o mês corrente e o que
+   * vier depois dele). Ficam na fita, fora dos indicadores, e a tela diz por quê.
    */
-  referenciaEmCurso: boolean;
+  naoEncerradas: string[];
   carteira: {
     /** Fim da última sincronização com o Acessórias. Null = nunca sincronizou. */
     atualizadoEm: string | null;

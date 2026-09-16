@@ -1,6 +1,7 @@
 import "server-only";
 import { query } from "./db";
-import { buckets, carregarCadastros, escopoEmpresas, type ProdFiltros } from "./contabil-prod-comum";
+import { carregarCadastros, escopoEmpresas, type ProdFiltros } from "./contabil-prod-comum";
+import { competenciasDoFechamento } from "./contabil-fechamento-competencias";
 import { carteiraDoSetor, estadoCarteira, SETOR_CONTABIL } from "./carteira-setores";
 import { SEM_RESPONSAVEL } from "./carteira-setores-tipos";
 import { cnpjsDosGrupos, gruposPorCnpj } from "./carteira-grupos";
@@ -85,7 +86,6 @@ interface MovimentoRow {
   mes: string;
 }
 
-const mesDe = (iso: string) => iso.slice(0, 7) + "-01";
 
 /** Distância em meses entre duas competências "YYYY-MM-01". */
 function distanciaEmMeses(de: string, ate: string): number {
@@ -115,11 +115,14 @@ export async function montarFechamentoContabil(
   f: ProdFiltros,
   { gruposAcess = [], analistas: analistasFiltro = [] }: RecorteFechamento = {}
 ): Promise<ContabilFechamentoResp> {
-  // As competências do recorte. Período que começa ou termina no meio do mês
-  // inclui o mês inteiro: fechamento é do mês, não do intervalo.
-  const meses = buckets(f.inicio, f.fim, "mes");
-  const referencia = meses[meses.length - 1];
-  const referenciaEmCurso = referencia >= mesDe(new Date().toISOString().slice(0, 10));
+  // As competências do recorte, a de referência e a janela das consultas — a
+  // regra mora em [[contabil-fechamento-competencias]], que é pura e testada:
+  // os números são sempre da última competência ENCERRADA, nunca do mês corrente.
+  const { meses, referencia, naoEncerradas, janela } = competenciasDoFechamento(
+    f.inicio,
+    f.fim,
+    new Date().toISOString().slice(0, 10)
+  );
 
   const [carteira, estado, escopo, nomesDeGrupo, cnpjsDoFiltro] = await Promise.all([
     carteiraDoSetor(SETOR_CONTABIL),
@@ -169,7 +172,7 @@ export async function montarFechamentoContabil(
               ${SQL_FILTRO_CONTAS}
               and l.datalctoctb >= $2::date and l.datalctoctb < ($3::date + 1)
             group by 1, 2`,
-          [codigos, f.inicio, f.fim]
+          [codigos, janela.inicio, janela.fim]
         ),
         // Última competência fechada de TODOS os tempos, fora do período: é o que
         // responde "esta empresa está parada no fechamento desde quando", coisa
@@ -343,10 +346,13 @@ export async function montarFechamentoContabil(
   const mediveis = fechadas + abertas;
 
   return {
-    periodo: { inicio: f.inicio, fim: f.fim },
+    // O período que a tela mostra é o das competências medidas, e não o que a
+    // barra pediu: com o mês puxado para dentro os dois divergem, e mostrar o
+    // pedido faria a tela dizer "1 competência" abaixo de duas.
+    periodo: janela,
     meses,
     referencia,
-    referenciaEmCurso,
+    naoEncerradas,
     carteira: {
       atualizadoEm: estado.atualizadoEm,
       empresas: carteira.length,
