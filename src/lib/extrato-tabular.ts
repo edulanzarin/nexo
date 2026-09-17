@@ -1,5 +1,6 @@
 import type { Transacao } from "./regras-extrato";
 import type { ExtratoLido } from "./extrato-ofx";
+import type { ModoTextoPdf } from "./pdf-texto";
 
 /**
  * Motor de leitura para extratos em PDF no formato tabular — que é o de quase
@@ -12,8 +13,12 @@ import type { ExtratoLido } from "./extrato-ofx";
  * conferência, porque a cadeia de saldos tem que fechar do começo ao fim.
  */
 
-/** Dinheiro em formato BR, aceitando "R$", menos solto e sufixo C/D. */
-const RE_DINHEIRO = /(-\s*)?R?\$?\s*(-?\d{1,3}(?:\.\d{3})*,\d{2})\s*([CD])?/g;
+/**
+ * Dinheiro em formato BR, aceitando "R$", menos solto e sufixo C/D. O "R" só
+ * vale colado no "$": solto, ele casava a última letra da descrição ("VENDOR
+ * 9.609,60" virava "VENDO"), e a regra cadastrada pela descrição não casava.
+ */
+const RE_DINHEIRO = /(-\s*)?(?:R?\$)?\s*(-?\d{1,3}(?:\.\d{3})*,\d{2})\s*([CD])?/g;
 const RE_DATA = /^\s*(\d{2})\/(\d{2})(?:\/(\d{2,4}))?\b/;
 
 export type ModoSinal =
@@ -37,6 +42,13 @@ export interface ConfigTabular {
   sinal: ModoSinal;
   /** PDF protegido: a tela pede a senha ao usuário. */
   exigeSenha?: boolean;
+  /**
+   * Como ler o texto (padrão `layout`). `raw` quando o PDF desenha valor e
+   * saldo como colunas à parte e o `layout` os desencontra da descrição; na
+   * ordem de desenho a linha do lançamento sai inteira. O reconhecimento roda
+   * sempre sobre o `layout`.
+   */
+  modo?: ModoTextoPdf;
 }
 
 interface Achado {
@@ -201,6 +213,18 @@ export const CONFIGS: ConfigTabular[] = [
     reconhece: (t) => /dayconnect|daycoval/i.test(t),
     ignorar: SALDOS,
     sinal: "sinal",
+  },
+  {
+    // Cooperativas do sistema Ailos (banco 85: Acredicoop e as irmãs), extrato
+    // "Extrato conta corrente". O valor vem sem sinal e o saldo com sinal, e o
+    // `layout` joga valor e saldo para as linhas de baixo — em `raw` cada
+    // lançamento é uma linha "data descrição valor saldo".
+    banco: "Ailos",
+    reconhece: (t) =>
+      /Cooperativa:.*Banco:\s*85\b/i.test(t) && /Saldo inicial do per[íi]odo/i.test(t),
+    ignorar: SALDOS,
+    sinal: "saldo",
+    modo: "raw",
   },
   {
     // "Associado"/"Cooperativa" é do cabeçalho do Sicredi. Precisa vir antes

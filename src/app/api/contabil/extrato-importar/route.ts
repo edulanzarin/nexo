@@ -37,7 +37,7 @@ export const POST = apiRoute(async (req) => {
   let extrato: PdfLido;
   try {
     if (nome.endsWith(".pdf")) {
-      extrato = lerPdf(await textoDoPdf(bytes, senha));
+      extrato = await lerPdf((modo) => textoDoPdf(bytes, senha, modo));
     } else {
       // OFX e variantes (.ofx, .qfx, .sta) são texto.
       extrato = lerOfx(bytes.toString("utf8"));

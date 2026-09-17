@@ -1,6 +1,7 @@
 import type { Transacao } from "./regras-extrato";
 import type { ExtratoLido } from "./extrato-ofx";
 import { acharConfig, lerTabular, type ResultadoTabular } from "./extrato-tabular";
+import type { ModoTextoPdf } from "./pdf-texto";
 
 /**
  * Leitor de extrato em PDF. Cada banco tem um layout próprio, então isto é um
@@ -335,14 +336,18 @@ export interface PdfLido extends ExtratoLido {
 /**
  * Escolhe o leitor: primeiro os de layout próprio, depois o motor tabular, que
  * cobre a maioria dos bancos por configuração em vez de código.
+ *
+ * Recebe quem extrai o texto, não o texto: o reconhecimento é sobre o `layout`,
+ * e só o banco que declara `modo: "raw"` paga a segunda extração.
  */
-export function lerPdf(texto: string): PdfLido {
+export async function lerPdf(textoDoPdf: (modo: ModoTextoPdf) => Promise<string>): Promise<PdfLido> {
+  const texto = await textoDoPdf("layout");
   const proprio = LEITORES.find((l) => l.reconhece(texto));
   if (proprio) return proprio.ler(texto);
 
   const cfg = acharConfig(texto);
   if (cfg) {
-    const r: ResultadoTabular = lerTabular(texto, cfg);
+    const r: ResultadoTabular = lerTabular(cfg.modo === "raw" ? await textoDoPdf("raw") : texto, cfg);
     return r;
   }
 
