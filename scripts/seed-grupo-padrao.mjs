@@ -2,8 +2,10 @@
 // empresas do Questor exceto as do próprio escritório (nome com "NAVECON").
 // Uso: node scripts/seed-grupo-padrao.mjs
 //
-// É um SNAPSHOT: empresas cadastradas depois no Questor não entram sozinhas —
-// rode de novo para reconciliar. Idempotente (recria os itens do grupo).
+// O grupo nasce no modo "exceto" (migration 038): o que se grava são as empresas
+// NAVECON, e o resto do Questor entra na leitura — inclusive a empresa que for
+// cadastrada depois. Idempotente (recria os itens e crava o modo); antes era uma
+// foto da lista de dentro, que precisava rodar de novo a cada empresa nova.
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -37,14 +39,14 @@ await questor.connect();
 await app.connect();
 try {
   const { rows } = await questor.query(
-    `select codigoempresa from empresa where nomeempresa not ilike '%navecon%' order by codigoempresa`
+    `select codigoempresa from empresa where nomeempresa ilike '%navecon%' order by codigoempresa`
   );
   const codigos = rows.map((r) => r.codigoempresa);
 
   await app.query("begin");
   const g = await app.query(
-    `insert into empresa_grupo (nome) values ($1)
-     on conflict (nome) do update set nome = excluded.nome
+    `insert into empresa_grupo (nome, modo) values ($1, 'exceto')
+     on conflict (nome) do update set modo = 'exceto'
      returning id`,
     [NOME]
   );
@@ -57,7 +59,7 @@ try {
     [grupoId, codigos]
   );
   await app.query("commit");
-  console.log(`Grupo "${NOME}" (id ${grupoId}) com ${codigos.length} empresas (NAVECON de fora).`);
+  console.log(`Grupo "${NOME}" (id ${grupoId}): todas as empresas, exceto ${codigos.length} NAVECON.`);
 } catch (err) {
   await app.query("rollback");
   console.error(`FALHOU: ${err.message}`);
