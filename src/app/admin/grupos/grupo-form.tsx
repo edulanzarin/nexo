@@ -1,4 +1,4 @@
-import { EmpresaPicker } from "@/components/admin/empresa-picker";
+import { GrupoEmpresasCampo } from "@/components/admin/grupo-empresas-campo";
 import { Button } from "@/components/ui";
 import { salvarGrupo, excluirGrupo } from "../actions";
 import type { GrupoDetalhe, EmpresaOpcao } from "../dados";
@@ -23,12 +23,11 @@ export function GrupoForm({
         <input name="nome" required defaultValue={grupo?.nome ?? ""} className={input} placeholder="Ex.: Carteira Sul" />
       </label>
 
-      <div className="max-w-2xl">
-        <h2 className="text-sm font-semibold">Empresas do grupo</h2>
-        <div className="mt-3">
-          <EmpresaPicker name="empresas" empresas={empresas} inicial={grupo?.empresas ?? []} />
-        </div>
-      </div>
+      <GrupoEmpresasCampo
+        empresas={empresas}
+        modoInicial={grupo?.modo ?? "lista"}
+        marcadasIniciais={grupo?.empresas ?? []}
+      />
 
       <div className="flex items-center justify-between border-t border-hairline pt-4">
         {grupo ? (

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { assertSecao } from "@/lib/sessao";
+import { ehModoGrupo } from "@/lib/grupo-modo";
 import {
   salvarGrupoEmpresa as salvarGrupoLib,
   excluirGrupoEmpresa as excluirGrupoLib,
@@ -13,6 +14,8 @@ export async function salvarGrupoEmpresa(formData: FormData): Promise<void> {
   const id = Number(formData.get("id"));
   const nome = String(formData.get("nome") ?? "").trim();
   if (!nome) throw new Error("Dê um nome ao grupo");
+  const modo = formData.get("modo");
+  if (!ehModoGrupo(modo)) throw new Error("Modo do grupo inválido");
   const empresas = formData
     .getAll("empresas")
     .map((e) => Number(e))
@@ -21,6 +24,7 @@ export async function salvarGrupoEmpresa(formData: FormData): Promise<void> {
   await salvarGrupoLib({
     id: Number.isInteger(id) && id > 0 ? id : undefined,
     nome,
+    modo,
     empresas,
   });
 

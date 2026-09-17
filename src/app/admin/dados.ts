@@ -1,6 +1,8 @@
 import "server-only";
 import { appQuery } from "@/lib/app-db";
 import { query } from "@/lib/db";
+import { resolverGrupos } from "@/lib/grupo-membros";
+import type { ModoGrupo } from "@/lib/grupo-modo";
 
 /**
  * Leituras da área admin. Usuários/grupos/cargos vêm do banco do app; a lista de
@@ -251,34 +253,51 @@ export async function listarCargosParaForm(): Promise<CargoOpcao[]> {
 export interface GrupoResumo {
   id: number;
   nome: string;
+  modo: ModoGrupo;
+  /** Quantas empresas o grupo tem hoje. */
   empresas: number;
+  /** Quantas estão marcadas — no modo `exceto`, as que ficam de fora. */
+  marcadas: number;
   cargos: number;
   usuarios: number;
 }
 
 export async function listarGrupos(): Promise<GrupoResumo[]> {
-  return appQuery<GrupoResumo>(
-    `select g.id, g.nome,
-            (select count(*)::int from empresa_grupo_item i where i.grupo_id = g.id) as empresas,
-            (select count(*)::int from cargo_grupo cg where cg.grupo_id = g.id) as cargos,
-            (select count(distinct uc.usuario_id)::int
-               from cargo_grupo cg2
-               join usuario_cargo uc on uc.cargo_id = cg2.cargo_id
-              where cg2.grupo_id = g.id) as usuarios
-       from empresa_grupo g
-      order by g.nome`
-  );
+  const [grupos, uso] = await Promise.all([
+    resolverGrupos("empresa_grupo"),
+    appQuery<{ id: number; cargos: number; usuarios: number }>(
+      `select g.id,
+              (select count(*)::int from cargo_grupo cg where cg.grupo_id = g.id) as cargos,
+              (select count(distinct uc.usuario_id)::int
+                 from cargo_grupo cg2
+                 join usuario_cargo uc on uc.cargo_id = cg2.cargo_id
+                where cg2.grupo_id = g.id) as usuarios
+         from empresa_grupo g`
+    ),
+  ]);
+  const usoPorId = new Map(uso.map((u) => [u.id, u]));
+  return grupos.map((g) => ({
+    id: g.id,
+    nome: g.nome,
+    modo: g.modo,
+    empresas: g.membros.length,
+    marcadas: g.marcadas.length,
+    cargos: usoPorId.get(g.id)?.cargos ?? 0,
+    usuarios: usoPorId.get(g.id)?.usuarios ?? 0,
+  }));
 }
 
 export interface GrupoDetalhe {
   id: number;
   nome: string;
+  modo: ModoGrupo;
+  /** As marcadas, como estão gravadas (dentro ou fora, conforme o modo). */
   empresas: number[];
 }
 
 export async function carregarGrupo(id: number): Promise<GrupoDetalhe | null> {
-  const [g] = await appQuery<{ id: number; nome: string }>(
-    `select id, nome from empresa_grupo where id = $1`,
+  const [g] = await appQuery<{ id: number; nome: string; modo: ModoGrupo }>(
+    `select id, nome, modo from empresa_grupo where id = $1`,
     [id]
   );
   if (!g) return null;

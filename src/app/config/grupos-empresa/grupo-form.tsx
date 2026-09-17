@@ -1,4 +1,4 @@
-import { EmpresaPicker } from "@/components/admin/empresa-picker";
+import { GrupoEmpresasCampo } from "@/components/admin/grupo-empresas-campo";
 import { Button } from "@/components/ui";
 import type { EmpresaOpcao } from "@/app/admin/dados";
 import type { GrupoEmpresaDetalhe } from "@/lib/grupos-empresa";
@@ -8,7 +8,7 @@ const input =
   "h-10 rounded-lg border border-hairline bg-surface px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-accent/50";
 
 /** Cria ou edita um grupo de empresa de negócio (nome + empresas). Server Action.
- *  Reusa o EmpresaPicker e a lista de empresas do Questor do admin. */
+ *  Reusa o campo de empresas e a lista de empresas do Questor do admin. */
 export function GrupoEmpresaForm({
   grupo,
   empresas,
@@ -31,12 +31,11 @@ export function GrupoEmpresaForm({
         />
       </label>
 
-      <div className="max-w-2xl">
-        <h2 className="text-sm font-semibold">Empresas do grupo</h2>
-        <div className="mt-3">
-          <EmpresaPicker name="empresas" empresas={empresas} inicial={grupo?.empresas ?? []} />
-        </div>
-      </div>
+      <GrupoEmpresasCampo
+        empresas={empresas}
+        modoInicial={grupo?.modo ?? "lista"}
+        marcadasIniciais={grupo?.empresas ?? []}
+      />
 
       <div className="flex items-center justify-between border-t border-hairline pt-4">
         {grupo ? (

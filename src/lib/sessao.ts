@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { appQuery } from "./app-db";
 import { COOKIE } from "./auth";
+import { empresasDosGrupos } from "./grupo-membros";
 import { MODULOS, secoesDoModulo, type ModuloId } from "./modulos";
 
 /**
@@ -82,17 +83,19 @@ export const getSessaoOpcional = cache(async (): Promise<Sessao | null> => {
     for (const r of rows) secoes.add(chaveSecao(r.modulo, r.secao));
   }
 
-  // Empresas: união dos grupos de todos os cargos (a menos que veja todas).
+  // Empresas: união dos grupos de todos os cargos (a menos que veja todas). O
+  // grupo se resolve pelo modo — num "todas, exceto" a empresa nova do Questor
+  // já está aqui, sem ninguém editar o grupo.
   let permitidas: number[] = [];
   if (!todasEmpresas && cargoIds.length) {
-    const emp = await appQuery<{ codigoempresa: number }>(
-      `select distinct i.codigoempresa
-         from cargo_grupo cg
-         join empresa_grupo_item i on i.grupo_id = cg.grupo_id
-        where cg.cargo_id = any($1)`,
+    const grupos = await appQuery<{ grupo_id: number }>(
+      `select distinct grupo_id from cargo_grupo where cargo_id = any($1)`,
       [cargoIds]
     );
-    permitidas = emp.map((e) => e.codigoempresa);
+    permitidas = await empresasDosGrupos(
+      "empresa_grupo",
+      grupos.map((g) => g.grupo_id)
+    );
   }
 
   return {

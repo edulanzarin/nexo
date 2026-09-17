@@ -11,17 +11,24 @@ import type { EmpresaOpcao } from "@/app/admin/dados";
  * checklist e contador. Emite um `<input type="hidden" name={name}>` por empresa
  * marcada — inclusive as que a busca escondeu —, então o Server Action recebe a
  * seleção completa.
+ *
+ * Controlado: quem usa guarda a seleção, porque o grupo precisa inverter as
+ * marcações ao trocar de modo (ver `GrupoEmpresasCampo`).
  */
 export function EmpresaPicker({
   name,
   empresas,
-  inicial,
+  selecionadas,
+  onMudar,
+  rotuloContagem,
 }: {
   name: string;
   empresas: EmpresaOpcao[];
-  inicial: number[];
+  selecionadas: ReadonlySet<number>;
+  onMudar: (selecionadas: Set<number>) => void;
+  /** Texto do contador ao lado da busca (padrão "N selec."). */
+  rotuloContagem?: string;
 }) {
-  const [selecionadas, setSelecionadas] = useState<Set<number>>(new Set(inicial));
   const [busca, setBusca] = useState("");
 
   const filtradas = useMemo(() => {
@@ -32,13 +39,12 @@ export function EmpresaPicker({
     );
   }, [empresas, busca]);
 
-  const alternar = (codigo: number) =>
-    setSelecionadas((prev) => {
-      const s = new Set(prev);
-      if (s.has(codigo)) s.delete(codigo);
-      else s.add(codigo);
-      return s;
-    });
+  const alternar = (codigo: number) => {
+    const s = new Set(selecionadas);
+    if (s.has(codigo)) s.delete(codigo);
+    else s.add(codigo);
+    onMudar(s);
+  };
 
   return (
     <div className="rounded-lg border border-hairline bg-surface">
@@ -50,7 +56,9 @@ export function EmpresaPicker({
           placeholder="Buscar empresa por nome ou código…"
           className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted"
         />
-        <span className="tnum shrink-0 text-xs text-muted">{selecionadas.size} selec.</span>
+        <span className="tnum shrink-0 text-xs text-muted">
+          {rotuloContagem ?? `${selecionadas.size} selec.`}
+        </span>
       </div>
       <div className="max-h-72 overflow-y-auto p-1">
         {filtradas.length === 0 && (

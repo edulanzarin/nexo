@@ -56,7 +56,12 @@ export function GruposEmpresaTabela({ grupos }: { grupos: GrupoEmpresaResumo[] }
                   className="cursor-pointer border-b border-hairline last:border-0 transition-colors hover:bg-surface-2"
                 >
                   <td className="px-4 py-2.5 font-medium">{g.nome}</td>
-                  <td className="tnum px-4 py-2.5 text-right text-ink-2">{g.empresas}</td>
+                  <td className="tnum px-4 py-2.5 text-right text-ink-2">
+                    {g.modo === "exceto" && (
+                      <span className="mr-2 text-xs text-muted">todas, exceto {g.marcadas}</span>
+                    )}
+                    {g.empresas}
+                  </td>
                 </tr>
               ))}
             </tbody>

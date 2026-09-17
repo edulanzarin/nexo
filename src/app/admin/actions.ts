@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { appPool } from "@/lib/app-db";
 import { hashSenha } from "@/lib/auth";
 import { assertAdmin } from "@/lib/sessao";
+import { ehModoGrupo } from "@/lib/grupo-modo";
 import { MODULOS, secoesDoModulo } from "@/lib/modulos";
 
 /** Conjunto válido de "modulo/secao" — barra chaves forjadas no form. */
@@ -245,16 +246,18 @@ export async function salvarGrupo(formData: FormData): Promise<void> {
   const id = Number(formData.get("id"));
   const nome = String(formData.get("nome") ?? "").trim();
   if (!nome) throw new Error("Dê um nome ao grupo");
+  const modo = formData.get("modo");
+  if (!ehModoGrupo(modo)) throw new Error("Modo do grupo inválido");
   const empresas = formData.getAll("empresas").map((e) => Number(e)).filter(Number.isInteger);
 
   await comTransacao(async (q) => {
     let grupoId = id;
     if (Number.isInteger(id) && id > 0) {
-      await q(`update empresa_grupo set nome = $2 where id = $1`, [id, nome]);
+      await q(`update empresa_grupo set nome = $2, modo = $3 where id = $1`, [id, nome, modo]);
     } else {
       const { rows } = await q(
-        `insert into empresa_grupo (nome) values ($1) returning id`,
-        [nome]
+        `insert into empresa_grupo (nome, modo) values ($1, $2) returning id`,
+        [nome, modo]
       );
       grupoId = rows[0].id as number;
     }
