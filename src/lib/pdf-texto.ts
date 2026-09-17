@@ -3,16 +3,33 @@ import { spawn } from "node:child_process";
 import { FilterError } from "./fiscal-filters";
 
 /**
- * Extrai o texto de um PDF com `pdftotext -layout`, que preserva as colunas —
- * sem o `-layout` o texto vira uma sopa e não dá para separar valor de
- * descrição. Entra e sai por stdin/stdout, sem arquivo temporário. Compartilhado
- * pela Conciliação (extrato) e pela Implantação (balancete).
+ * Como o texto sai do PDF:
+ * - `layout` preserva as colunas por espaços — o que extrato e balancete
+ *   precisam, uma linha por lançamento/conta;
+ * - `raw` segue a ORDEM EM QUE O PDF DESENHA. Relatório que empilha várias
+ *   linhas por registro (o patrimonial do SCI) sai embaralhado no `layout`, que
+ *   agrupa por altura e cola o valor de um bem no cabeçalho do vizinho; na ordem
+ *   de desenho cada registro sai inteiro. E a ordem é do arquivo, não da
+ *   ferramenta: xpdf e poppler devolvem a mesma sequência.
  */
-export function textoDoPdf(bytes: Buffer, senha?: string): Promise<string> {
+export type ModoTextoPdf = "layout" | "raw";
+
+/**
+ * Extrai o texto de um PDF com `pdftotext`. Entra e sai por stdin/stdout, sem
+ * arquivo temporário. Compartilhado pela Conciliação (extrato) e pela
+ * Implantação (balancete e patrimonial).
+ */
+export function textoDoPdf(
+  bytes: Buffer,
+  senha?: string,
+  modo: ModoTextoPdf = "layout"
+): Promise<string> {
   return new Promise((resolve, reject) => {
     // spawn e não execFile: só o spawn deixa escrever no stdin do processo, e
     // sem isso o pdftotext fica esperando entrada para sempre.
-    const args = senha ? ["-layout", "-upw", senha, "-", "-"] : ["-layout", "-", "-"];
+    // `-enc UTF-8` explícito: o poppler do container já sai em UTF-8, mas o xpdf
+    // (o do Git for Windows, na máquina de dev) sai em Latin-1 e quebra acento.
+    const args = [`-${modo}`, "-enc", "UTF-8", ...(senha ? ["-upw", senha] : []), "-", "-"];
     const p = spawn("pdftotext", args);
     const saida: Buffer[] = [];
     let erro = "";

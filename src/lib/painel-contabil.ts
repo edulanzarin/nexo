@@ -73,6 +73,7 @@ async function filtrosTrilha(
 const ACAO = {
   conciliacao: "contabil.conciliacao.gerar",
   implantacao: "contabil.implantacao.gerar",
+  implantacaoPatrimonial: "contabil.implantacao.patrimonial",
   laudo: "contabil.laudo.gerar",
   triar: "contabil.pendencia.triar",
   export: "contabil.export",
@@ -108,7 +109,7 @@ async function blocoAtividade(inicioMes: string, dono?: string): Promise<Contabi
     `select
         count(*) filter (where acao = '${ACAO.conciliacao}')::int as conciliacoes,
         coalesce(sum(case when acao = '${ACAO.conciliacao}' then (detalhe->>'linhas')::int end), 0)::int as conciliacao_linhas,
-        count(*) filter (where acao = '${ACAO.implantacao}')::int as implantacoes,
+        count(*) filter (where acao in ('${ACAO.implantacao}', '${ACAO.implantacaoPatrimonial}'))::int as implantacoes,
         count(*) filter (where acao = '${ACAO.laudo}')::int as laudos,
         count(*) filter (where acao = '${ACAO.triar}')::int as triadas,
         count(*) filter (where acao = '${ACAO.triar}' and detalhe->>'status' = 'resolvido')::int as resolvidas,
@@ -161,7 +162,7 @@ async function blocoSerie(inicio: string): Promise<ContabilSeriePonto[]> {
   return appQuery<ContabilSeriePonto>(
     `select to_char(g.b, 'YYYY-MM') as bucket,
             count(a.id) filter (where a.acao = '${ACAO.conciliacao}')::int as conciliacoes,
-            count(a.id) filter (where a.acao = '${ACAO.implantacao}')::int as implantacoes,
+            count(a.id) filter (where a.acao in ('${ACAO.implantacao}', '${ACAO.implantacaoPatrimonial}'))::int as implantacoes,
             count(a.id) filter (where a.acao = '${ACAO.laudo}')::int as laudos
        from generate_series(date_trunc('month', $1::date), date_trunc('month', current_date), interval '1 month') g(b)
        left join auditoria a

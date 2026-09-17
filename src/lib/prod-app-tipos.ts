@@ -73,10 +73,10 @@ export const TRABALHOS_CONTABIL: TrabalhoApp[] = [
   {
     id: "implantacao",
     rotulo: "Implantação",
-    descricao: "Saldos de abertura gerados do PDF",
+    descricao: "Saldos e bens de abertura gerados do PDF",
     cor: "var(--esp-3)",
     tipo: "producao",
-    acoes: ["contabil.implantacao.gerar"],
+    acoes: ["contabil.implantacao.gerar", "contabil.implantacao.patrimonial"],
   },
   {
     id: "triagem",

@@ -1,0 +1,700 @@
+Página: 1
+Correção e depreciação de 01/01/2000 a 30/04/2026
+Cidade/SC - CNPJ:00.000.000/0001-91
+Empresa: 9999 - EMPRESA EXEMPLO LTDA
+Valor depreciação
+Val. dep. moeda
+Valor corrigido
+Correção Período
+Dep. acumulada
+Dep. ac. moeda
+Dep. período
+Dep. per. moeda
+Val. residual Meses já depr.
+Meses a depr.
+Taxa depreciação
+Meses
+Conta: 98 - 01.2.3.01.001 - Maquinas e Equipamentos
+2 - 31/12/2021 - MAQUINAS SALDO ANTERIOR
+Fornecedor: FORNECEDORES DIVERSOS
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal:
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+306.184,27
+306.184,27
+1.458.020,330000
+127.359,56 70
+50
+178.824,71
+850.511,860000
+178.824,71
+10,00 %
+120 0,000000 631.808,840000
+Total geral da conta: 98 - 01.2.3.01.001 - Maquinas e Equipamentos
+306.184,27
+306.184,27
+1.458.020,330000
+127.359,56
+178.824,71
+850.511,860000
+178.824,71
+0,000000 631.808,840000
+Conta: 99 - 01.2.3.01.002 - Móveis e Utensílios
+3 - 31/12/2021 - MOVEIS SALDO ANTERIOR
+Fornecedor: FORNECEDORES DIVERSOS
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal:
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+13.019,00
+13.019,00
+61.995,240000
+7.315,86 53
+67
+5.703,14
+27.381,230000
+5.703,14
+10,00 %
+120 0,000000 26.864,760000
+13 - 21/10/2024 - COMIN COMERCIO DE MOVEIS
+Fornecedor: FORNECEDORES DIVERSOS
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal:
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+2.011,00
+2.011,00
+9.576,190000
+1.709,32 18
+102
+301,68
+1.436,430000
+301,68
+10,00 %
+120 0,000000 1.436,400000
+Total geral da conta: 99 - 01.2.3.01.002 - Móveis e Utensílios
+15.030,00
+15.030,00
+71.571,430000
+9.025,18
+6.004,82
+28.817,660000
+6.004,82
+0,000000 28.301,160000
+Conta: 102 - 01.2.3.01.005 - Veículos
+4 - 31/12/2021 - VEICULOS SALDO ANTERIOR
+Fornecedor: FORNECEDORES DIVERSOS
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal:
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+2.260.437,60
+2.260.437,60
+10.763.988,570000
+0,00 60
+0
+2.260.437,60
+10.763.988,570000
+2.260.437,60
+20,00 %
+60 0,000000 7.722.015,030000
+5 - 19/01/2023 - NF 285667 FACHINI SA
+Fornecedor: FACCHINI S.A.
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal:
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+190.000,00
+190.000,00
+904.761,900000
+66.499,87 39
+21
+123.500,13
+588.095,240000
+123.500,13
+20,00 %
+60 0,000000 588.095,430000
+6 - 25/01/2023 - NF 784451 VOLKSWAGEN DO BRASIL INDUSTRIA
+Fornecedor: VOLKSWAGEN DO BRASIL IND DE VEICULOS AUTOMOTIVOS LTDA
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal:
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+82.325,81
+82.325,81
+392.027,670000
+28.813,91 39
+21
+53.511,90
+254.817,980000
+53.511,90
+20,00 %
+60 0,000000 254.817,810000
+7 - 13/02/2023 - RODAN
+Fornecedor: RODAN COM DE PECAS E IMPL TRANSP S.A
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal:
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+297.000,00
+297.000,00
+1.414.285,710000
+108.900,00 38
+22
+188.100,00
+895.714,290000
+188.100,00
+20,00 %
+60 0,000000 895.714,340000
+8 - 29/05/2023 - FACCHINI SA
+Fornecedor: FACHINI VEICULOS LTDA
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal:
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+224.000,00
+224.000,00
+1.066.666,670000
+93.333,45 35
+25
+130.666,55
+622.222,220000
+130.666,55
+20,00 %
+60 0,000000 622.222,300000
+17/06/2026 14:50 - SCI Ambiente Contábil ÚNICO
+ESCRITORIO ANTERIOR S/S
+Página: 2
+Correção e depreciação de 01/01/2000 a 30/04/2026
+Cidade/SC - CNPJ:00.000.000/0001-91
+Empresa: 9999 - EMPRESA EXEMPLO LTDA
+Valor depreciação
+Val. dep. moeda
+Valor corrigido
+Correção Período
+Dep. acumulada
+Dep. ac. moeda
+Dep. período
+Dep. per. moeda
+Val. residual Meses já depr.
+Meses a depr.
+Taxa depreciação
+Meses
+9 - 01/08/2023 - SCANIA R 400 PLACA ABC1D23
+Fornecedor: CONSUMIDOR FINAL
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal:
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+334.000,00
+334.000,00
+1.590.476,190000
+155.866,56 32
+28
+178.133,44
+848.253,970000
+178.133,44
+20,00 %
+60 0,000000 848.254,080000
+10 - 08/09/2023 - 101963 - DICAVE GARTNER DISTRIBUIDORA CATARINENSE DE VEICULOS
+Fornecedor: CONSUMIDOR FINAL
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal:
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+950.000,00
+950.000,00
+4.523.809,520000
+459.166,77 31
+29
+490.833,23
+2.337.301,590000
+490.833,23
+20,00 %
+60 0,000000 2.337.301,730000
+11 - 23/10/2023 - 247773 - FACCHINI S.A.
+Fornecedor: CONSUMIDOR FINAL
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal:
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+155.000,00
+155.000,00
+738.095,240000
+77.500,10 30
+30
+77.499,90
+369.047,620000
+77.499,90
+20,00 %
+60 0,000000 369.047,700000
+12 - 11/07/2024 - NF 112724 DICAVE GARTNER DISTRIBUIDORA
+Fornecedor: DICAVE GARTNER DISTRIBUIDORA CATARINENSEDE VEICULOS LTDA
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal:
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+565.000,00
+565.000,00
+2.690.476,190000
+367.249,93 21
+39
+197.750,07
+941.666,670000
+197.750,07
+20,00 %
+60 0,000000 941.666,670000
+14 - 31/12/2024 - VEICULOS
+Fornecedor: FORNECEDORES DIVERSOS
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal:
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+111.500,00
+111.500,00
+530.952,380000
+81.766,72 16
+44
+29.733,28
+141.587,300000
+29.733,28
+20,00 %
+60 0,000000 141.587,360000
+15 - 02/01/2025 - VEICULOS SALDO ANTERIOR
+Fornecedor: FORNECEDORES DIVERSOS
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal:
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+1.548.901,30
+1.548.901,30
+7.375.720,480000
+1.548.901,30 0
+16
+0,00
+0,000000
+0,00
+0,00 %
+16 0,000000 0,000000
+16 - 25/08/2025 - NF 18554 PALMEIRA IMPLEMENTOS RODOVIARIOS LTDA
+Fornecedor: CONSUMIDOR FINAL
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal:
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+114.000,00
+114.000,00
+542.857,140000
+98.800,00 8
+52
+15.200,00
+72.380,950000
+15.200,00
+20,00 %
+60 0,000000 72.380,960000
+17 - 25/08/2025 - NF 18555 PALMEIRA IMPLEMENTOS RODOVIARIOS LTDA
+Fornecedor: CONSUMIDOR FINAL
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal:
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+114.000,00
+114.000,00
+542.857,140000
+98.800,00 8
+52
+15.200,00
+72.380,950000
+15.200,00
+20,00 %
+60 0,000000 72.380,960000
+18 - 25/08/2025 - NF 18553 PALMEIRA IMPLEMENTOS RODOVIARIOS LTDA
+Fornecedor: CONSUMIDOR FINAL
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal:
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+160.900,00
+160.900,00
+766.190,480000
+139.446,64 8
+52
+21.453,36
+102.158,730000
+21.453,36
+20,00 %
+60 0,000000 102.158,720000
+19 - 10/03/2025 - SEMIRREBOQUE PORTA CONTAINER 3 EIXOS MEC JUNTOS 4 PINOS 40 PES -
+Fornecedor: OLIVO S/A INDUSTRIA E COMERCIO DE IMPLEMENTOS RODOVIARIOS
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal: 3882
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+78.000,00
+78.000,00
+371.428,570000
+56.875,00 13
+35
+21.125,00
+100.595,240000
+21.125,00
+25,00 %
+48 0,000000 100.595,300000
+17/06/2026 14:50 - SCI Ambiente Contábil ÚNICO
+ESCRITORIO ANTERIOR S/S
+Página: 3
+Correção e depreciação de 01/01/2000 a 30/04/2026
+Cidade/SC - CNPJ:00.000.000/0001-91
+Empresa: 9999 - EMPRESA EXEMPLO LTDA
+Valor depreciação
+Val. dep. moeda
+Valor corrigido
+Correção Período
+Dep. acumulada
+Dep. ac. moeda
+Dep. período
+Dep. per. moeda
+Val. residual Meses já depr.
+Meses a depr.
+Taxa depreciação
+Meses
+20 - 10/03/2025 - SEMIRREBOQUE PORTA CONTAINER 3 EIXOS MEC JUNTOS 4 PINOS 40 PES -
+Fornecedor: OLIVO S/A INDUSTRIA E COMERCIO DE IMPLEMENTOS RODOVIARIOS
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal: 3883
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+78.000,00
+78.000,00
+371.428,570000
+78.000,00 0
+14
+0,00
+0,000000
+0,00
+0,00 %
+14 0,000000 0,000000
+21 - 10/03/2025 - SEMIRREBOQUE PORTA CONTAINER 3 EIXOS MEC JUNTOS 4 PINOS 40 PES -
+Fornecedor: OLIVO S/A INDUSTRIA E COMERCIO DE IMPLEMENTOS RODOVIARIOS
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal: 3884
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+78.000,00
+78.000,00
+371.428,570000
+56.875,00 13
+35
+21.125,00
+100.595,240000
+21.125,00
+25,00 %
+48 0,000000 100.595,300000
+22 - 10/03/2025 - SEMIRREBOQUE PORTA CONTAINER 3 EIXOS MEC JUNTOS 4 PINOS 40 PES -
+Fornecedor: OLIVO S/A INDUSTRIA E COMERCIO DE IMPLEMENTOS RODOVIARIOS
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal: 3885
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+78.000,00
+78.000,00
+371.428,570000
+78.000,00 0
+14
+0,00
+0,000000
+0,00
+0,00 %
+14 0,000000 0,000000
+23 - 10/03/2025 - SEMIRREBOQUE PORTA CONTAINER 3 EIXOS MEC JUNTOS 4 PINOS 40 PES -
+Fornecedor: OLIVO S/A INDUSTRIA E COMERCIO DE IMPLEMENTOS RODOVIARIOS
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal: 3886
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+78.000,00
+78.000,00
+371.428,570000
+56.875,00 13
+35
+21.125,00
+100.595,240000
+21.125,00
+25,00 %
+48 0,000000 100.595,300000
+24 - 10/03/2025 - SEMIRREBOQUE PORTA CONTAINER 3 EIXOS MEC JUNTOS 4 PINOS 40 PES -
+Fornecedor: OLIVO S/A INDUSTRIA E COMERCIO DE IMPLEMENTOS RODOVIARIOS
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal: 3887
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+78.000,00
+78.000,00
+371.428,570000
+78.000,00 0
+14
+0,00
+0,000000
+0,00
+0,00 %
+14 0,000000 0,000000
+25 - 23/04/2025 - SEMI REBOQUE PORTA CONTAINER 3 EIXOS MEC JUNTOS 12 PINOS 40 PES -
+Fornecedor: OLIVO S/A INDUSTRIA E COMERCIO DE IMPLEMENTOS RODOVIARIOS
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal: 4019
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+81.450,00
+81.450,00
+387.857,140000
+81.450,00 0
+13
+0,00
+0,000000
+0,00
+0,00 %
+13 0,000000 0,000000
+26 - 23/04/2025 - SEMI REBOQUE PORTA CONTAINER 3 EIXOS MEC JUNTOS 12 PINOS 40 PES -
+Fornecedor: OLIVO S/A INDUSTRIA E COMERCIO DE IMPLEMENTOS RODOVIARIOS
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal: 4020
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+81.450,00
+81.450,00
+387.857,140000
+81.450,00 0
+13
+0,00
+0,000000
+0,00
+0,00 %
+13 0,000000 0,000000
+27 - 23/04/2025 - SEMI REBOQUE PORTA CONTAINER 3 EIXOS MEC JUNTOS 12 PINOS 40 PES -
+Fornecedor: OLIVO S/A INDUSTRIA E COMERCIO DE IMPLEMENTOS RODOVIARIOS
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal: 4021
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+81.450,00
+81.450,00
+387.857,140000
+81.450,00 0
+13
+0,00
+0,000000
+0,00
+0,00 %
+13 0,000000 0,000000
+28 - 23/04/2025 - SEMI REBOQUE PORTA CONTAINER 3 EIXOS MEC JUNTOS 12 PINOS 40 PES -
+Fornecedor: OLIVO S/A INDUSTRIA E COMERCIO DE IMPLEMENTOS RODOVIARIOS
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal: 4022
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+81.450,00
+81.450,00
+387.857,140000
+81.450,00 0
+13
+0,00
+0,000000
+0,00
+0,00 %
+13 0,000000 0,000000
+29 - 23/04/2025 - SEMI REBOQUE PORTA CONTAINER 3 EIXOS MEC JUNTOS 12 PINOS 40 PES -
+Fornecedor: OLIVO S/A INDUSTRIA E COMERCIO DE IMPLEMENTOS RODOVIARIOS
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal: 4023
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+81.450,00
+81.450,00
+387.857,140000
+81.450,00 0
+13
+0,00
+0,000000
+0,00
+0,00 %
+13 0,000000 0,000000
+17/06/2026 14:50 - SCI Ambiente Contábil ÚNICO
+ESCRITORIO ANTERIOR S/S
+Página: 4
+Correção e depreciação de 01/01/2000 a 30/04/2026
+Cidade/SC - CNPJ:00.000.000/0001-91
+Empresa: 9999 - EMPRESA EXEMPLO LTDA
+Valor depreciação
+Val. dep. moeda
+Valor corrigido
+Correção Período
+Dep. acumulada
+Dep. ac. moeda
+Dep. período
+Dep. per. moeda
+Val. residual Meses já depr.
+Meses a depr.
+Taxa depreciação
+Meses
+30 - 23/04/2025 - SEMI REBOQUE PORTA CONTAINER 3 EIXOS MEC JUNTOS 12 PINOS 40 PES -
+Fornecedor: OLIVO S/A INDUSTRIA E COMERCIO DE IMPLEMENTOS RODOVIARIOS
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal: 4024
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+81.450,00
+81.450,00
+387.857,140000
+81.450,00 0
+13
+0,00
+0,000000
+0,00
+0,00 %
+13 0,000000 0,000000
+31 - 25/08/2025 - SR LN 4ED
+Fornecedor: PALMEIRA IMPLEMENTOS RODOVIARIOS LTDA
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal: 18553
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+160.900,00
+160.900,00
+766.190,480000
+160.900,00 0
+9
+0,00
+0,000000
+0,00
+0,00 %
+9 0,000000 0,000000
+32 - 25/08/2025 - SR PC QR 3E
+Fornecedor: PALMEIRA IMPLEMENTOS RODOVIARIOS LTDA
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal: 18555
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+114.000,00
+114.000,00
+542.857,140000
+114.000,00 0
+9
+0,00
+0,000000
+0,00
+0,00 %
+9 0,000000 0,000000
+33 - 25/08/2025 - SR PC QR 3E
+Fornecedor: PALMEIRA IMPLEMENTOS RODOVIARIOS LTDA
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal: 18554
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+114.000,00
+114.000,00
+542.857,140000
+114.000,00 0
+9
+0,00
+0,000000
+0,00
+0,00 %
+9 0,000000 0,000000
+34 - 17/12/2025 - TIGGO8 PRO 1.6
+Fornecedor: Caoa Montadora de Veiculos Ltda
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal:
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+194.990,00
+194.990,00
+928.523,810000
+181.990,68 4
+56
+12.999,32
+61.901,590000
+12.999,32
+20,00 %
+60 0,000000 61.901,600000
+Total geral da conta: 102 - 01.2.3.01.005 - Veículos
+8.647.654,71
+8.647.654,71
+41.179.308,110000
+4.789.260,93
+3.858.393,78
+18.373.303,390000
+3.858.393,78
+0,000000 15.331.330,590000
+Conta: 103 - 01.2.3.01.006 - Computadores e periféricos
+1 - 31/12/2021 - COMPUTADORES SALDO ANTERIOR
+Fornecedor: FORNECEDORES DIVERSOS
+Valor moeda: 0,21
+Nº patrimonial:
+Nº do documento fiscal:
+Tipo da mercadoria: 1 - Bem
+Saldo em quantidade: 0
+1.874,90
+1.874,90
+8.928,100000
+249,90 52
+8
+1.625,00
+7.737,680000
+1.625,00
+20,00 %
+60 0,000000 7.737,600000
+Total geral da conta: 103 - 01.2.3.01.006 - Computadores e periféricos
+1.874,90
+1.874,90
+8.928,100000
+249,90
+1.625,00
+7.737,680000
+1.625,00
+0,000000 7.737,600000
+8.970.743,88
+8.970.743,88
+42.717.827,970000
+4.925.895,57
+4.044.848,31
+19.260.370,590000
+4.044.848,31
+0,000000 15.999.178,190000
+TOTAL GERAL DO RELATÓRIO
+17/06/2026 14:50 - SCI Ambiente Contábil ÚNICO
+ESCRITORIO ANTERIOR S/S
+

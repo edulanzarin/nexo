@@ -25,6 +25,7 @@ const ROTULO_ACAO: Record<string, string> = {
   "contabil.laudo.gerar": "Gerou laudo",
   "contabil.conciliacao.gerar": "Gerou conciliação",
   "contabil.implantacao.gerar": "Gerou implantação de saldos",
+  "contabil.implantacao.patrimonial": "Gerou implantação do patrimonial",
   "contabil.pendencia.triar": "Triou pendência",
   "contabil.plano.salvar": "Salvou plano de contabilização",
   "contabil.plano.reverter": "Reverteu plano ao Questor",

@@ -10,6 +10,7 @@ import { ConfFilterBar } from "@/components/filters/conf-filter-bar";
 import { FiltroPendente } from "@/components/filtro-pendente";
 import { ImportarControles } from "@/components/importar-controles";
 import { ImplantacaoControles } from "@/components/implantacao-controles";
+import { PatrimonialControles } from "@/components/patrimonial-controles";
 import { RegrasControles } from "@/components/regras-controles";
 import { useFiltros } from "@/hooks/use-filters";
 import { ehSecaoPostMortem } from "@/lib/postmortem-secoes";
@@ -33,6 +34,7 @@ const CONTROLES_BARRA: Record<string, React.ComponentType> = {
   importar: ImportarControles,
   regras: RegrasControles,
   implantar: ImplantacaoControles,
+  patrimonial: PatrimonialControles,
 };
 
 export function ContabilShell({ children }: { children: React.ReactNode }) {

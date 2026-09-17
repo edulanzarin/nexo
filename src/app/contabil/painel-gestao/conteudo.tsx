@@ -31,6 +31,7 @@ import type { ContabilSeriePonto } from "@/lib/painel-contabil-tipos";
 const ROTULO_ACAO: Record<string, string> = {
   "contabil.conciliacao.gerar": "Conciliação gerada",
   "contabil.implantacao.gerar": "Implantação gerada",
+  "contabil.implantacao.patrimonial": "Patrimonial gerado",
   "contabil.laudo.gerar": "Laudo gerado",
   "contabil.pendencia.triar": "Pendência triada",
   "contabil.export": "Exportação",

@@ -213,25 +213,35 @@ export const SECOES_CONTABIL: SecaoContabil[] = [
       },
     ],
   },
-  // Implantação de Saldos: trabalho pontual de quando uma empresa entra no
-  // escritório. Foi o último item enquanto só existiam as seções acima — mas a
-  // ordem da sidebar é a desta lista, e a regra é "seção NOVA entra no fim"
-  // (abaixo desta), não empurrar a Implantação pra baixo a cada adição.
+  // Implantação: trabalho pontual de quando uma empresa entra no escritório.
+  // Foi o último item enquanto só existiam as seções acima — mas a ordem da
+  // sidebar é a desta lista, e a regra é "seção NOVA entra no fim" (abaixo
+  // desta), não empurrar a Implantação pra baixo a cada adição.
   {
     id: "implantacao",
-    rotulo: "Implantação de Saldos",
+    rotulo: "Implantação",
     icone: Import,
     path: "/contabil/implantacao",
     metrica: false,
-    descricao: "Balancete de abertura (PDF) → arquivo de importação do Questor",
-    // Uma tela só: subir o PDF do balancete, conferir o de-para e baixar o
-    // arquivo. A empresa é o contexto; quem "executa" é o envio do PDF.
+    descricao: "Balancete e bens da contabilidade anterior (PDF) → arquivos de importação do Questor",
+    // Duas abas, um trabalho: o que a empresa traz da contabilidade anterior.
+    // Cada uma sobe o seu PDF, confere o de-para e baixa o seu arquivo; a
+    // empresa é o contexto e quem "executa" é o envio do PDF. A primeira aba
+    // segue com id "implantar": é a chave dos controles dela na barra do shell.
     abas: [
       {
         id: "implantar",
-        rotulo: "Implantar",
+        rotulo: "Saldos",
         path: "/contabil/implantacao",
         descricao: "Subir o balancete anterior em PDF e gerar o arquivo de saldos",
+        semPeriodo: true,
+        execucao: null,
+      },
+      {
+        id: "patrimonial",
+        rotulo: "Patrimonial",
+        path: "/contabil/implantacao/patrimonial",
+        descricao: "Subir o relatório de bens do imobilizado em PDF e gerar o arquivo do patrimonial",
         semPeriodo: true,
         execucao: null,
       },
