@@ -110,6 +110,9 @@ export interface DesempenhoItem {
   respostas: number;
   respondentes: string[];
   ultimaResposta: string | null;
+  /** Cobranças já disparadas (só existem em avaliação sem resposta). */
+  lembretes: number;
+  ultimoLembrete: string | null;
   criadoEm: string;
   enviadoEm: string | null;
   /** Preenchido = link fechado, não aceita mais resposta. */
@@ -148,4 +151,6 @@ export interface DesempenhoRodada {
   criadoEm: string;
   avaliacoes: number;
   respondidas: number;
+  /** Avaliações que dá para cobrar agora: saíram, seguem abertas e sem resposta. */
+  aCobrar: number;
 }

@@ -3,6 +3,7 @@ import { appQuery } from "./app-db";
 import { FilterError } from "./fiscal-filters";
 import { enviarEmail } from "./mailer";
 import { appUrl } from "./app-url";
+import { dataBR } from "./format";
 import { carregarFormulario } from "./formularios";
 import { listarDiretorio, nomesDeSetor } from "./rh-diretorio";
 import { gerarToken } from "./rh-experiencia-dados";
@@ -190,6 +191,148 @@ export async function enviarAvaliacao(id: number): Promise<boolean> {
   }
 }
 
+// ── Lembrete: cobrar quem não respondeu ───────────────────────────────────────
+
+export interface ResultadoLembrete {
+  enviado: boolean;
+  destinatarios: string[];
+}
+
+/**
+ * Cobra UMA avaliação parada: manda o mesmo link aos gestores do setor, agora
+ * com cara de lembrete (diz desde quando está esperando) e deixando rastro em
+ * `rh_desempenho_lembrete` — é o rastro que responde "essa já foi cobrada?".
+ *
+ * As três recusas SÃO a regra do recurso: encerrada (o link não aceita mais
+ * nada), já respondida (o link é um só para o setor inteiro e quem responde se
+ * identifica digitando o nome — não dá para saber qual gestor faltou, então
+ * cobrar de novo bateria em quem respondeu) e ainda não enviada (aí não é
+ * lembrete, é o disparo, e quem faz isso é `enviarAvaliacao`).
+ */
+export async function enviarLembrete(
+  id: number,
+  criadoPor?: string | null
+): Promise<ResultadoLembrete> {
+  const [a] = await appQuery<{
+    id: number;
+    token: string;
+    classiforgan: string | null;
+    funcionario_nome: string;
+    codigoempresa: number;
+    codigofunccontr: number;
+    status: StatusDesempenho;
+    encerrado_em: string | null;
+    enviado_em: string | null;
+    titulo: string;
+    mensagem: string | null;
+    respostas: number;
+  }>(
+    `select d.id, d.token, d.classiforgan, d.funcionario_nome, d.codigoempresa,
+            d.codigofunccontr, d.status, d.encerrado_em,
+            to_char(d.enviado_em, 'YYYY-MM-DD') as enviado_em, r.titulo, r.mensagem,
+            (select count(*)::int from rh_desempenho_resposta x where x.desempenho_id = d.id)
+              as respostas
+       from rh_desempenho d join rh_desempenho_rodada r on r.id = d.rodada_id
+      where d.id = $1`,
+    [id]
+  );
+  if (!a) throw new FilterError("Avaliação não encontrada");
+  if (a.encerrado_em) throw new FilterError("Avaliação encerrada — não há o que cobrar");
+  if (a.respostas > 0) throw new FilterError("Esta avaliação já foi respondida");
+  if (a.status !== "enviado") {
+    throw new FilterError(
+      a.status === "pendente"
+        ? "Esta avaliação ainda não saiu — dispare antes de cobrar"
+        : "O envio desta avaliação falhou — reenvie antes de cobrar"
+    );
+  }
+
+  const para = a.classiforgan ? await emailsDosGestores(a.classiforgan) : [];
+  if (!para.length) {
+    throw new FilterError("Nenhum gestor cadastrado no departamento deste colaborador");
+  }
+
+  const contrato = await contextoDoColaborador(a.codigoempresa, a.codigofunccontr);
+  const { assunto, html } = await emailDesempenho({
+    titulo: a.titulo,
+    mensagem: a.mensagem,
+    funcionario: a.funcionario_nome,
+    empresa: a.codigoempresa,
+    cargo: contrato?.cargo ?? null,
+    setor: contrato?.setor ?? null,
+    token: a.token,
+    lembrete: { desde: a.enviado_em },
+  });
+
+  let enviado: boolean;
+  try {
+    ({ enviado } = await enviarEmail({ para, assunto, html }));
+  } catch (err) {
+    // O status NÃO vira 'erro': o disparo original deu certo: quem falhou foi a
+    // cobrança. Rebaixar aqui apagaria da tela que a avaliação está no ar.
+    console.error("[desempenho] falha ao cobrar", id, err);
+    throw new FilterError("Falha ao enviar o lembrete — ver log do servidor");
+  }
+
+  await appQuery(
+    `insert into rh_desempenho_lembrete (desempenho_id, destinatarios, criado_por)
+     values ($1, $2, $3)`,
+    [id, para.join(", "), criadoPor ?? null]
+  );
+  return { enviado, destinatarios: para };
+}
+
+export interface ResultadoCobranca {
+  cobradas: number; // avaliações que receberam o lembrete
+  enviados: number; // e-mails de fato despachados (o driver de log conta 0)
+  ignoradas: number; // já respondidas, encerradas ou que nem saíram
+  falhas: string[]; // colaborador cuja cobrança não foi (setor sem gestor, SMTP)
+}
+
+/**
+ * Cobra a rodada inteira de uma vez — é assim que a RH usa: "aquela avaliação
+ * de agosto, quem não respondeu?". Só entram as avaliações cobráveis; o resto é
+ * contado em `ignoradas` em vez de virar erro, senão uma rodada meio respondida
+ * nunca poderia ser cobrada.
+ *
+ * Falha de UMA avaliação (setor sem gestor, SMTP fora do ar) não derruba o
+ * lote: vira nome em `falhas` e o laço segue.
+ */
+export async function cobrarRodada(
+  rodadaId: number,
+  criadoPor?: string | null
+): Promise<ResultadoCobranca> {
+  const linhas = await appQuery<{ id: number; funcionario_nome: string; cobravel: boolean }>(
+    `select d.id, d.funcionario_nome,
+            (d.status = 'enviado' and d.encerrado_em is null
+             and not exists (select 1 from rh_desempenho_resposta x
+                              where x.desempenho_id = d.id)) as cobravel
+       from rh_desempenho d where d.rodada_id = $1 order by d.id`,
+    [rodadaId]
+  );
+  if (!linhas.length) throw new FilterError("Rodada não encontrada");
+
+  let cobradas = 0;
+  let enviados = 0;
+  let ignoradas = 0;
+  const falhas: string[] = [];
+  for (const l of linhas) {
+    if (!l.cobravel) {
+      ignoradas++;
+      continue;
+    }
+    try {
+      const r = await enviarLembrete(l.id, criadoPor);
+      cobradas++;
+      if (r.enviado) enviados++;
+    } catch (err) {
+      falhas.push(l.funcionario_nome);
+      console.error("[desempenho] falha ao cobrar", l.id, err);
+    }
+  }
+  return { cobradas, enviados, ignoradas, falhas };
+}
+
 /** Encerra (ou reabre) uma avaliação: encerrada, o link para de aceitar resposta. */
 export async function encerrarAvaliacao(id: number, encerrar: boolean): Promise<void> {
   const linhas = await appQuery(
@@ -242,6 +385,8 @@ interface LinhaDesempenho {
   respostas: number;
   respondentes: string[] | null;
   ultima_resposta: string | null;
+  lembretes: number;
+  ultimo_lembrete: string | null;
   criado_em: string;
   enviado_em: string | null;
   encerrado_em: string | null;
@@ -281,6 +426,10 @@ export async function listarDesempenho(f: FiltroDesempenho = {}): Promise<Desemp
                from rh_desempenho_resposta x where x.desempenho_id = d.id) as respondentes,
             (select to_char(max(x.respondido_em), 'YYYY-MM-DD"T"HH24:MI:SS')
                from rh_desempenho_resposta x where x.desempenho_id = d.id) as ultima_resposta,
+            (select count(*)::int from rh_desempenho_lembrete l where l.desempenho_id = d.id)
+              as lembretes,
+            (select to_char(max(l.enviado_em), 'YYYY-MM-DD"T"HH24:MI:SS')
+               from rh_desempenho_lembrete l where l.desempenho_id = d.id) as ultimo_lembrete,
             to_char(d.criado_em, 'YYYY-MM-DD"T"HH24:MI:SS') as criado_em,
             to_char(d.enviado_em, 'YYYY-MM-DD"T"HH24:MI:SS') as enviado_em,
             to_char(d.encerrado_em, 'YYYY-MM-DD"T"HH24:MI:SS') as encerrado_em
@@ -322,6 +471,8 @@ export async function listarDesempenho(f: FiltroDesempenho = {}): Promise<Desemp
       respostas: r.respostas,
       respondentes: r.respondentes ?? [],
       ultimaResposta: r.ultima_resposta,
+      lembretes: r.lembretes,
+      ultimoLembrete: r.ultimo_lembrete,
       criadoEm: r.criado_em,
       enviadoEm: r.enviado_em,
       encerradoEm: r.encerrado_em,
@@ -400,12 +551,18 @@ export async function listarRodadas(): Promise<DesempenhoRodada[]> {
     criado_em: string;
     avaliacoes: number;
     respondidas: number;
+    a_cobrar: number;
   }>(
     `select r.id, r.titulo, r.escopo, f.nome as formulario_nome,
             to_char(r.criado_em, 'YYYY-MM-DD"T"HH24:MI:SS') as criado_em,
             (select count(*)::int from rh_desempenho d where d.rodada_id = r.id) as avaliacoes,
             (select count(*)::int from rh_desempenho d
-              where d.rodada_id = r.id and d.status = 'respondido') as respondidas
+              where d.rodada_id = r.id and d.status = 'respondido') as respondidas,
+            -- cobráveis: saíram, seguem abertas e ninguém respondeu (ver enviarLembrete)
+            (select count(*)::int from rh_desempenho d
+              where d.rodada_id = r.id and d.status = 'enviado' and d.encerrado_em is null
+                and not exists (select 1 from rh_desempenho_resposta x
+                                 where x.desempenho_id = d.id)) as a_cobrar
        from rh_desempenho_rodada r join formulario f on f.id = r.formulario_id
       order by r.criado_em desc`
   );
@@ -417,6 +574,7 @@ export async function listarRodadas(): Promise<DesempenhoRodada[]> {
     criadoEm: r.criado_em,
     avaliacoes: r.avaliacoes,
     respondidas: r.respondidas,
+    aCobrar: r.a_cobrar,
   }));
 }
 
@@ -459,9 +617,14 @@ async function emailDesempenho(params: {
   cargo: string | null;
   setor: string | null;
   token: string;
+  /** Cobrança de avaliação parada: muda assunto e abertura — o link é o mesmo. */
+  lembrete?: { desde: string | null };
 }): Promise<{ assunto: string; html: string }> {
   const link = `${await appUrl()}/f/${params.token}`;
-  const assunto = `${params.titulo} — ${params.funcionario}`;
+  const { lembrete } = params;
+  const assunto = lembrete
+    ? `Lembrete: ${params.titulo} — ${params.funcionario}`
+    : `${params.titulo} — ${params.funcionario}`;
   const msg = params.mensagem
     ? `<p style="white-space:pre-line">${escapar(params.mensagem)}</p>`
     : "";
@@ -470,13 +633,19 @@ async function emailDesempenho(params: {
   const html = `
   <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;line-height:1.5">
     <p>Olá,</p>
-    <p>O RH da Navecon pede sua avaliação de desempenho sobre
-       <strong>${escapar(params.funcionario)}</strong>.</p>
+    ${
+      lembrete
+        ? `<p>Um lembrete: a avaliação de desempenho sobre
+             <strong>${escapar(params.funcionario)}</strong> continua sem resposta.</p>`
+        : `<p>O RH da Navecon pede sua avaliação de desempenho sobre
+             <strong>${escapar(params.funcionario)}</strong>.</p>`
+    }
     <table style="font-size:13px;margin:12px 0">
       ${linha("Colaborador", params.funcionario)}
       ${linha("Empresa", nomeEmpresaRh(params.empresa))}
       ${linha("Cargo", params.cargo ?? "—")}
       ${linha("Setor", params.setor ?? "—")}
+      ${lembrete?.desde ? linha("Enviada em", dataBR(lembrete.desde)) : ""}
     </table>
     ${msg}
     <p style="margin:20px 0">
@@ -487,7 +656,9 @@ async function emailDesempenho(params: {
     <p style="color:#555;font-size:12px">Ou copie este link: <br>${link}</p>
     <p style="color:#555;font-size:12px">
       Não é preciso login. O link vai a todos os gestores do setor — cada um responde a sua
-      avaliação, informando o próprio nome no formulário.
+      avaliação, informando o próprio nome no formulário.${
+        lembrete ? " Se você já respondeu, desconsidere este aviso." : ""
+      }
     </p>
   </div>`;
   return { assunto, html };

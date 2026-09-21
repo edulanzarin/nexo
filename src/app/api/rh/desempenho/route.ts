@@ -2,9 +2,11 @@ import { apiRoute } from "@/lib/api-route";
 import { FilterError } from "@/lib/fiscal-filters";
 import {
   carregarDesempenho,
+  cobrarRodada,
   criarRodada,
   encerrarAvaliacao,
   enviarAvaliacao,
+  enviarLembrete,
   excluirAvaliacao,
   listarDesempenho,
   listarRodadas,
@@ -93,9 +95,21 @@ export const POST = apiRoute(async (req) => {
   });
 });
 
-/** PATCH age sobre UMA avaliação: reenviar aos gestores, encerrar ou reabrir. */
+/**
+ * PATCH age sobre UMA avaliação: reenviar aos gestores, cobrar quem não
+ * respondeu, encerrar ou reabrir. A exceção é `cobrar-rodada`, que age sobre a
+ * rodada inteira — por isso ela sai antes de exigir `id`.
+ */
 export const PATCH = apiRoute(async (req) => {
-  const body = (await req.json()) as { id?: number; acao?: string };
+  const body = (await req.json()) as { id?: number; rodadaId?: number; acao?: string };
+  const sessao = await getSessaoOpcional();
+
+  if (body.acao === "cobrar-rodada") {
+    const rodadaId = Number(body.rodadaId);
+    if (!Number.isInteger(rodadaId)) throw new FilterError("Rodada não informada");
+    return cobrarRodada(rodadaId, sessao?.usuario.id ?? null);
+  }
+
   const id = Number(body.id);
   if (!Number.isInteger(id)) throw new FilterError("Avaliação não informada");
 
@@ -103,6 +117,10 @@ export const PATCH = apiRoute(async (req) => {
     case "reenviar": {
       const enviado = await enviarAvaliacao(id);
       return { enviado };
+    }
+    case "lembrete": {
+      const { enviado, destinatarios } = await enviarLembrete(id, sessao?.usuario.id ?? null);
+      return { enviado, destinatarios: destinatarios.length };
     }
     case "encerrar":
       await encerrarAvaliacao(id, true);

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import clsx from "clsx";
 import {
   AlertTriangle,
+  BellRing,
   CheckCircle2,
   Clock,
   Eye,
@@ -479,6 +480,7 @@ export default function Conteudo() {
   const [nova, setNova] = useState(false);
   const [verId, setVerId] = useState<number | null>(null);
   const [agindo, setAgindo] = useState<number | null>(null);
+  const [cobrando, setCobrando] = useState(false);
 
   const qs = useMemo(() => {
     const p = new URLSearchParams();
@@ -501,6 +503,7 @@ export default function Conteudo() {
 
   const itens = useMemo(() => data ?? [], [data]);
   const temFiltro = qs.length > 0;
+  const rodadaSel = rodada === "" ? null : (rodadas ?? []).find((r) => r.id === rodada) ?? null;
 
   const kpis = useMemo(() => {
     let aguardando = 0;
@@ -521,7 +524,10 @@ export default function Conteudo() {
     queryClient.invalidateQueries({ queryKey: ["rh-desempenho-rodadas"] });
   };
 
-  const acao = async (i: DesempenhoItem, acaoNome: "reenviar" | "encerrar" | "reabrir") => {
+  const acao = async (
+    i: DesempenhoItem,
+    acaoNome: "reenviar" | "lembrete" | "encerrar" | "reabrir"
+  ) => {
     setAgindo(i.id);
     try {
       await mutar("/api/rh/desempenho", "PATCH", { id: i.id, acao: acaoNome });
@@ -529,14 +535,51 @@ export default function Conteudo() {
       toast.success(
         acaoNome === "reenviar"
           ? `Avaliação reenviada aos gestores (${i.gestores})`
-          : acaoNome === "encerrar"
-            ? "Avaliação encerrada — o link não aceita mais respostas"
-            : "Avaliação reaberta"
+          : acaoNome === "lembrete"
+            ? `Lembrete enviado aos gestores de ${i.nome} (${i.gestores})`
+            : acaoNome === "encerrar"
+              ? "Avaliação encerrada — o link não aceita mais respostas"
+              : "Avaliação reaberta"
       );
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha na ação");
     } finally {
       setAgindo(null);
+    }
+  };
+
+  /**
+   * Cobra de uma vez todas as avaliações paradas da rodada escolhida no filtro.
+   * Só aparece com rodada selecionada: "cobrar quem não respondeu" só quer dizer
+   * alguma coisa dentro de um disparo — na lista inteira misturaria avaliação de
+   * agosto com a de ontem.
+   */
+  const cobrarRodada = async () => {
+    if (!rodadaSel?.aCobrar) return;
+    if (
+      !confirm(
+        `Enviar lembrete aos gestores das ${rodadaSel.aCobrar} avaliação(ões) sem resposta de "${rodadaSel.titulo}"?`
+      )
+    )
+      return;
+    setCobrando(true);
+    try {
+      const r = await mutar<{
+        cobradas: number;
+        enviados: number;
+        ignoradas: number;
+        falhas: string[];
+      }>("/api/rh/desempenho", "PATCH", { acao: "cobrar-rodada", rodadaId: rodadaSel.id });
+      recarregar();
+      if (r.cobradas) toast.success(`Lembrete enviado em ${r.cobradas} avaliação(ões)`);
+      else toast.info("Nenhuma avaliação para cobrar nesta rodada");
+      if (r.falhas.length) {
+        toast.warning(`Sem cobrança: ${r.falhas.join(", ")} — confira os gestores do setor`);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao cobrar a rodada");
+    } finally {
+      setCobrando(false);
     }
   };
 
@@ -576,9 +619,30 @@ export default function Conteudo() {
         <p className="text-sm text-muted">
           Avaliações sobre o colaborador, respondidas pelos gestores do setor dele.
         </p>
-        <Button variant="primary" onClick={() => setNova(true)}>
-          <Plus className="size-4" /> Nova avaliação
-        </Button>
+        <div className="flex items-center gap-2">
+          {rodadaSel && (
+            <Button
+              variant="secondary"
+              onClick={cobrarRodada}
+              disabled={!rodadaSel.aCobrar || cobrando}
+              title={
+                rodadaSel.aCobrar
+                  ? `Lembrete aos gestores das avaliações sem resposta de "${rodadaSel.titulo}"`
+                  : "Ninguém a cobrar nesta rodada"
+              }
+            >
+              {cobrando ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <BellRing className="size-4" />
+              )}
+              Cobrar quem não respondeu ({rodadaSel.aCobrar})
+            </Button>
+          )}
+          <Button variant="primary" onClick={() => setNova(true)}>
+            <Plus className="size-4" /> Nova avaliação
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -745,6 +809,12 @@ export default function Conteudo() {
                     {i.respondentes.length > 0 && (
                       <p className="text-[11px] text-muted">{i.respondentes.join(", ")}</p>
                     )}
+                    {i.lembretes > 0 && i.respostas === 0 && (
+                      <p className="text-[11px] text-muted">
+                        {i.lembretes === 1 ? "cobrada" : `cobrada ${i.lembretes}×`}, última em{" "}
+                        {dataBR(i.ultimoLembrete!.slice(0, 10))}
+                      </p>
+                    )}
                   </td>
                   <td className="py-3 pl-3 pr-4">
                     <div className="flex items-center justify-end gap-1.5">
@@ -757,6 +827,22 @@ export default function Conteudo() {
                       >
                         <Eye className="size-3.5" /> Ver
                       </Button>
+                      {!i.encerradoEm && i.status === "enviado" && i.respostas === 0 && (
+                        <IconButton
+                          size="sm"
+                          onClick={() => acao(i, "lembrete")}
+                          disabled={i.gestores === 0 || agindo === i.id}
+                          className="border border-hairline"
+                          title={
+                            i.gestores === 0
+                              ? "Cadastre um gestor no setor"
+                              : "Cobrar os gestores do setor (ninguém respondeu ainda)"
+                          }
+                          aria-label="Cobrar quem não respondeu"
+                        >
+                          <BellRing className="size-3.5" />
+                        </IconButton>
+                      )}
                       {!i.encerradoEm && (
                         <Button
                           variant="secondary"
