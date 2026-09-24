@@ -1,0 +1,67 @@
+# NaveX: app, migrations e banco próprio. O Questor é externo e somente leitura.
+# Mesmo arquivo em desenvolvimento e produção; o docker-compose.dev.yml só
+# publica o banco em 127.0.0.1 para o `npm run dev` da máquina.
+services:
+  navex-app:
+    build: .
+    # Nome fixo da imagem: sem isto o Compose derivaria do nome do projeto.
+    image: navex-app
+    container_name: navex-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-4083}:3000"
+    env_file:
+      - .env
+    environment:
+      # Dentro da rede do compose o banco atende pelo nome do serviço e pela
+      # porta interna. Vem depois do env_file e sobrescreve o valor de dev.
+      APP_DB_URL: postgres://navex:${APP_DB_PASSWORD:?defina APP_DB_PASSWORD no .env}@navex-db:5432/navex
+      PORT: "3000"
+    depends_on:
+      navex-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/login').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # Migration não sobe com o app: roda, aplica o que falta e sai. O app só
+  # começa depois que ela terminar com sucesso.
+  navex-migrate:
+    image: navex-app
+    container_name: navex-migrate
+    restart: "no"
+    entrypoint: ["node", "scripts/migrate.mjs"]
+    environment:
+      APP_DB_URL: postgres://navex:${APP_DB_PASSWORD:?defina APP_DB_PASSWORD no .env}@navex-db:5432/navex
+    depends_on:
+      navex-db:
+        condition: service_healthy
+
+  navex-db:
+    image: postgres:17-alpine
+    container_name: navex-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: navex
+      POSTGRES_USER: navex
+      # A senha só é aplicada na PRIMEIRA subida, quando o volume nasce.
+      POSTGRES_PASSWORD: ${APP_DB_PASSWORD:?defina APP_DB_PASSWORD no .env}
+    # Sem `ports`: quem consome o banco é o app, pela rede interna.
+    volumes:
+      - navex-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U navex -d navex"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  navex-db-data:
+    name: navex-db-data
+
+networks:
+  default:
+    name: navex-net

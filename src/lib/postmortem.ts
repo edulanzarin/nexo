@@ -1,0 +1,298 @@
+import "server-only";
+import { appQuery } from "./app-db";
+import { FilterError } from "./fiscal-filters";
+import {
+  criticidadeValida,
+  fatoresVazio,
+  gravidadeValida,
+  impactosVazio,
+  validarEnvio,
+  type DadosPM,
+  type GrupoOpcao,
+  type RelatorioPM,
+  type ResumoPM,
+  type StatusPM,
+} from "./postmortem-tipos";
+
+/**
+ * Acesso a dados do Relatório Post Mortem (banco do APP, gravável). Dois
+ * recortes, e o handler da rota escolhe pela seção da sessão — ambos DENTRO de
+ * um setor, porque o relatório mora no módulo do setor que o preenche:
+ *
+ * - **seção `post-mortem`** — `listarMeus(autor, setor)`: a posse é do autor,
+ *   dentro do setor dele. É o que o analista preenche e acompanha.
+ * - **seção `post-mortem-gestao`** — `listarDoSetor(setor)`: todos os
+ *   relatórios daquele setor, de qualquer autor, para o gestor da área.
+ */
+
+// As colunas editáveis, na ordem em que salvar/enviar passam os valores.
+const COLS_EDITAVEIS = [
+  "criticidade",
+  "gravidade",
+  "grupo_id",
+  "empresa_afetada",
+  "funcionarios_afetados",
+  "responsavel_info",
+  "processo",
+  "data_ocorrido",
+  "data_identificado",
+  "quem_identificou",
+  "como_identificou",
+  "descricao",
+  "linha_tempo",
+  "impactos",
+  "cinco_porques",
+  "fatores",
+  "causa_raiz",
+  "acoes_corretivas",
+  "acoes_preventivas",
+  "licoes",
+] as const;
+
+// Vira `[valores...]` na mesma ordem de COLS_EDITAVEIS. jsonb vai como texto
+// (JSON.stringify) — o pg não serializa objeto/array sozinho. Texto vazio vira
+// null pra não guardar string em branco onde o certo é "não preenchido".
+function valoresEditaveis(d: DadosPM): unknown[] {
+  const t = (s: string) => (s.trim() ? s.trim() : null);
+  return [
+    d.criticidade,
+    d.gravidade,
+    d.grupoId,
+    t(d.empresaAfetada),
+    d.funcionariosAfetados,
+    t(d.responsavelInfo),
+    t(d.processo),
+    d.dataOcorrido,
+    d.dataIdentificado,
+    t(d.quemIdentificou),
+    t(d.comoIdentificou),
+    t(d.descricao),
+    JSON.stringify(d.linhaTempo ?? []),
+    JSON.stringify(d.impactos ?? impactosVazio()),
+    JSON.stringify(d.cincoPorques ?? []),
+    JSON.stringify(d.fatores ?? fatoresVazio()),
+    t(d.causaRaiz),
+    JSON.stringify(d.acoesCorretivas ?? []),
+    JSON.stringify(d.acoesPreventivas ?? []),
+    t(d.licoes),
+  ];
+}
+
+interface LinhaBanco {
+  id: number;
+  numero: number | null;
+  status: StatusPM;
+  autor_id: string;
+  autor_nome: string;
+  setor: string;
+  criticidade: string | null;
+  gravidade: number | null;
+  grupo_id: number | null;
+  grupo_nome: string | null;
+  empresa_afetada: string | null;
+  funcionarios_afetados: number | null;
+  responsavel_info: string | null;
+  processo: string | null;
+  data_ocorrido: string | null;
+  data_identificado: string | null;
+  quem_identificou: string | null;
+  como_identificou: string | null;
+  descricao: string | null;
+  linha_tempo: RelatorioPM["linhaTempo"] | null;
+  impactos: RelatorioPM["impactos"] | null;
+  cinco_porques: string[] | null;
+  fatores: RelatorioPM["fatores"] | null;
+  causa_raiz: string | null;
+  acoes_corretivas: RelatorioPM["acoesCorretivas"] | null;
+  acoes_preventivas: RelatorioPM["acoesPreventivas"] | null;
+  licoes: string | null;
+  criado_em: string;
+  atualizado_em: string;
+}
+
+// Sempre 5 posições nos "porquês" — o form conta com isso mesmo em relatório antigo.
+function cincoPorques(arr: string[] | null): string[] {
+  const base = arr ?? [];
+  return Array.from({ length: 5 }, (_, i) => base[i] ?? "");
+}
+
+function paraRelatorio(r: LinhaBanco): RelatorioPM {
+  return {
+    id: r.id,
+    numero: r.numero,
+    status: r.status,
+    autorId: r.autor_id,
+    autorNome: r.autor_nome,
+    setor: r.setor,
+    grupoNome: r.grupo_nome,
+    criticidade: criticidadeValida(r.criticidade) ? r.criticidade : null,
+    gravidade: gravidadeValida(r.gravidade),
+    grupoId: r.grupo_id,
+    empresaAfetada: r.empresa_afetada ?? "",
+    funcionariosAfetados: r.funcionarios_afetados,
+    responsavelInfo: r.responsavel_info ?? "",
+    processo: r.processo ?? "",
+    dataOcorrido: r.data_ocorrido,
+    dataIdentificado: r.data_identificado,
+    quemIdentificou: r.quem_identificou ?? "",
+    comoIdentificou: r.como_identificou ?? "",
+    descricao: r.descricao ?? "",
+    linhaTempo: r.linha_tempo ?? [],
+    impactos: r.impactos ?? impactosVazio(),
+    cincoPorques: cincoPorques(r.cinco_porques),
+    fatores: r.fatores ?? fatoresVazio(),
+    causaRaiz: r.causa_raiz ?? "",
+    acoesCorretivas: r.acoes_corretivas ?? [],
+    acoesPreventivas: r.acoes_preventivas ?? [],
+    licoes: r.licoes ?? "",
+    criadoEm: r.criado_em,
+    atualizadoEm: r.atualizado_em,
+  };
+}
+
+const SELECT_COMPLETO = `
+  select pm.*, u.nome as autor_nome, g.nome as grupo_nome
+    from postmortem pm
+    join usuario u on u.id = pm.autor_id
+    left join grupo_empresarial g on g.id = pm.grupo_id`;
+
+/** Um relatório completo, ou null. A checagem de posse é do handler. */
+export async function obterPostMortem(id: number): Promise<RelatorioPM | null> {
+  const rows = await appQuery<LinhaBanco>(`${SELECT_COMPLETO} where pm.id = $1`, [id]);
+  return rows[0] ? paraRelatorio(rows[0]) : null;
+}
+
+const SELECT_RESUMO = `
+  select pm.id, pm.numero, pm.status, pm.setor, pm.criticidade, pm.gravidade,
+         pm.empresa_afetada, pm.processo, pm.data_ocorrido, pm.atualizado_em,
+         u.nome as autor_nome, g.nome as grupo_nome
+    from postmortem pm
+    join usuario u on u.id = pm.autor_id
+    left join grupo_empresarial g on g.id = pm.grupo_id`;
+
+function paraResumo(r: LinhaBanco): ResumoPM {
+  return {
+    id: r.id,
+    numero: r.numero,
+    status: r.status,
+    setor: r.setor,
+    criticidade: criticidadeValida(r.criticidade) ? r.criticidade : null,
+    gravidade: gravidadeValida(r.gravidade),
+    empresaAfetada: r.empresa_afetada ?? "",
+    grupoNome: r.grupo_nome,
+    autorNome: r.autor_nome,
+    processo: r.processo ?? "",
+    dataOcorrido: r.data_ocorrido,
+    atualizadoEm: r.atualizado_em,
+  };
+}
+
+/** Os relatórios de um autor DENTRO de um setor (a lista da seção do setor). */
+export async function listarMeus(autorId: string, setor: string): Promise<ResumoPM[]> {
+  const rows = await appQuery<LinhaBanco>(
+    `${SELECT_RESUMO} where pm.autor_id = $1 and pm.setor = $2 order by pm.atualizado_em desc`,
+    [autorId, setor]
+  );
+  return rows.map(paraResumo);
+}
+
+/**
+ * Todos os relatórios de UM setor — a lista da gestão daquele setor. O setor é
+ * obrigatório e vem da seção (nunca do cliente): não existe leitura de
+ * escritório inteiro desde que o relatório voltou para dentro do setor.
+ *
+ * Criticidade, situação e busca ficam no cliente, sobre a lista já carregada:
+ * são recortes de uma lista de setor, que é curta, e não valem uma ida ao banco.
+ */
+export async function listarDoSetor(setor: string): Promise<ResumoPM[]> {
+  // Enviados primeiro por nº decrescente; rascunhos (numero null) ao fim.
+  const rows = await appQuery<LinhaBanco>(
+    `${SELECT_RESUMO} where pm.setor = $1
+      order by pm.numero desc nulls last, pm.atualizado_em desc`,
+    [setor]
+  );
+  return rows.map(paraResumo);
+}
+
+/** Cria um rascunho vazio do autor no setor e devolve o id (o form abre nele). */
+export async function criarPostMortem(autorId: string, setor: string): Promise<number> {
+  const rows = await appQuery<{ id: number }>(
+    `insert into postmortem (autor_id, setor) values ($1, $2) returning id`,
+    [autorId, setor]
+  );
+  return rows[0].id;
+}
+
+/**
+ * Salva o rascunho (só o dono, só enquanto rascunho). Lança se não aplicou.
+ *
+ * O `setor` entra no WHERE junto com o autor: quem chega pelo caminho de um
+ * módulo não escreve num relatório de outro setor, e isso fica garantido pela
+ * própria consulta em vez de por uma leitura extra antes dela.
+ */
+export async function salvarPostMortem(
+  id: number,
+  autorId: string,
+  setor: string,
+  dados: DadosPM
+): Promise<void> {
+  const sets = COLS_EDITAVEIS.map((c, i) => `${c} = $${i + 1}`).join(", ");
+  const base = valoresEditaveis(dados);
+  const rows = await appQuery<{ id: number }>(
+    `update postmortem set ${sets}
+       where id = $${base.length + 1} and autor_id = $${base.length + 2}
+         and setor = $${base.length + 3} and status = 'rascunho'
+       returning id`,
+    [...base, id, autorId, setor]
+  );
+  if (!rows[0]) throw new FilterError("Relatório não encontrado ou já enviado");
+}
+
+/**
+ * Envia: grava o corpo, cobra os campos essenciais, aloca o nº sequencial e
+ * fecha (status enviado). Só o dono, só a partir de rascunho. Devolve o número.
+ */
+export async function enviarPostMortem(
+  id: number,
+  autorId: string,
+  setor: string,
+  dados: DadosPM
+): Promise<number> {
+  const faltando = validarEnvio(dados);
+  if (faltando.length) {
+    throw new FilterError(`Preencha antes de enviar: ${faltando.join(", ")}`);
+  }
+  const sets = COLS_EDITAVEIS.map((c, i) => `${c} = $${i + 1}`).join(", ");
+  const base = valoresEditaveis(dados);
+  const rows = await appQuery<{ numero: number }>(
+    `update postmortem
+        set ${sets},
+            numero = nextval('postmortem_numero_seq'),
+            status = 'enviado'
+      where id = $${base.length + 1} and autor_id = $${base.length + 2}
+        and setor = $${base.length + 3} and status = 'rascunho'
+      returning numero`,
+    [...base, id, autorId, setor]
+  );
+  if (!rows[0]) throw new FilterError("Relatório não encontrado ou já enviado");
+  return rows[0].numero;
+}
+
+/** Exclui um rascunho do próprio autor (relatório enviado não se apaga). */
+export async function excluirPostMortem(
+  id: number,
+  autorId: string,
+  setor: string
+): Promise<void> {
+  const rows = await appQuery<{ id: number }>(
+    `delete from postmortem
+       where id = $1 and autor_id = $2 and setor = $3 and status = 'rascunho' returning id`,
+    [id, autorId, setor]
+  );
+  if (!rows[0]) throw new FilterError("Rascunho não encontrado (enviado não se exclui)");
+}
+
+/** Grupos de empresa (admin) para o seletor do formulário. */
+export async function listarGruposPostMortem(): Promise<GrupoOpcao[]> {
+  return appQuery<GrupoOpcao>(`select id, nome from grupo_empresarial order by nome`);
+}

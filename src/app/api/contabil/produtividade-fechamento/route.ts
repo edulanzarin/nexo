@@ -1,0 +1,30 @@
+import { apiRoute } from "@/lib/api-route";
+import { parseProdFiltros } from "@/lib/contabil-prod-comum";
+import { montarFechamentoContabil } from "@/lib/contabil-fechamento";
+
+/**
+ * Aba Fechamento da Produtividade do Contábil: quais empresas tiveram a
+ * competência apurada, de quem elas são e quem apurou.
+ *
+ * Cruza as duas fontes do sistema — o lançamento de encerramento vem do Questor,
+ * o analista responsável vem da carteira do Acessórias, que a rota irmã
+ * sincroniza.
+ */
+export const GET = apiRoute(async (req) => {
+  const sp = req.nextUrl.searchParams;
+  const f = parseProdFiltros(sp);
+  // Grupo do ACESSÓRIAS, filtro próprio desta aba — não confundir com `grupos`,
+  // que é o cadastro do Nexo e já entra pelo escopo em `parseProdFiltros`.
+  const gruposAcess = (sp.get("grupos_acess") ?? "")
+    .split(",")
+    .filter(Boolean)
+    .map(Number)
+    .filter(Number.isInteger);
+  // Um `analista` por nome, repetido: nome de pessoa pode ter vírgula, e
+  // juntar com separador faria um nome virar dois.
+  const analistas = sp
+    .getAll("analista")
+    .map((a) => a.trim())
+    .filter(Boolean);
+  return montarFechamentoContabil(f, { gruposAcess, analistas });
+});

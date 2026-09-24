@@ -1,0 +1,503 @@
+@import "tailwindcss";
+
+/* ============================================================================
+   NaveX: vidro sobre papel quadriculado.
+
+   Dois temas, noite e dia, trocados por `data-tema` no <html> (o script do
+   layout decide antes da pintura, sem piscar). Toda cor sai daqui: tela não
+   escreve hex. Os nomes dizem o PAPEL da cor, não o tom.
+
+   - fundo, vidro, vidro-forte, poco: as superfícies, da mais funda à flutuante;
+   - tinta, tinta-2, apagado: o texto, do principal ao de apoio;
+   - acento: o laranja da marca, reservado para a AÇÃO (Executar, primário,
+     marcador de ativo). Nunca estado, nunca dado;
+   - rota: o azul da marca, para foco, seleção e informação;
+   - ok, atencao, perigo: estado. Sempre com ícone ou palavra junto;
+   - serie-*: cor de dado nos gráficos, separada do acento de propósito
+     (retematizar a interface não pode repintar os gráficos).
+   ========================================================================== */
+
+:root,
+:root[data-tema="dia"] {
+  color-scheme: light;
+
+  --fundo: #edf0f6;
+  --grade: rgb(32 52 96 / 0.07);
+  --brilho-laranja: rgb(255 122 46 / 0.13);
+  --brilho-azul: rgb(46 108 255 / 0.12);
+
+  --vidro: rgb(255 255 255 / 0.74);
+  --vidro-borda: rgb(22 36 72 / 0.1);
+  --vidro-forte: rgb(255 255 255 / 0.97);
+  --poco: rgb(22 36 72 / 0.045);
+  --poco-forte: rgb(22 36 72 / 0.08);
+  --linha: rgb(22 36 72 / 0.1);
+  --linha-forte: rgb(22 36 72 / 0.18);
+  --realce: inset 0 1px 0 rgb(255 255 255 / 0.9);
+
+  --tinta: #0e1628;
+  --tinta-2: #3a465d;
+  --apagado: #677289;
+
+  --marca-laranja: #ff7a2e;
+  --marca-azul: #2f6bff;
+
+  --acento: #c24d06;
+  --acento-solido: #ff7a2e;
+  --acento-solido-hover: #ff8c47;
+  --sobre-acento: #1b0d03;
+  --acento-suave: rgb(255 122 46 / 0.13);
+
+  --rota: #2156d0;
+  --rota-suave: rgb(33 86 208 / 0.1);
+  --anel: rgb(33 86 208 / 0.45);
+
+  --ok: #0f8a47;
+  --ok-suave: rgb(15 138 71 / 0.11);
+  --atencao: #a86400;
+  --atencao-suave: rgb(236 164 0 / 0.16);
+  --perigo: #cf2340;
+  --perigo-suave: rgb(207 35 64 / 0.1);
+
+  --serie-1: #2f6bff;
+  --serie-2: #f26a1b;
+  --serie-3: #0d9e9e;
+  --serie-4: #7b5cf0;
+  --serie-5: #d9468f;
+  --serie-6: #6b9e1f;
+  --serie-outras: #8a94a8;
+
+  --id-vermelho: #d8323c;
+  --id-amarelo: #e0a100;
+  --id-azul: #2f6bff;
+  --id-rosa: #e0508f;
+  --id-laranja: #f26a1b;
+  --id-cinza: #7a8599;
+  --id-verde: #1a9a6c;
+
+  --sombra-painel: 0 1px 2px rgb(22 36 72 / 0.05), 0 10px 28px -16px rgb(22 36 72 / 0.22);
+  --sombra-flutua: 0 24px 60px -18px rgb(14 22 40 / 0.35), 0 8px 20px -12px rgb(14 22 40 / 0.2);
+  --veu: rgb(14 22 40 / 0.32);
+}
+
+:root[data-tema="noite"] {
+  color-scheme: dark;
+
+  --fundo: #0a1020;
+  --grade: rgb(130 160 230 / 0.065);
+  --brilho-laranja: rgb(255 122 46 / 0.12);
+  --brilho-azul: rgb(60 120 255 / 0.16);
+
+  --vidro: rgb(20 29 50 / 0.7);
+  --vidro-borda: rgb(160 186 255 / 0.1);
+  --vidro-forte: rgb(22 31 54 / 0.97);
+  --poco: rgb(160 186 255 / 0.045);
+  --poco-forte: rgb(160 186 255 / 0.085);
+  --linha: rgb(160 186 255 / 0.1);
+  --linha-forte: rgb(160 186 255 / 0.2);
+  --realce: inset 0 1px 0 rgb(255 255 255 / 0.05);
+
+  --tinta: #e9eef8;
+  --tinta-2: #b3bdd1;
+  --apagado: #7f8aa3;
+
+  --marca-laranja: #ff7a2e;
+  --marca-azul: #5b8cff;
+
+  --acento: #ff9352;
+  --acento-solido: #ff7a2e;
+  --acento-solido-hover: #ff8c47;
+  --sobre-acento: #1b0d03;
+  --acento-suave: rgb(255 122 46 / 0.14);
+
+  --rota: #7aa6ff;
+  --rota-suave: rgb(122 166 255 / 0.13);
+  --anel: rgb(122 166 255 / 0.55);
+
+  --ok: #44d492;
+  --ok-suave: rgb(68 212 146 / 0.12);
+  --atencao: #f6c94d;
+  --atencao-suave: rgb(246 201 77 / 0.13);
+  --perigo: #ff6b7a;
+  --perigo-suave: rgb(255 107 122 / 0.13);
+
+  --serie-1: #6f9dff;
+  --serie-2: #ff8a45;
+  --serie-3: #3ccfcf;
+  --serie-4: #a58bff;
+  --serie-5: #ff7ab6;
+  --serie-6: #a9d85c;
+  --serie-outras: #76819a;
+
+  --id-vermelho: #ff5a62;
+  --id-amarelo: #f5c02a;
+  --id-azul: #6f9dff;
+  --id-rosa: #ff78b0;
+  --id-laranja: #ff8a45;
+  --id-cinza: #8f9ab0;
+  --id-verde: #3fcf98;
+
+  --sombra-painel: 0 1px 2px rgb(0 0 0 / 0.35), 0 14px 32px -18px rgb(0 0 0 / 0.7);
+  --sombra-flutua: 0 30px 70px -20px rgb(0 0 0 / 0.8), 0 10px 24px -14px rgb(0 0 0 / 0.6);
+  --veu: rgb(4 8 18 / 0.6);
+}
+
+@theme inline {
+  --color-fundo: var(--fundo);
+  --color-vidro: var(--vidro);
+  --color-vidro-borda: var(--vidro-borda);
+  --color-vidro-forte: var(--vidro-forte);
+  --color-poco: var(--poco);
+  --color-poco-forte: var(--poco-forte);
+  --color-linha: var(--linha);
+  --color-linha-forte: var(--linha-forte);
+  --color-tinta: var(--tinta);
+  --color-tinta-2: var(--tinta-2);
+  --color-apagado: var(--apagado);
+  --color-acento: var(--acento);
+  --color-acento-solido: var(--acento-solido);
+  --color-acento-solido-hover: var(--acento-solido-hover);
+  --color-sobre-acento: var(--sobre-acento);
+  --color-acento-suave: var(--acento-suave);
+  --color-rota: var(--rota);
+  --color-rota-suave: var(--rota-suave);
+  --color-ok: var(--ok);
+  --color-ok-suave: var(--ok-suave);
+  --color-atencao: var(--atencao);
+  --color-atencao-suave: var(--atencao-suave);
+  --color-perigo: var(--perigo);
+  --color-perigo-suave: var(--perigo-suave);
+  --color-serie-1: var(--serie-1);
+  --color-serie-2: var(--serie-2);
+  --color-serie-3: var(--serie-3);
+  --color-serie-4: var(--serie-4);
+  --color-serie-5: var(--serie-5);
+  --color-serie-6: var(--serie-6);
+  --color-serie-outras: var(--serie-outras);
+  --color-id-vermelho: var(--id-vermelho);
+  --color-id-amarelo: var(--id-amarelo);
+  --color-id-azul: var(--id-azul);
+  --color-id-rosa: var(--id-rosa);
+  --color-id-laranja: var(--id-laranja);
+  --color-id-cinza: var(--id-cinza);
+  --color-id-verde: var(--id-verde);
+
+  --font-sans: var(--fonte-ui), "Segoe UI", system-ui, sans-serif;
+
+  /* Escala de tipo fechada. 13px é o corpo da interface: é sistema de trabalho,
+     denso, e a leitura acontece em coluna de tabela. */
+  --text-micro: 11px;
+  --text-micro--line-height: 14px;
+  --text-pequeno: 12px;
+  --text-pequeno--line-height: 16px;
+  --text-corpo: 13px;
+  --text-corpo--line-height: 18px;
+  --text-medio: 14px;
+  --text-medio--line-height: 20px;
+  --text-titulo: 20px;
+  --text-titulo--line-height: 26px;
+  --text-leitura: 26px;
+  --text-leitura--line-height: 30px;
+  --text-destaque: 34px;
+  --text-destaque--line-height: 38px;
+
+  /* Raio por hierarquia: a peça maior curva mais. Um raio só em tudo é o que
+     faz a tela parecer kit. */
+  --radius-chip: 6px;
+  --radius-controle: 8px;
+  --radius-painel: 14px;
+  --radius-flutua: 16px;
+
+  /* Altura única de controle: botão, campo e seletor na mesma fila alinham
+     pela casca, não por items-end. */
+  --spacing-controle: 32px;
+  --spacing-controle-p: 26px;
+
+  --ease-saida: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-mola: cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+@custom-variant noite (&:where([data-tema="noite"], [data-tema="noite"] *));
+
+/* ---- Base ------------------------------------------------------------- */
+
+@layer base {
+  html {
+    background: var(--fundo);
+    color: var(--tinta);
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* Faixa que sangra não abre rolagem lateral; `clip` não solta sticky. */
+    overflow-x: clip;
+  }
+
+  body {
+    min-height: 100dvh;
+    background: var(--fundo);
+    font-family: var(--font-sans);
+    font-size: var(--text-corpo);
+    line-height: var(--text-corpo--line-height);
+    font-feature-settings: "ss01" off;
+  }
+
+  /* O papel quadriculado e os dois brilhos da marca moram atrás de tudo. A
+     grade se apaga para baixo: é chegada, não textura de leitura, e a tabela
+     densa lá embaixo fica sobre fundo calmo. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(38rem 26rem at 8% -6%, var(--brilho-laranja), transparent 70%),
+      radial-gradient(44rem 30rem at 72% -12%, var(--brilho-azul), transparent 70%),
+      linear-gradient(var(--grade) 1px, transparent 1px) 0 0 / 24px 24px,
+      linear-gradient(90deg, var(--grade) 1px, transparent 1px) 0 0 / 24px 24px;
+    mask-image: linear-gradient(to bottom, #000 0, #000 18rem, transparent 42rem);
+  }
+
+  ::selection {
+    background: var(--rota-suave);
+    color: var(--tinta);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--anel);
+    outline-offset: 2px;
+  }
+
+  button,
+  [role="button"] {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--linha-forte) transparent;
+  }
+}
+
+/* ---- Componentes -------------------------------------------------------- */
+
+@layer components {
+  /* Vidro da moldura e dos painéis. O desfoque vem pelo @apply: escrito à mão,
+     o build entrega só a versão -webkit- e o computado vira none. */
+  .nx-vidro {
+    @apply backdrop-blur-xl backdrop-saturate-150;
+    background-color: var(--vidro);
+    border: 1px solid var(--vidro-borda);
+    box-shadow: var(--realce), var(--sombra-painel);
+  }
+
+  /* Vidro de sobreposição (menu, modal, dica): mais opaco que a moldura, para
+     o texto ler sobre qualquer coisa que passe por baixo. */
+  .nx-flutua {
+    @apply backdrop-blur-2xl;
+    background-color: var(--vidro-forte);
+    border: 1px solid var(--linha-forte);
+    box-shadow: var(--realce), var(--sombra-flutua);
+  }
+
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Número de indicador: estreito e tabular, lido como mostrador. */
+  .nx-leitura {
+    font-variant-numeric: tabular-nums;
+    font-stretch: 82%;
+    font-weight: 620;
+    letter-spacing: -0.01em;
+  }
+
+  .nx-titulo {
+    font-stretch: 94%;
+    font-weight: 620;
+    letter-spacing: -0.012em;
+  }
+
+  /* Tabela densa: linha de 34px, cabeçalho que gruda no contêiner que rola. */
+  .nx-tabela {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: var(--text-corpo);
+  }
+  .nx-tabela thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    height: 32px;
+    padding: 0 10px;
+    background: var(--vidro-forte);
+    border-bottom: 1px solid var(--linha-forte);
+    color: var(--apagado);
+    font-size: var(--text-pequeno);
+    font-weight: 560;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .nx-tabela tbody td {
+    height: 34px;
+    padding: 0 10px;
+    border-bottom: 1px solid var(--linha);
+    color: var(--tinta-2);
+    vertical-align: middle;
+  }
+  .nx-tabela tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  .nx-tabela tbody tr[data-clicavel] {
+    cursor: pointer;
+  }
+  .nx-tabela tbody tr:hover td {
+    background: var(--poco);
+  }
+  .nx-tabela tbody tr[aria-selected="true"] td {
+    background: var(--rota-suave);
+  }
+  .nx-tabela tfoot td {
+    height: 34px;
+    padding: 0 10px;
+    border-top: 1px solid var(--linha-forte);
+    color: var(--tinta);
+    font-weight: 600;
+  }
+  .nx-tabela th:first-child,
+  .nx-tabela td:first-child {
+    padding-left: 14px;
+  }
+  .nx-tabela th:last-child,
+  .nx-tabela td:last-child {
+    padding-right: 14px;
+  }
+
+  .nx-esqueleto {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-controle);
+    background: var(--poco-forte);
+  }
+  .nx-esqueleto::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, var(--poco-forte), transparent);
+    animation: nx-brilho 1.4s ease-in-out infinite;
+  }
+
+  /* Entrada da página: o único momento orquestrado. Cabeçalho, faixa de
+     indicadores e o primeiro painel sobem em cascata, uma vez. Preenchimento
+     `backwards`: com `both` o último quadro prende o transform e mata o hover. */
+  .nx-entra > * {
+    animation: nx-sobe 420ms var(--ease-saida) backwards;
+  }
+  .nx-entra > *:nth-child(2) {
+    animation-delay: 50ms;
+  }
+  .nx-entra > *:nth-child(3) {
+    animation-delay: 100ms;
+  }
+  .nx-entra > *:nth-child(4) {
+    animation-delay: 150ms;
+  }
+  .nx-entra > *:nth-child(n + 5) {
+    animation-delay: 190ms;
+  }
+}
+
+@keyframes nx-sobe {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes nx-brilho {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes nx-aparece {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+@keyframes nx-modal {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+}
+
+@keyframes nx-veu {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes nx-traco {
+  from {
+    stroke-dashoffset: var(--traco, 40);
+  }
+}
+
+@keyframes nx-corre {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+@keyframes nx-gira {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Reduzir movimento zera a duração E o atraso: com cascata, só a duração
+   deixaria a tela esperando em branco pelo atraso de cada peça. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+}
+
+/* Papel não herda o tema: o relatório impresso sai claro, sem moldura. */
+@media print {
+  :root,
+  :root[data-tema="noite"] {
+    color-scheme: light;
+    --fundo: #fff;
+    --vidro: #fff;
+    --vidro-forte: #fff;
+    --tinta: #000;
+    --tinta-2: #222;
+    --apagado: #555;
+    --linha: #ccc;
+    --linha-forte: #999;
+  }
+  body::before {
+    display: none;
+  }
+  .nx-sem-papel {
+    display: none !important;
+  }
+}

@@ -1,0 +1,7 @@
+# Extras de DESENVOLVIMENTO: publica o banco do app em 127.0.0.1:5083 (espelho
+# da 4083 do app) para o `npm run dev`, o `npm run migrate` e um cliente SQL.
+# Uso: npm run db:up
+services:
+  navex-db:
+    ports:
+      - "127.0.0.1:5083:5432"

@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.gitignore
+npm-debug.log
+README.md
+knowledge
+*.tsbuildinfo
+# Credenciais entram por variável de ambiente no compose, nunca na imagem.
+.env
+.env.local
+.env.*.local
