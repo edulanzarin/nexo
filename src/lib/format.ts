@@ -71,3 +71,28 @@ export function documento(v: string | null | undefined): string {
   if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   return v;
 }
+
+const pctFmt = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1, minimumFractionDigits: 0 });
+
+/**
+ * Porcentagem com vírgula. `v` já em pontos percentuais (12,5 e não 0,125).
+ * `toFixed` devolve ponto, e em pt-BR ponto é milhar: "3.4%" vira "3.400%".
+ */
+export function pct(v: number | null | undefined, casas = 1): string {
+  if (v == null || !Number.isFinite(v)) return "—";
+  return `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: casas }).format(v)}%`;
+}
+
+/** Número decimal com vírgula e casas fixas no máximo. */
+export function decimal(v: number, casas = 1): string {
+  return casas === 1 ? pctFmt.format(v) : new Intl.NumberFormat("pt-BR", { maximumFractionDigits: casas }).format(v);
+}
+
+/** Horas decimais como "12h 30min"; abaixo de uma hora, só os minutos. */
+export function horas(h: number): string {
+  const total = Math.round(h * 60);
+  const hh = Math.floor(total / 60);
+  const mm = total % 60;
+  if (hh === 0) return `${mm}min`;
+  return mm ? `${num(hh)}h ${mm}min` : `${num(hh)}h`;
+}

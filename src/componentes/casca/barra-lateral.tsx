@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useCaminho } from "@/hooks/use-contexto";
 import { useMemo } from "react";
 import { Icone } from "@/componentes/primitivos/icone";
 import { Menu } from "@/componentes/primitivos/menu";
@@ -33,7 +34,7 @@ export function BarraLateral({
   modulosAcessiveis: ModuloId[];
   usuario: UsuarioCasca;
 }) {
-  const pathname = usePathname();
+  const pathname = useCaminho();
   const sp = useSearchParams();
   const [recolhida, setRecolhida] = usePreferencia("lateral-recolhida", false);
   const modulo = MODULOS.find((m) => m.id === moduloId)!;

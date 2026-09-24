@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
+import { useCaminho } from "./use-contexto";
 
 /**
  * Estado de tela que sobrevive à troca de seção DENTRO do módulo: o extrato
@@ -70,4 +71,14 @@ export function useEstadoModulo<T>(
     [chave]
   );
   return [valor, definir];
+}
+
+/**
+ * Estado da TELA atual (a aba), que sobrevive à troca de seção e cai ao sair do
+ * módulo: busca, filtro de situação, página, arquivo lido. A chave leva o
+ * caminho da aba, então `busca` de uma tela não vaza para a outra.
+ */
+export function useEstadoTela<T>(campo: string, inicial: T) {
+  const caminho = useCaminho();
+  return useEstadoModulo<T>(`${caminho}\u0000${campo}`, inicial);
 }

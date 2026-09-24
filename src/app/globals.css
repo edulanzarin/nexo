@@ -84,9 +84,9 @@
   color-scheme: dark;
 
   --fundo: #0a1020;
-  --grade: rgb(130 160 230 / 0.065);
-  --brilho-laranja: rgb(255 122 46 / 0.12);
-  --brilho-azul: rgb(60 120 255 / 0.16);
+  --grade: rgb(130 160 230 / 0.085);
+  --brilho-laranja: rgb(255 122 46 / 0.14);
+  --brilho-azul: rgb(60 120 255 / 0.2);
 
   --vidro: rgb(20 29 50 / 0.7);
   --vidro-borda: rgb(160 186 255 / 0.1);
@@ -140,6 +140,23 @@
   --sombra-painel: 0 1px 2px rgb(0 0 0 / 0.35), 0 14px 32px -18px rgb(0 0 0 / 0.7);
   --sombra-flutua: 0 30px 70px -20px rgb(0 0 0 / 0.8), 0 10px 24px -14px rgb(0 0 0 / 0.6);
   --veu: rgb(4 8 18 / 0.6);
+}
+
+/* Nomes de cor que a camada de domínio do nexo2 carrega (escada de idade,
+   origens, espécies, tipos de gesto). Ficam como apelidos dos tokens do NaveX:
+   o domínio vem intacto e a cor continua saindo do tema. */
+:root {
+  --esp-1: var(--serie-1);
+  --esp-2: var(--serie-2);
+  --esp-3: var(--serie-3);
+  --esp-4: var(--serie-4);
+  --esp-5: var(--serie-5);
+  --esp-outras: var(--serie-outras);
+  --ent: var(--serie-1);
+  --sai: var(--ok);
+  --good: var(--ok);
+  --warning: var(--atencao);
+  --critical: var(--perigo);
 }
 
 @theme inline {
@@ -232,9 +249,10 @@
     overflow-x: clip;
   }
 
+  /* Sem fundo no body: o html pinta o fundo, e o papel quadriculado (z-index
+     negativo) fica entre os dois. Com fundo no body, ele cobria a grade. */
   body {
     min-height: 100dvh;
-    background: var(--fundo);
     font-family: var(--font-sans);
     font-size: var(--text-corpo);
     line-height: var(--text-corpo--line-height);
