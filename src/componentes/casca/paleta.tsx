@@ -22,7 +22,7 @@ export function abrirPaleta() {
   window.dispatchEvent(new CustomEvent(EVENTO));
 }
 
-interface Item {
+export interface ItemPaleta {
   id: string;
   grupo: "Seções" | "Empresas" | "Ações";
   rotulo: string;
@@ -77,10 +77,10 @@ export function Paleta() {
     };
   }, []);
 
-  const itens = useMemo<Item[]>(() => {
+  const itens = useMemo<ItemPaleta[]>(() => {
     const ctx = lerContexto(sp);
     const qs = qsSoContexto(ctx);
-    const secoes: Item[] = MODULOS.filter((m) => m.pronto && acessos[m.id]?.length).flatMap((m) =>
+    const secoes: ItemPaleta[] = MODULOS.filter((m) => m.pronto && acessos[m.id]?.length).flatMap((m) =>
       secoesDoModulo(m.id)
         .filter((s) => acessos[m.id]!.includes(s.id))
         .map((s) => ({
@@ -105,7 +105,7 @@ export function Paleta() {
       nome: string;
     }[];
     const vistas = new Set<number>();
-    const listaEmpresas: Item[] = [];
+    const listaEmpresas: ItemPaleta[] = [];
     for (const e of ordem) {
       if (vistas.has(e.codigo)) continue;
       vistas.add(e.codigo);
@@ -119,7 +119,7 @@ export function Paleta() {
         agir: () => trocarEmpresa(e.codigo),
       });
     }
-    const acoes: Item[] = [
+    const acoes: ItemPaleta[] = [
       { id: "a:noite", grupo: "Ações", rotulo: "Tema noite", icone: "noite", busca: "tema noite escuro", agir: () => definirTema("noite") },
       { id: "a:dia", grupo: "Ações", rotulo: "Tema dia", icone: "dia", busca: "tema dia claro", agir: () => definirTema("dia") },
       { id: "a:inicio", grupo: "Ações", rotulo: "Ir para o início", icone: "inicio", busca: "inicio home", agir: () => router.push("/") },
@@ -132,7 +132,7 @@ export function Paleta() {
   const filtrados = useMemo(() => {
     const t = normalizar(termo.trim());
     const partes = t.split(/\s+/).filter(Boolean);
-    const casa = (i: Item) => partes.every((p) => i.busca.includes(p));
+    const casa = (i: ItemPaleta) => partes.every((p) => i.busca.includes(p));
     // Sem termo: as seções e as empresas recentes. Com termo: tudo que casa,
     // com teto por grupo para a lista não virar a carteira inteira.
     if (!partes.length)
@@ -140,7 +140,7 @@ export function Paleta() {
         ...itens.filter((i) => i.grupo === "Seções"),
         ...itens.filter((i) => i.grupo === "Empresas" && recentes.includes(Number(i.detalhe))),
       ];
-    const grupos: Record<Item["grupo"], Item[]> = { Seções: [], Empresas: [], Ações: [] };
+    const grupos: Record<ItemPaleta["grupo"], ItemPaleta[]> = { Seções: [], Empresas: [], Ações: [] };
     for (const i of itens) if (casa(i)) grupos[i.grupo].push(i);
     return [...grupos["Seções"].slice(0, 12), ...grupos["Empresas"].slice(0, 30), ...grupos["Ações"]];
   }, [itens, termo, recentes]);
@@ -151,13 +151,12 @@ export function Paleta() {
 
   if (!aberta || typeof document === "undefined") return null;
 
-  const escolher = (i: Item | undefined) => {
+  const escolher = (i: ItemPaleta | undefined) => {
     if (!i) return;
     setAberta(false);
     i.agir();
   };
 
-  let grupoAnterior = "";
   return createPortal(
     <div className="fixed inset-0 z-[70] flex items-start justify-center p-4 pt-[12vh]">
       <div
@@ -165,76 +164,120 @@ export function Paleta() {
         className="absolute inset-0 animate-[nx-veu_160ms_ease-out] bg-[var(--veu)] backdrop-blur-[2px]"
         onClick={() => setAberta(false)}
       />
-      <div
-        role="dialog"
-        aria-label="Ir para"
-        className="nx-flutua relative flex max-h-[70dvh] w-full max-w-xl animate-[nx-modal_180ms_var(--ease-saida)] flex-col overflow-hidden rounded-flutua"
-        onKeyDown={(e) => {
-          if (e.key === "Escape") setAberta(false);
-          else if (e.key === "ArrowDown") {
-            e.preventDefault();
-            setAtivo((a) => Math.min(a + 1, filtrados.length - 1));
-          } else if (e.key === "ArrowUp") {
-            e.preventDefault();
-            setAtivo((a) => Math.max(a - 1, 0));
-          } else if (e.key === "Enter") {
-            e.preventDefault();
-            escolher(filtrados[ativo]);
-          }
+      <PainelPaleta
+        termo={termo}
+        onTermo={(t) => {
+          setTermo(t);
+          setAtivo(0);
         }}
-      >
-        <div className="flex items-center gap-2.5 border-b border-linha px-4">
-          <Icone nome="buscar" tamanho={17} className="text-apagado" />
-          <input
-            ref={entrada}
-            autoFocus
-            value={termo}
-            onChange={(e) => {
-              setTermo(e.target.value);
-              setAtivo(0);
-            }}
-            placeholder="Seção, empresa ou código"
-            className="h-12 min-w-0 flex-1 bg-transparent text-medio text-tinta placeholder:text-apagado focus:outline-none"
-          />
-          <Tecla>Esc</Tecla>
-        </div>
-        <div ref={lista} className="min-h-0 flex-1 overflow-y-auto p-1.5">
-          {filtrados.length === 0 && (
-            <p className="px-3 py-6 text-center text-corpo text-apagado italic">
-              Nada com esse nome. Tente o código da empresa.
-            </p>
-          )}
-          {filtrados.map((i, n) => {
-            const cabeca = i.grupo !== grupoAnterior;
-            grupoAnterior = i.grupo;
-            return (
-              <div key={i.id}>
-                {cabeca && (
-                  <p className="px-2.5 pt-2 pb-1 text-micro font-[600] text-apagado">
-                    {i.grupo === "Empresas" && !termo ? "Empresas recentes" : i.grupo}
-                  </p>
-                )}
-                <button
-                  type="button"
-                  data-i={n}
-                  onMouseMove={() => setAtivo(n)}
-                  onClick={() => escolher(i)}
-                  className={cn(
-                    "flex h-9 w-full items-center gap-2.5 rounded-controle px-2.5 text-left text-corpo",
-                    n === ativo ? "bg-poco-forte text-tinta" : "text-tinta-2"
-                  )}
-                >
-                  <Icone nome={i.icone} tamanho={16} className="text-apagado" />
-                  <span className="min-w-0 flex-1 truncate">{i.rotulo}</span>
-                  {i.detalhe && <span className="num shrink-0 text-pequeno text-apagado">{i.detalhe}</span>}
-                  {n === ativo && <Icone nome="enter" tamanho={14} className="text-apagado" />}
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+        itens={filtrados}
+        ativo={ativo}
+        onAtivo={setAtivo}
+        onEscolher={escolher}
+        onFechar={() => setAberta(false)}
+        entradaRef={entrada}
+        listaRef={lista}
+      />
     </div>,
     document.body
+  );
+}
+
+/**
+ * A aparência da paleta, sem o comportamento de abrir e fechar. Separada para o
+ * catálogo mostrá-la aberta com a mesma peça (a paleta só existe aberta).
+ */
+export function PainelPaleta({
+  termo,
+  onTermo,
+  itens,
+  ativo,
+  onAtivo,
+  onEscolher,
+  onFechar,
+  entradaRef,
+  listaRef,
+  estatico,
+}: {
+  termo: string;
+  onTermo: (t: string) => void;
+  itens: ItemPaleta[];
+  ativo: number;
+  onAtivo: (i: number) => void;
+  onEscolher: (i: ItemPaleta | undefined) => void;
+  onFechar?: () => void;
+  entradaRef?: React.Ref<HTMLInputElement>;
+  listaRef?: React.Ref<HTMLDivElement>;
+  estatico?: boolean;
+}) {
+  // O título do grupo aparece na primeira linha de cada grupo.
+  const abreGrupo = itens.map((i, n) => n === 0 || itens[n - 1].grupo !== i.grupo);
+  return (
+    <div
+      role="dialog"
+      aria-label="Ir para"
+      className={cn(
+        "nx-flutua relative flex w-full max-w-xl flex-col overflow-hidden rounded-flutua",
+        !estatico && "max-h-[70dvh] animate-[nx-modal_180ms_var(--ease-saida)]"
+      )}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") onFechar?.();
+        else if (e.key === "ArrowDown") {
+          e.preventDefault();
+          onAtivo(Math.min(ativo + 1, itens.length - 1));
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          onAtivo(Math.max(ativo - 1, 0));
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          onEscolher(itens[ativo]);
+        }
+      }}
+    >
+      <div className="flex items-center gap-2.5 border-b border-linha px-4">
+        <Icone nome="buscar" tamanho={17} className="text-apagado" />
+        <input
+          ref={entradaRef}
+          autoFocus={!estatico}
+          value={termo}
+          onChange={(e) => onTermo(e.target.value)}
+          placeholder="Seção, empresa ou código"
+          className="h-12 min-w-0 flex-1 bg-transparent text-medio text-tinta placeholder:text-apagado focus:outline-none"
+        />
+        <Tecla>Esc</Tecla>
+      </div>
+      <div ref={listaRef} className="min-h-0 flex-1 overflow-y-auto p-1.5">
+        {itens.length === 0 && (
+          <p className="px-3 py-6 text-center text-corpo text-apagado italic">Nada com esse nome. Tente o código da empresa.</p>
+        )}
+        {itens.map((i, n) => {
+          const cabeca = abreGrupo[n];
+          return (
+            <div key={i.id}>
+              {cabeca && (
+                <p className="px-2.5 pt-2 pb-1 text-micro font-[600] text-apagado">
+                  {i.grupo === "Empresas" && !termo ? "Empresas recentes" : i.grupo}
+                </p>
+              )}
+              <button
+                type="button"
+                data-i={n}
+                onMouseMove={() => onAtivo(n)}
+                onClick={() => onEscolher(i)}
+                className={cn(
+                  "flex h-9 w-full items-center gap-2.5 rounded-controle px-2.5 text-left text-corpo",
+                  n === ativo ? "bg-poco-forte text-tinta" : "text-tinta-2"
+                )}
+              >
+                <Icone nome={i.icone} tamanho={16} className="text-apagado" />
+                <span className="min-w-0 flex-1 truncate">{i.rotulo}</span>
+                {i.detalhe && <span className="num shrink-0 text-pequeno text-apagado">{i.detalhe}</span>}
+                {n === ativo && <Icone nome="enter" tamanho={14} className="text-apagado" />}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

@@ -335,7 +335,7 @@ export function analisarMotor(bal: BalanceteContabil): AnaliseDeterministica {
   if (!val.fecha) {
     inc.push({
       severidade: "alta", tipo: "nao_fecha", titulo: "Balancete não fecha",
-      detalhe: `Diferença de ${brl0(Math.abs(val.difFechamento))} entre débitos e créditos — há partida sem contrapartida. Revise antes de confiar nos números.`,
+      detalhe: `Diferença de ${brl0(Math.abs(val.difFechamento))} entre débitos e créditos. Há partida sem contrapartida; revise antes de confiar nos números.`,
       valor: val.difFechamento,
     });
   }
@@ -371,8 +371,8 @@ export function analisarMotor(bal: BalanceteContabil): AnaliseDeterministica {
       severidade: "alta", tipo: "saldo_impossivel",
       titulo: `${ehDisp ? "Disponibilidade" : "Estoque"} com saldo invertido · ${a.conta} ${a.descricao}`,
       detalhe: ehDisp
-        ? `Caixa/banco/aplicação com saldo credor de ${brl0(Math.abs(a.saldoFinal))} — dinheiro não fica negativo. Há lançamento faltando ou trocado.`
-        : `Estoque com saldo credor de ${brl0(Math.abs(a.saldoFinal))} — estoque negativo é impossível. Revise entradas/saídas.`,
+        ? `Caixa/banco/aplicação com saldo credor de ${brl0(Math.abs(a.saldoFinal))}. Dinheiro não fica negativo: há lançamento faltando ou trocado.`
+        : `Estoque com saldo credor de ${brl0(Math.abs(a.saldoFinal))}. Estoque não fica negativo: revise entradas e saídas.`,
       conta: a.conta, valor: a.saldoFinal,
     });
   }
@@ -382,8 +382,8 @@ export function analisarMotor(bal: BalanceteContabil): AnaliseDeterministica {
       severidade: "media", tipo: "sinal_atipico",
       titulo: `Saldo de sinal atípico · ${a.conta} ${a.descricao}`,
       detalhe: a.natureza === "D"
-        ? `Conta de natureza devedora com saldo credor de ${brl0(Math.abs(a.saldoFinal))} — pode ser lançamento invertido ou conta usada como redutora sem cadastro.`
-        : `Conta de natureza credora com saldo devedor de ${brl0(Math.abs(a.saldoFinal))} — lançamento invertido ou conta usada fora da natureza cadastrada.`,
+        ? `Conta de natureza devedora com saldo credor de ${brl0(Math.abs(a.saldoFinal))}. Pode ser lançamento invertido ou conta usada como redutora sem cadastro.`
+        : `Conta de natureza credora com saldo devedor de ${brl0(Math.abs(a.saldoFinal))}. Pode ser lançamento invertido ou conta usada fora da natureza cadastrada.`,
       conta: a.conta, valor: a.saldoFinal,
     });
   }
@@ -399,7 +399,7 @@ export function analisarMotor(bal: BalanceteContabil): AnaliseDeterministica {
     inc.push({
       severidade: "baixa", tipo: "sinal_atipico_contraparte",
       titulo: `${anomContraparte.length} conta(s) de clientes/fornecedores/sócios com saldo de sinal atípico`,
-      detalhe: `Somam ${brl0(soma)}. Em contas individuais de terceiros isso costuma ser adiantamento, nota de crédito ou pagamento a maior — em geral normal. Vale conferir só as de maior valor.`,
+      detalhe: `Somam ${brl0(soma)}. Em contas individuais de terceiros isso costuma ser adiantamento, nota de crédito ou pagamento a maior, e em geral é normal. Vale conferir só as de maior valor.`,
       valor: soma,
     });
   }
@@ -409,7 +409,7 @@ export function analisarMotor(bal: BalanceteContabil): AnaliseDeterministica {
     inc.push({
       severidade: "baixa", tipo: "resultado_nao_incorporado",
       titulo: "Resultado do exercício ainda não incorporado ao PL",
-      detalhe: `O resultado acumulado do exercício (${brl0(resultadoExercicio)}) ainda está nas contas de resultado e não foi transportado ao PL registrado. É normal num balancete mensal antes da apuração — o PL acima já considera esse valor.`,
+      detalhe: `O resultado acumulado do exercício (${brl0(resultadoExercicio)}) ainda está nas contas de resultado e não foi transportado ao PL registrado. É normal num balancete mensal antes da apuração, e o PL acima já considera esse valor.`,
       valor: resultadoExercicio,
     });
   }
@@ -430,7 +430,7 @@ export function analisarMotor(bal: BalanceteContabil): AnaliseDeterministica {
         inc.push({
           severidade: "media", tipo: "inversao_periodo",
           titulo: `Saldo inverteu de natureza no período · ${c.conta} ${c.descricao}`,
-          detalhe: "O saldo passou de normal a atípico (ou vice-versa) ao longo dos meses — confira os lançamentos do intervalo.",
+          detalhe: "O saldo passou de normal a atípico (ou o contrário) ao longo dos meses. Confira os lançamentos do intervalo.",
           conta: c.conta,
         });
       }

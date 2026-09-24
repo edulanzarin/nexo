@@ -126,7 +126,7 @@ export async function redigirLaudo(
   const apiKey = process.env.GROQ_API_KEY?.trim();
   if (!apiKey) {
     throw new AnaliseError(
-      "Chave da API da Groq não configurada — defina GROQ_API_KEY no ambiente."
+      "Chave da API da Groq não configurada. Defina GROQ_API_KEY no .env do servidor."
     );
   }
 

@@ -30,7 +30,7 @@ export const GET = apiRoute(async (req) => {
       return { lancamentos: [], total: 0 } satisfies BalanceteLancamentosResp;
     }
 
-    const rows = await client.query<BalanceteLancamento>(
+    const rows = await client.query<BalanceteLancamento & { total_geral: number }>(
       `with lc as (
          select to_char(l.datalctoctb,'YYYY-MM-DD') data,
                 case when l.chaveorigem like 'MOV%' then 'MOV'
@@ -48,7 +48,10 @@ export const GET = apiRoute(async (req) => {
               coalesce(nullif(lc.hist,''), '') historico,
               coalesce(e.numeronf, s.numeronf) numero,
               upper(btrim(coalesce(e.especienf, s.especienf))) especie,
-              coalesce(pe.nomepessoa, ps.nomepessoa) contraparte
+              coalesce(pe.nomepessoa, ps.nomepessoa) contraparte,
+              -- A janela conta antes do limit: é o que deixa a tela saber que a
+              -- lista veio cortada (antes o total era o tamanho da página).
+              count(*) over ()::int total_geral
          from lc
          left join lctofisent e on lc.origem='ME' and e.codigoempresa=$1 and e.chavelctofisent=lc.chave
          left join lctofissai s on lc.origem='MS' and s.codigoempresa=$1 and s.chavelctofissai=lc.chave
@@ -60,8 +63,12 @@ export const GET = apiRoute(async (req) => {
     );
 
     return {
-      lancamentos: rows.rows,
-      total: rows.rows.length,
+      lancamentos: rows.rows.map((l) => {
+        const { total_geral, ...lancamento } = l;
+        void total_geral;
+        return lancamento;
+      }),
+      total: rows.rows[0]?.total_geral ?? 0,
     } satisfies BalanceteLancamentosResp;
   } finally {
     client.release();

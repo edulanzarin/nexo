@@ -126,6 +126,7 @@ function Corpo({ children }: { children: ReactNode }) {
         />
         {abas.length > 1 && (
           <Abas
+            className="nx-sem-papel"
             rotulo={secao.rotulo}
             ativa={aba?.id ?? abas[0].id}
             itens={abas.map((a) => ({ chave: a.id, rotulo: a.rotulo, href: `${a.path}${qs ? `?${qs}` : ""}` }))}

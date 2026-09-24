@@ -1,4 +1,5 @@
 import type { Divergencia, LinhaPlano, PlanoCfop } from "./types";
+import { brl } from "./format";
 
 /** Centavos de tolerância — arredondamento de rateio não é erro. */
 const TOLERANCIA = 0.02;
@@ -181,7 +182,7 @@ export function conferirNota(
           tipo: "faltando",
           natureza,
           componente: linha.descrConta ?? `Conta ${conta}`,
-          detalhe: `Esperado ${rotuloNatureza(natureza).toLowerCase()} de ${esperadoValor.toFixed(2)} na conta ${conta}, não gerado`,
+          detalhe: `Esperado ${rotuloNatureza(natureza).toLowerCase()} de ${brl(esperadoValor)} na conta ${conta}, não gerado`,
           contaEsperada: conta,
           contaLancada: null,
           valorEsperado: esperadoValor,
@@ -196,7 +197,7 @@ export function conferirNota(
           tipo: "valor",
           natureza,
           componente: linha.descrConta ?? `Conta ${conta}`,
-          detalhe: `Conta ${conta}: lançado ${valorLancado.toFixed(2)}, esperado ${esperadoValor.toFixed(2)} (${linha.regraValor})`,
+          detalhe: `Conta ${conta}: lançado ${brl(valorLancado)}, esperado ${brl(esperadoValor)} (${linha.regraValor})`,
           contaEsperada: conta,
           contaLancada: conta,
           valorEsperado: esperadoValor,

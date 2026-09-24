@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PainelPaleta, type ItemPaleta } from "@/componentes/casca/paleta";
 import { MenuExportar } from "@/componentes/produto/menu-exportar";
 import { AguardandoExecucao, BotaoExecutar, CabecalhoPagina, EscolhaEmpresa } from "@/componentes/produto/pagina";
 import { SeletorConta } from "@/componentes/produto/seletor-conta";
@@ -9,7 +10,17 @@ import { SeletorFilial } from "@/componentes/produto/seletor-filial";
 import { SeletorPeriodoDia, SeletorPeriodoMes } from "@/componentes/produto/seletor-periodo";
 import { Bloco, Familia, Variante } from "../bloco";
 
+const ITENS_PALETA: ItemPaleta[] = [
+  { id: "1", grupo: "Seções", rotulo: "Conferência fiscal", detalhe: "Contábil", icone: "conferencia", busca: "", agir: () => {} },
+  { id: "2", grupo: "Seções", rotulo: "Conciliação bancária", detalhe: "Contábil", icone: "banco", busca: "", agir: () => {} },
+  { id: "3", grupo: "Seções", rotulo: "Balancete contábil", detalhe: "Contábil", icone: "planilha", busca: "", agir: () => {} },
+  { id: "4", grupo: "Empresas", rotulo: "MAGALHAES COMERCIO DE ALIMENTOS LTDA", detalhe: "1318", icone: "historico", busca: "", agir: () => {} },
+  { id: "5", grupo: "Empresas", rotulo: "NAVECON CONTABILIDADE LTDA", detalhe: "1200", icone: "historico", busca: "", agir: () => {} },
+];
+
 export function BlocosProduto() {
+  const [termoPaleta, setTermoPaleta] = useState("");
+  const [ativoPaleta, setAtivoPaleta] = useState(0);
   const [empresa, setEmpresa] = useState<number[]>([1200]);
   const [grupos, setGrupos] = useState<number[]>([]);
   const [escopo, setEscopo] = useState<number[]>([]);
@@ -95,6 +106,23 @@ export function BlocosProduto() {
           <EscolhaEmpresa />
         </Bloco>
       </div>
+
+      <Bloco
+        titulo="Paleta de comandos"
+        porque="Ctrl+K de qualquer tela: ir para uma seção ou trocar de empresa sem sair de onde está. Numa carteira de 1.500 empresas, digitar o código é mais rápido que qualquer lista. Sem termo, mostra as seções e as empresas recentes."
+      >
+        <div className="flex justify-center rounded-painel border border-dashed border-linha-forte bg-poco p-6">
+          <PainelPaleta
+            estatico
+            termo={termoPaleta}
+            onTermo={setTermoPaleta}
+            itens={ITENS_PALETA}
+            ativo={ativoPaleta}
+            onAtivo={setAtivoPaleta}
+            onEscolher={() => {}}
+          />
+        </div>
+      </Bloco>
 
       <Bloco
         titulo="Conta do plano"

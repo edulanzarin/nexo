@@ -12,6 +12,8 @@ export type ItemMenu =
       rotulo: string;
       icone?: NomeIcone;
       detalhe?: string;
+      /** Segunda linha, menor: o que a ação faz quando o rótulo não basta. */
+      descricao?: string;
       perigo?: boolean;
       desabilitado?: boolean;
       /** Texto do atalho de teclado, só exibido. */
@@ -109,14 +111,18 @@ export function ListaMenu({
               it.aoEscolher();
             }}
             className={cn(
-              "flex h-8 w-full items-center gap-2 rounded-controle px-2.5 text-left text-corpo",
+              "flex min-h-8 w-full items-center gap-2 rounded-controle px-2.5 text-left text-corpo",
+              it.descricao && "py-1.5",
               it.perigo ? "text-perigo" : "text-tinta-2",
               ativo === i && (it.perigo ? "bg-perigo-suave" : "bg-poco-forte text-tinta"),
               it.desabilitado && "opacity-45"
             )}
           >
             {it.icone && <Icone nome={it.icone} tamanho={15} className={it.perigo ? "" : "text-apagado"} />}
-            <span className="min-w-0 flex-1 truncate">{it.rotulo}</span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate">{it.rotulo}</span>
+              {it.descricao && <span className="block truncate text-micro text-apagado">{it.descricao}</span>}
+            </span>
             {it.detalhe && <span className="text-pequeno text-apagado">{it.detalhe}</span>}
             {it.atalho && <kbd className="text-micro text-apagado">{it.atalho}</kbd>}
           </button>

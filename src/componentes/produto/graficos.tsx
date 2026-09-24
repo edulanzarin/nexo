@@ -184,7 +184,7 @@ export function GraficoSerie<T extends Record<string, unknown>>({
           tick={EIXO}
           tickLine={false}
           axisLine={false}
-          width={44}
+          width={56}
           tickFormatter={(v: number) => formatarEixo(v)}
         />
         {temDireito && (
@@ -194,7 +194,7 @@ export function GraficoSerie<T extends Record<string, unknown>>({
             tick={EIXO}
             tickLine={false}
             axisLine={false}
-            width={40}
+            width={52}
             tickFormatter={(v: number) => (formatarEixoDireito ?? formatarEixo)(v)}
           />
         )}
@@ -296,7 +296,7 @@ export function GraficoBarrasCor<T extends Record<string, unknown>>({
       <ComposedChart data={dados} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
         <CartesianGrid vertical={false} stroke="var(--linha)" />
         <XAxis dataKey={chave(x)} tick={EIXO} tickLine={false} axisLine={{ stroke: "var(--linha-forte)" }} minTickGap={8} />
-        <YAxis tick={EIXO} tickLine={false} axisLine={false} width={44} tickFormatter={(v: number) => formatarEixo(v)} />
+        <YAxis tick={EIXO} tickLine={false} axisLine={false} width={56} tickFormatter={(v: number) => formatarEixo(v)} />
         <Tooltip
           cursor={{ fill: "var(--poco-forte)" }}
           content={({ active, payload }) => {
@@ -474,7 +474,7 @@ export function GraficoDispersao<T extends Record<string, unknown>>({
           tick={EIXO}
           tickLine={false}
           axisLine={false}
-          width={44}
+          width={56}
           tickFormatter={(v: number) => numCompact(v)}
         />
         <ZAxis range={[54, 54]} />
@@ -576,11 +576,14 @@ export function CalendarioAtividade({
   dias,
   formatar = num,
   rotulo = "Lançamentos",
+  pico,
 }: {
   /** Um item por dia com volume, ISO "YYYY-MM-DD". */
   dias: { dia: string; valor: number }[];
   formatar?: (v: number) => string;
   rotulo?: string;
+  /** Dia a destacar. Sem ele, o de maior volume. */
+  pico?: string;
 }) {
   if (!dias.length) return <p className="py-6 text-center text-corpo text-apagado italic">Nenhum dia com atividade.</p>;
   const ordenados = [...dias].sort((a, b) => a.dia.localeCompare(b.dia));
@@ -602,9 +605,21 @@ export function CalendarioAtividade({
   const valores = ordenados.map((d) => d.valor).sort((a, b) => a - b);
   // Régua pelo p95: um dia de fechamento com dez vezes a média apagaria todo o resto.
   const teto = valores[Math.floor(valores.length * 0.95)] || valores[valores.length - 1] || 1;
+  // O pico, se não veio de fora, é o dia de maior volume: ganha contorno para
+  // a pessoa achar o dia sem contar quadrados.
+  const diaPico = pico ?? ordenados.reduce((a, b) => (b.valor > a.valor ? b : a)).dia;
+  // Nome do mês sobre a semana em que ele começa: a fita se lê como calendário.
+  const rotulosMes = semanas.map((s, i) => {
+    const primeiro = s.find((d) => d.valor != null)?.dia;
+    if (!primeiro) return "";
+    const mes = primeiro.slice(0, 7);
+    const anterior = i > 0 ? semanas[i - 1].find((d) => d.valor != null)?.dia.slice(0, 7) : undefined;
+    return mes !== anterior ? MESES_CURTOS[Number(mes.slice(5, 7)) - 1] : "";
+  });
   return (
     <div className="flex gap-1.5 overflow-x-auto pb-1">
-      <div className="grid grid-rows-7 gap-[3px] pt-0">
+      <div className="grid grid-rows-[14px_repeat(7,14px)] gap-[3px]">
+        <span />
         {DIAS_SEMANA.map((d, i) => (
           <span key={i} className="grid h-3.5 place-items-center text-[9px] text-apagado">
             {i % 2 === 1 ? d : ""}
@@ -612,7 +627,10 @@ export function CalendarioAtividade({
         ))}
       </div>
       {semanas.map((s, i) => (
-        <div key={i} className="grid grid-rows-7 gap-[3px]">
+        <div key={i} className="grid grid-rows-[14px_repeat(7,14px)] gap-[3px]">
+          <span className="w-3.5 overflow-visible text-[10px] leading-[14px] whitespace-nowrap text-apagado">
+            {rotulosMes[i]}
+          </span>
           {s.map((d) => {
             const v = d.valor;
             const nivel = v == null ? -1 : v === 0 ? 0 : Math.min(4, Math.ceil((v / teto) * 4));
@@ -620,7 +638,11 @@ export function CalendarioAtividade({
               <span
                 key={d.dia}
                 title={v == null ? undefined : `${d.dia.slice(8, 10)}/${d.dia.slice(5, 7)}: ${formatar(v)} ${rotulo.toLowerCase()}`}
-                className={cn("size-3.5 rounded-[3px]", v == null && "opacity-0")}
+                className={cn(
+                  "size-3.5 rounded-[3px]",
+                  v == null && "opacity-0",
+                  d.dia === diaPico && v != null && "ring-2 ring-acento-solido ring-offset-1 ring-offset-[var(--vidro-forte)]"
+                )}
                 style={{
                   background:
                     nivel <= 0
@@ -635,3 +657,5 @@ export function CalendarioAtividade({
     </div>
   );
 }
+
+const MESES_CURTOS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];

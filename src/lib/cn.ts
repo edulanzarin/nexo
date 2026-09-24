@@ -9,6 +9,10 @@ import { extendTailwindMerge } from "tailwind-merge";
  */
 const mesclar = extendTailwindMerge({
   extend: {
+    // Altura de controle é escala de espaçamento com nome: sem isto,
+    // `h-controle` e `h-controle-p` ficavam as duas no atributo e o menor
+    // botão dependia da ordem do CSS para vencer.
+    theme: { spacing: ["controle", "controle-p"] },
     classGroups: {
       "font-size": [{ text: ["micro", "pequeno", "corpo", "medio", "titulo", "leitura", "destaque"] }],
       rounded: [{ rounded: ["chip", "controle", "painel", "flutua"] }],

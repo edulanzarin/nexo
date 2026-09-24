@@ -138,13 +138,13 @@ export function Inicio() {
         {caminho.length > 0 && (
           <section>
             <h2 className="mb-2.5 text-medio font-[600] text-tinta">Sendo refeitos no NaveX</h2>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-2">
               {caminho.map((m) => (
                 <div key={m.id} className="nx-vidro flex items-center gap-2.5 rounded-painel px-3 py-2.5">
                   <CorModulo modulo={m} tamanho={30} />
                   <div className="min-w-0">
                     <p className="truncate text-corpo font-[600] text-tinta">{m.titulo}</p>
-                    <p className="truncate text-pequeno text-apagado">Segue no Nexo por enquanto</p>
+                    <p className="truncate text-pequeno text-apagado">Ainda no Nexo</p>
                   </div>
                 </div>
               ))}
@@ -184,7 +184,8 @@ function MapaModulo({ modulo, visiveis }: { modulo: Modulo; visiveis: string[] }
           <Icone nome="seta-direita" tamanho={15} />
         </Link>
       </header>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-4 p-4 sm:grid-cols-3 lg:grid-cols-6">
+      {/* Grade que se reparte pela largura: seis colunas fixas cortavam o nome das seções. */}
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-x-4 gap-y-4 p-4">
         {grupos.map(([grupo, secoes]) => (
           <div key={grupo} className="min-w-0">
             <p className="mb-1.5 px-2 text-micro font-[600] text-apagado">{grupo}</p>

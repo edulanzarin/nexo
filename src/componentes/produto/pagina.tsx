@@ -30,7 +30,8 @@ export function CabecalhoPagina({
         <h1 className="nx-titulo text-titulo text-tinta">{titulo}</h1>
         {descricao && <p className="mt-0.5 max-w-[72ch] text-corpo text-apagado">{descricao}</p>}
       </div>
-      {acoes && <div className="flex flex-wrap items-center gap-2">{acoes}</div>}
+      {/* No papel, botão não serve: a impressão leva só o título e o conteúdo. */}
+      {acoes && <div className="nx-sem-papel flex flex-wrap items-center gap-2">{acoes}</div>}
     </header>
   );
 }

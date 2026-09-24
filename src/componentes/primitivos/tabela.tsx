@@ -11,7 +11,11 @@ export interface Coluna<T> {
   cabecalho: ReactNode;
   celula: (linha: T, indice: number) => ReactNode;
   alinhar?: "esq" | "dir" | "centro";
-  /** Largura CSS da coluna (`"120px"`, `"30%"`). Sem ela, a coluna reparte a sobra. */
+  /**
+   * Largura CSS da coluna. Em pixels (`"120px"`) a coluna tem esse tamanho; em
+   * porcentagem (`"30%"`) a coluna de texto reparte o espaço e trunca nele.
+   * Sem largura, a coluna tem o tamanho do conteúdo, numa linha só.
+   */
   largura?: string;
   /** Valor de ordenação. Com ele, o cabeçalho vira botão de ordenar. */
   ordenar?: (linha: T) => number | string | null | undefined;
@@ -197,6 +201,12 @@ export function TabelaDados<T>({
                     className={cn(
                       ALINHAMENTO[c.alinhar ?? "esq"],
                       c.alinhar === "dir" && "num whitespace-nowrap",
+                      // Em layout automático a largura da coluna é só preferência:
+                      // o texto longo alarga a coluna e o truncate nunca corta.
+                      // Coluna de texto em PORCENTAGEM aceita encolher (máximo
+                      // zero) e aí a reticência aparece. A de pixels não: espremida,
+                      // o CPF invadia a coluna vizinha. Número nunca trunca.
+                      c.largura?.endsWith("%") && c.alinhar !== "dir" && "max-w-0",
                       c.secundaria && "max-[900px]:hidden",
                       c.classe
                     )}

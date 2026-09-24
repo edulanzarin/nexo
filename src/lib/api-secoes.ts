@@ -76,7 +76,10 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     "painel-gestao": ["painel-gestao"],
     // Notas (explorador)
     "notas-lista": ["notas"],
-    "nota-itens": ["notas"],
+    // Os itens da nota abrem no detalhe da Conferência e da Central de
+    // pendências também; mapeado só para Notas, quem tem aquelas seções sem
+    // esta recebia erro dentro do próprio modal (furo herdado do nexo2).
+    "nota-itens": ["notas", "conferencia", "pendencias"],
     contrapartes: ["notas"],
     // Conferência (+ aba Configuração do plano de contabilização)
     conferencia: ["conferencia"],
