@@ -3,24 +3,47 @@ const brlFmt = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
 });
 
-const brlCompactFmt = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
-
 const numFmt = new Intl.NumberFormat("pt-BR");
+const umaCasa = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
 
-const numCompactFmt = new Intl.NumberFormat("pt-BR", {
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
+/** Espaço que não quebra: "R$" e "mil" não se separam do número na quebra de linha. */
+const NBSP = String.fromCharCode(160);
+
+const UNIDADES = [
+  { base: 1e9, nome: "bi" },
+  { base: 1e6, nome: "mi" },
+  { base: 1e3, nome: "mil" },
+];
+
+/**
+ * Forma compacta montada à mão, e não pelo `notation: "compact"` do Intl: a
+ * notação compacta depende da versão do ICU, e a do Node escreve "412,0 mil"
+ * onde a do navegador escreve "412 mil". Na tela renderizada no servidor, a
+ * diferença quebrava a hidratação do React (erro 418) sem aviso nenhum.
+ */
+function compacto(v: number): string {
+  const abs = Math.abs(v);
+  for (let i = 0; i < UNIDADES.length; i++) {
+    const u = UNIDADES[i];
+    if (abs < u.base) continue;
+    const arred = Math.round((abs / u.base) * 10) / 10;
+    // 999.960 arredonda para "1.000 mil": sobe para a unidade de cima.
+    if (arred >= 1000 && i > 0) {
+      const acima = UNIDADES[i - 1];
+      return `${v < 0 ? "-" : ""}${umaCasa.format(Math.round((abs / acima.base) * 10) / 10)}${NBSP}${acima.nome}`;
+    }
+    return `${v < 0 ? "-" : ""}${umaCasa.format(arred)}${NBSP}${u.nome}`;
+  }
+  return `${v < 0 ? "-" : ""}${numFmt.format(Math.round(abs))}`;
+}
 
 export const brl = (v: number) => brlFmt.format(v);
-export const brlCompact = (v: number) => brlCompactFmt.format(v);
+export const brlCompact = (v: number) => {
+  const c = compacto(v);
+  return c.startsWith("-") ? `-R$${NBSP}${c.slice(1)}` : `R$${NBSP}${c}`;
+};
 export const num = (v: number) => numFmt.format(v);
-export const numCompact = (v: number) => numCompactFmt.format(v);
+export const numCompact = (v: number) => compacto(v);
 
 export function dataBR(iso: string | null | undefined): string {
   if (!iso) return "—";

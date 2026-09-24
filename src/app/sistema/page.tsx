@@ -1,3 +1,8 @@
+// O catálogo mostra rótulos relativos a hoje (Mês passado, Últimos 3 meses).
+// Gerado estático no build, ele congelaria no dia do deploy e divergiria do
+// navegador na hidratação.
+export const dynamic = "force-dynamic";
+
 import { BlocosContabilBalancetes } from "./blocos/contabil-balancetes";
 import { BlocosContabilConciliacao } from "./blocos/contabil-conciliacao";
 import { BlocosContabilProdutividade } from "./blocos/contabil-produtividade";
