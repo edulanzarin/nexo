@@ -18,6 +18,7 @@ import { BlocosFundamentos } from "./blocos/fundamentos";
 import { BlocosGraficos } from "./blocos/graficos";
 import { BlocosProduto } from "./blocos/produto";
 import { BlocosRhBase } from "./blocos/rh-base";
+import { BlocosRhPessoas } from "./blocos/rh-pessoas";
 import { BlocosSobreposicoes } from "./blocos/sobreposicoes";
 import { Familia } from "./bloco";
 import { Semeador } from "./semeador";
@@ -54,6 +55,7 @@ export default function PaginaSistema() {
         </Familia>
         <Familia id="rh" titulo="RH" descricao="Peças que só o RH usa, nascidas nas telas dele e nas páginas abertas do canal.">
           <BlocosRhBase />
+          <BlocosRhPessoas />
         </Familia>
       </div>
     </Semeador>
