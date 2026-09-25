@@ -21,6 +21,7 @@ export const FAMILIAS = [
   { id: "rh", titulo: "RH" },
   { id: "obrigacoes", titulo: "Obrigações" },
   { id: "config", titulo: "Configurações" },
+  { id: "admin", titulo: "Administração" },
 ];
 
 /** A moldura do catálogo: famílias à esquerda, tema e prévia no topo. */

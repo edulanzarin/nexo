@@ -25,6 +25,11 @@ import { CampoEmpresasGrupo } from "../grupo-empresas-campo";
  * Grupos de empresa de negócio: a U FIT e as empresas dela, para o seletor de
  * empresa do topo filtrar as telas pelo grupo inteiro e para o Post Mortem
  * dizer de que grupo era o cliente.
+ *
+ * A mesma montagem (lista, janela, remoção) serve aos grupos de permissão da
+ * Administração, que são o mesmo desenho sobre outra tabela. O que muda entre
+ * os dois mora num `CadastroGrupo`; as peças sem o sufixo `Cadastro` são as de
+ * negócio, com o cadastro delas já ligado.
  */
 
 /** Chave da lista do cadastro. Quem escreve invalida por ela e pela do seletor do topo. */
@@ -33,68 +38,114 @@ const CHAVE_EMPRESAS = "config-empresas";
 
 const plural = (n: number, um: string, varios: string) => `${num(n)} ${n === 1 ? um : varios}`;
 
+// ── O que muda entre os cadastros ───────────────────────────────────────────
+
+/** O que a lista e a janela leem de um grupo, nos dois cadastros. */
+export interface GrupoListado {
+  id: number;
+  nome: string;
+  modo: ModoGrupo;
+  /** Quantas empresas o grupo tem hoje. */
+  empresas: number;
+  /** Quantas estão marcadas: no modo `exceto`, as que ficam de fora. */
+  marcadas: number;
+  atualizadoEm: string;
+}
+
+export interface CadastroGrupo<G extends GrupoListado> {
+  /** Rota da lista e do POST. O grupo aberto, o PATCH e o DELETE vão em `${api}/<id>`. */
+  api: string;
+  /** Chave do grupo aberto no cache. */
+  chaveGrupo: string;
+  /** O universo de empresas, com a mesma chave e URL do hook das outras telas. */
+  empresas: { chave: string; url: string };
+  /** Listas que mudam quando um grupo muda: invalidadas depois de escrever. */
+  invalidar: string[];
+  rotuloTabela: string;
+  /** Largura da coluna do nome: cede espaço às colunas de uso, quando há. */
+  larguraNome: string;
+  /** Colunas entre Empresas e Atualizado em (quem usa o grupo). */
+  colunasUso?: Coluna<G>[];
+  /** O que o selo "Sem empresa" explica ao passar o mouse. */
+  dicaSemEmpresa: string;
+  tituloNovo: string;
+  descricaoNovo: string;
+  exemploNome: string;
+  descricao: (g: G) => string;
+  /** Por que o grupo não pode sair, dito antes do clique. Null quando pode. */
+  trava: (g: G) => ReactNode;
+  /** O que a remoção desfaz, ao lado do Confirmar. */
+  efeito: (g: G) => string;
+}
+
 // ── A lista ──────────────────────────────────────────────────────────────────
 
-const COLUNAS: Coluna<GrupoEmpresaCadastro>[] = [
-  {
-    id: "nome",
-    cabecalho: "Grupo",
-    largura: "64%",
-    ordenar: (g) => g.nome,
-    celula: (g) => (
-      <span className="flex min-w-0 items-center gap-2">
-        <span className="truncate font-[560] text-tinta" title={g.nome}>
-          {g.nome}
+function colunasDoCadastro<G extends GrupoListado>(cad: CadastroGrupo<G>): Coluna<G>[] {
+  return [
+    {
+      id: "nome",
+      cabecalho: "Grupo",
+      largura: cad.larguraNome,
+      ordenar: (g) => g.nome,
+      celula: (g) => (
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="truncate font-[560] text-tinta" title={g.nome}>
+            {g.nome}
+          </span>
+          {g.modo === "exceto" && (
+            <Selo title="Toda empresa do Questor menos as marcadas. Empresa nova entra sozinha.">
+              Todas, exceto {num(g.marcadas)}
+            </Selo>
+          )}
+          {g.empresas === 0 && (
+            <Selo tom="atencao" title={cad.dicaSemEmpresa}>
+              Sem empresa
+            </Selo>
+          )}
         </span>
-        {g.modo === "exceto" && (
-          <Selo title="Toda empresa do Questor menos as marcadas. Empresa nova entra sozinha.">
-            Todas, exceto {num(g.marcadas)}
-          </Selo>
-        )}
-        {g.empresas === 0 && (
-          <Selo tom="atencao" title="Grupo sem empresa não aparece no seletor de empresa">
-            Sem empresa
-          </Selo>
-        )}
-      </span>
-    ),
-  },
-  {
-    id: "empresas",
-    cabecalho: "Empresas",
-    alinhar: "dir",
-    largura: "112px",
-    ordenar: (g) => g.empresas,
-    celula: (g) => num(g.empresas),
-  },
-  {
-    id: "atualizado",
-    cabecalho: "Atualizado em",
-    secundaria: true,
-    largura: "136px",
-    ordenar: (g) => g.atualizadoEm,
-    celula: (g) => <span className="num">{dataBR(g.atualizadoEm)}</span>,
-  },
-];
+      ),
+    },
+    {
+      id: "empresas",
+      cabecalho: "Empresas",
+      alinhar: "dir",
+      largura: "112px",
+      ordenar: (g) => g.empresas,
+      celula: (g) => num(g.empresas),
+    },
+    ...(cad.colunasUso ?? []),
+    {
+      id: "atualizado",
+      cabecalho: "Atualizado em",
+      secundaria: true,
+      largura: "136px",
+      ordenar: (g) => g.atualizadoEm,
+      celula: (g) => <span className="num">{dataBR(g.atualizadoEm)}</span>,
+    },
+  ];
+}
 
-/** Os grupos, uma linha cada. O clique abre o grupo, com as empresas e a remoção. */
-export function TabelaGruposEmpresa({
+/** Os grupos de um cadastro, uma linha cada. O clique abre o grupo. */
+export function TabelaGruposCadastro<G extends GrupoListado>({
+  cadastro,
   grupos,
   onAbrir,
   selecionado,
   vazio,
   alturaMax = "62vh",
 }: {
-  grupos: GrupoEmpresaCadastro[];
-  onAbrir: (g: GrupoEmpresaCadastro) => void;
+  cadastro: CadastroGrupo<G>;
+  grupos: G[];
+  onAbrir: (g: G) => void;
   selecionado?: number | null;
   vazio?: ReactNode;
   alturaMax?: string;
 }) {
+  const colunas = useMemo(() => colunasDoCadastro(cadastro), [cadastro]);
   return (
     <TabelaDados
-      rotulo="Grupos de empresa"
-      colunas={COLUNAS}
+      rotulo={cadastro.rotuloTabela}
+      colunas={colunas}
       linhas={grupos}
       chave={(g) => String(g.id)}
       onLinha={onAbrir}
@@ -124,26 +175,34 @@ function iguais(a: RascunhoGrupo, b: RascunhoGrupo): boolean {
   );
 }
 
+// O relatório aponta para o grupo de negócio por chave estrangeira: o banco recusaria.
+function travaNegocio(relatorios: number): ReactNode {
+  if (relatorios <= 0) return null;
+  return (
+    <>
+      {relatorios === 1 ? "Um relatório" : `${num(relatorios)} relatórios`} do Post Mortem{" "}
+      {relatorios === 1 ? "usa" : "usam"} este grupo, e por isso ele não pode ser removido.
+    </>
+  );
+}
+
+const EFEITO_NEGOCIO = "O grupo sai do seletor de empresa de todos.";
+
 function RemoverGrupo({
-  relatorios,
+  trava,
+  efeito,
   onRemover,
   confirmandoInicial = false,
 }: {
-  relatorios: number;
+  trava: ReactNode;
+  efeito: string;
   onRemover: () => Promise<boolean>;
   confirmandoInicial?: boolean;
 }) {
   const [confirmando, setConfirmando] = useState(confirmandoInicial);
   const [removendo, setRemovendo] = useState(false);
   let conteudo: ReactNode;
-  // O relatório aponta para o grupo por chave estrangeira: o banco recusaria.
-  if (relatorios > 0)
-    conteudo = (
-      <Nota>
-        {relatorios === 1 ? "Um relatório" : `${num(relatorios)} relatórios`} do Post Mortem{" "}
-        {relatorios === 1 ? "usa" : "usam"} este grupo, e por isso ele não pode ser removido.
-      </Nota>
-    );
+  if (trava) conteudo = <Nota>{trava}</Nota>;
   else if (confirmando)
     conteudo = (
       <>
@@ -163,7 +222,7 @@ function RemoverGrupo({
         <Botao variante="fantasma" onClick={() => setConfirmando(false)} disabled={removendo}>
           Cancelar
         </Botao>
-        <span className="text-pequeno text-apagado">O grupo sai do seletor de empresa de todos.</span>
+        <span className="text-pequeno text-apagado">{efeito}</span>
       </>
     );
   else
@@ -189,6 +248,7 @@ export function CorpoGrupoEmpresa({
   onEnviar,
   remocao,
   trocouInicial,
+  exemploNome = "U FIT",
 }: {
   rascunho: RascunhoGrupo;
   onMudar: (r: RascunhoGrupo) => void;
@@ -196,9 +256,19 @@ export function CorpoGrupoEmpresa({
   carregandoEmpresas?: boolean;
   idForm?: string;
   onEnviar?: () => void;
-  /** Só no grupo que já existe. */
-  remocao?: { relatorios: number; onRemover: () => Promise<boolean>; confirmandoInicial?: boolean };
+  /**
+   * Só no grupo que já existe. Sem `trava` e `efeito`, vale o grupo de
+   * negócio: a trava é o uso em relatório do Post Mortem.
+   */
+  remocao?: {
+    relatorios?: number;
+    trava?: ReactNode;
+    efeito?: string;
+    onRemover: () => Promise<boolean>;
+    confirmandoInicial?: boolean;
+  };
   trocouInicial?: boolean;
+  exemploNome?: string;
 }) {
   const base = useId();
   return (
@@ -216,7 +286,7 @@ export function CorpoGrupoEmpresa({
           data-autofoco
           value={rascunho.nome}
           maxLength={NOME_GRUPO_MAX}
-          placeholder="U FIT"
+          placeholder={exemploNome}
           onChange={(e) => onMudar({ ...rascunho, nome: e.target.value })}
         />
       </Rotulado>
@@ -232,7 +302,8 @@ export function CorpoGrupoEmpresa({
       />
       {remocao && (
         <RemoverGrupo
-          relatorios={remocao.relatorios}
+          trava={remocao.trava !== undefined ? remocao.trava : travaNegocio(remocao.relatorios ?? 0)}
+          efeito={remocao.efeito ?? EFEITO_NEGOCIO}
           onRemover={remocao.onRemover}
           confirmandoInicial={remocao.confirmandoInicial}
         />
@@ -298,27 +369,50 @@ export function descricaoGrupo(g: GrupoEmpresaCadastro): string {
     .join(" · ");
 }
 
-const TITULO_NOVO = "Novo Grupo";
-const DESCRICAO_NOVO = "Empresas de um mesmo negócio, para filtrar as telas pelo grupo de uma vez";
+/** O cadastro de grupos de negócio (Configurações). */
+export const CADASTRO_GRUPO_NEGOCIO: CadastroGrupo<GrupoEmpresaCadastro> = {
+  api: "/api/config/grupos-empresa",
+  chaveGrupo: "config-grupo",
+  empresas: { chave: CHAVE_EMPRESAS, url: "/api/config/empresas" },
+  // A lista do cadastro e a do seletor de empresa do topo mostram o mesmo grupo.
+  invalidar: [CHAVE_GRUPOS_CADASTRO, "grupos-empresa"],
+  rotuloTabela: "Grupos de empresa",
+  larguraNome: "64%",
+  dicaSemEmpresa: "Grupo sem empresa não aparece no seletor de empresa",
+  tituloNovo: "Novo Grupo",
+  descricaoNovo: "Empresas de um mesmo negócio, para filtrar as telas pelo grupo de uma vez",
+  exemploNome: "U FIT",
+  descricao: descricaoGrupo,
+  trava: (g) => travaNegocio(g.relatorios),
+  efeito: () => EFEITO_NEGOCIO,
+};
 
 /** Quem a janela abre: um grupo novo ou um da lista. */
-export type AlvoGrupo = "novo" | GrupoEmpresaCadastro;
+export type AlvoGrupo<G extends GrupoListado = GrupoEmpresaCadastro> = "novo" | G;
 
-/** A janela do grupo, com as escritas. Fecha sozinha ao salvar e ao remover. */
-export function ModalGrupoEmpresa({ alvo, onFechar }: { alvo: AlvoGrupo | null; onFechar: () => void }) {
+/** A janela do grupo de um cadastro, com as escritas. Fecha sozinha ao salvar e ao remover. */
+export function ModalGrupoCadastro<G extends GrupoListado>({
+  cadastro: cad,
+  alvo,
+  onFechar,
+}: {
+  cadastro: CadastroGrupo<G>;
+  alvo: AlvoGrupo<G> | null;
+  onFechar: () => void;
+}) {
   const qc = useQueryClient();
   const idForm = useId();
   const novo = alvo === "novo";
   const grupo = alvo && alvo !== "novo" ? alvo : null;
 
-  const empresas = useConsulta<EmpresaMarcavel[]>(CHAVE_EMPRESAS, alvo ? "/api/config/empresas" : null, {
+  const empresas = useConsulta<EmpresaMarcavel[]>(cad.empresas.chave, alvo ? cad.empresas.url : null, {
     staleTime: 10 * 60_000,
   });
   // Sem cache entre aberturas: o grupo aberto é sempre o gravado agora, e a
   // volta à janela do navegador não recarrega por cima do que está sendo editado.
   const detalhe = useQuery<GrupoEmpresaDetalhe>({
-    queryKey: ["config-grupo", grupo?.id ?? null],
-    queryFn: () => buscarJson<GrupoEmpresaDetalhe>(`/api/config/grupos-empresa/${grupo!.id}`),
+    queryKey: [cad.chaveGrupo, grupo?.id ?? null],
+    queryFn: () => buscarJson<GrupoEmpresaDetalhe>(`${cad.api}/${grupo!.id}`),
     enabled: grupo != null,
     gcTime: 0,
     staleTime: Infinity,
@@ -352,12 +446,17 @@ export function ModalGrupoEmpresa({ alvo, onFechar }: { alvo: AlvoGrupo | null; 
     (rascunho.modo === "exceto" || rascunho.marcadas.size > 0) &&
     (novo || mudou);
 
-  // A lista do cadastro e a do seletor de empresa do topo mostram o mesmo grupo.
   const invalidar = () =>
-    Promise.all([
-      qc.invalidateQueries({ queryKey: [CHAVE_GRUPOS_CADASTRO] }),
-      qc.invalidateQueries({ queryKey: ["grupos-empresa"] }),
-    ]);
+    Promise.all(
+      cad.invalidar.map((chave) =>
+        qc.invalidateQueries({
+          queryKey: [chave],
+          // O grupo aberto só é marcado: relido agora, o removido acenderia o
+          // erro "não existe mais" na janela que está fechando.
+          refetchType: chave === cad.chaveGrupo ? "none" : "active",
+        })
+      )
+    );
 
   async function salvar() {
     if (!rascunho || !pronto) return;
@@ -365,8 +464,8 @@ export function ModalGrupoEmpresa({ alvo, onFechar }: { alvo: AlvoGrupo | null; 
     const corpo = { nome, modo: rascunho.modo, empresas: [...rascunho.marcadas] };
     setSalvando(true);
     try {
-      if (grupo) await mutar(`/api/config/grupos-empresa/${grupo.id}`, "PATCH", corpo);
-      else await mutar("/api/config/grupos-empresa", "POST", corpo);
+      if (grupo) await mutar(`${cad.api}/${grupo.id}`, "PATCH", corpo);
+      else await mutar(cad.api, "POST", corpo);
       await invalidar();
       avisar.ok(novo ? "Grupo criado" : "Grupo salvo", `${nome} · ${resumoRascunho(rascunho, empresas.data)}`);
       onFechar();
@@ -380,7 +479,7 @@ export function ModalGrupoEmpresa({ alvo, onFechar }: { alvo: AlvoGrupo | null; 
   async function remover(): Promise<boolean> {
     if (!grupo) return false;
     try {
-      await mutar(`/api/config/grupos-empresa/${grupo.id}`, "DELETE");
+      await mutar(`${cad.api}/${grupo.id}`, "DELETE");
       await invalidar();
       avisar.ok("Grupo removido", grupo.nome);
       onFechar();
@@ -424,7 +523,8 @@ export function ModalGrupoEmpresa({ alvo, onFechar }: { alvo: AlvoGrupo | null; 
         carregandoEmpresas={!empresas.data}
         idForm={idForm}
         onEnviar={salvar}
-        remocao={grupo ? { relatorios: grupo.relatorios, onRemover: remover } : undefined}
+        exemploNome={cad.exemploNome}
+        remocao={grupo ? { trava: cad.trava(grupo), efeito: cad.efeito(grupo), onRemover: remover } : undefined}
       />
     );
 
@@ -432,8 +532,8 @@ export function ModalGrupoEmpresa({ alvo, onFechar }: { alvo: AlvoGrupo | null; 
     <Modal
       aberto={alvo != null}
       onFechar={onFechar}
-      titulo={grupo ? grupo.nome : TITULO_NOVO}
-      descricao={grupo ? descricaoGrupo(grupo) : DESCRICAO_NOVO}
+      titulo={grupo ? grupo.nome : cad.tituloNovo}
+      descricao={grupo ? cad.descricao(grupo) : cad.descricaoNovo}
       fecharNoVeu={!mudou}
       rodape={
         <RodapeGrupo
@@ -451,8 +551,9 @@ export function ModalGrupoEmpresa({ alvo, onFechar }: { alvo: AlvoGrupo | null; 
   );
 }
 
-/** A janela do grupo parada, para o catálogo. Mexe no rascunho, mas não grava. */
-export function GrupoEmpresaEstatico({
+/** A janela do grupo de um cadastro, parada, para o catálogo. Mexe no rascunho, mas não grava. */
+export function GrupoCadastroEstatico<G extends GrupoListado>({
+  cadastro: cad,
   grupo,
   inicial,
   empresas,
@@ -460,8 +561,9 @@ export function GrupoEmpresaEstatico({
   trocouInicial,
   confirmandoInicial,
 }: {
+  cadastro: CadastroGrupo<G>;
   /** Sem grupo, é a janela do grupo novo. */
-  grupo?: GrupoEmpresaCadastro;
+  grupo?: G;
   inicial: RascunhoGrupo;
   empresas: EmpresaMarcavel[];
   carregando?: boolean;
@@ -473,8 +575,8 @@ export function GrupoEmpresaEstatico({
   return (
     <PainelModal
       estatico
-      titulo={grupo ? grupo.nome : TITULO_NOVO}
-      descricao={grupo ? descricaoGrupo(grupo) : DESCRICAO_NOVO}
+      titulo={grupo ? grupo.nome : cad.tituloNovo}
+      descricao={grupo ? cad.descricao(grupo) : cad.descricaoNovo}
       onFechar={() => {}}
       rodape={
         <RodapeGrupo
@@ -491,10 +593,44 @@ export function GrupoEmpresaEstatico({
         empresas={empresas}
         carregandoEmpresas={carregando}
         trocouInicial={trocouInicial}
+        exemploNome={cad.exemploNome}
         remocao={
-          grupo ? { relatorios: grupo.relatorios, onRemover: async () => true, confirmandoInicial } : undefined
+          grupo
+            ? { trava: cad.trava(grupo), efeito: cad.efeito(grupo), onRemover: async () => true, confirmandoInicial }
+            : undefined
         }
       />
     </PainelModal>
   );
+}
+
+// ── As peças do grupo de negócio, com o cadastro dele ligado ─────────────────
+
+/** Os grupos, uma linha cada. O clique abre o grupo, com as empresas e a remoção. */
+export function TabelaGruposEmpresa(props: {
+  grupos: GrupoEmpresaCadastro[];
+  onAbrir: (g: GrupoEmpresaCadastro) => void;
+  selecionado?: number | null;
+  vazio?: ReactNode;
+  alturaMax?: string;
+}) {
+  return <TabelaGruposCadastro cadastro={CADASTRO_GRUPO_NEGOCIO} {...props} />;
+}
+
+/** A janela do grupo, com as escritas. Fecha sozinha ao salvar e ao remover. */
+export function ModalGrupoEmpresa({ alvo, onFechar }: { alvo: AlvoGrupo | null; onFechar: () => void }) {
+  return <ModalGrupoCadastro cadastro={CADASTRO_GRUPO_NEGOCIO} alvo={alvo} onFechar={onFechar} />;
+}
+
+/** A janela do grupo parada, para o catálogo. Mexe no rascunho, mas não grava. */
+export function GrupoEmpresaEstatico(props: {
+  /** Sem grupo, é a janela do grupo novo. */
+  grupo?: GrupoEmpresaCadastro;
+  inicial: RascunhoGrupo;
+  empresas: EmpresaMarcavel[];
+  carregando?: boolean;
+  trocouInicial?: boolean;
+  confirmandoInicial?: boolean;
+}) {
+  return <GrupoCadastroEstatico cadastro={CADASTRO_GRUPO_NEGOCIO} {...props} />;
 }

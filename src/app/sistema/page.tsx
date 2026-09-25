@@ -8,6 +8,9 @@ import { BlocosContabilConciliacao } from "./blocos/contabil-conciliacao";
 import { BlocosContabilProdutividade } from "./blocos/contabil-produtividade";
 import { BlocosContabilRotina } from "./blocos/contabil-rotina";
 import { BlocosContabilVisao } from "./blocos/contabil-visao";
+import { BlocosAdminCargos } from "./blocos/admin-cargos";
+import { BlocosAdminRegistro } from "./blocos/admin-registro";
+import { BlocosAdminUsuarios } from "./blocos/admin-usuarios";
 import { BlocosConfig } from "./blocos/config";
 import { BlocosControles } from "./blocos/controles";
 import { BlocosDados } from "./blocos/dados";
@@ -76,6 +79,15 @@ export default function PaginaSistema() {
           descricao="Os cadastros que as telas dos outros módulos leem, como os grupos de empresa."
         >
           <BlocosConfig />
+        </Familia>
+        <Familia
+          id="admin"
+          titulo="Administração"
+          descricao="Usuários, cargos e permissões, a trilha de auditoria e o Meu Perfil."
+        >
+          <BlocosAdminUsuarios />
+          <BlocosAdminCargos />
+          <BlocosAdminRegistro />
         </Familia>
       </div>
     </Semeador>

@@ -71,10 +71,13 @@ export function ModalAvisoSaida({
   aberto,
   onFicar,
   onSair,
+  texto = TEXTO,
 }: {
   aberto: boolean;
   onFicar: () => void;
   onSair: () => void;
+  /** O que se perde, na palavra de quem usa (o cargo, e não "este formulário"). */
+  texto?: string;
 }) {
   return (
     <Modal
@@ -91,7 +94,7 @@ export function ModalAvisoSaida({
         </>
       }
     >
-      <p className="text-corpo text-tinta-2">{TEXTO}</p>
+      <p className="text-corpo text-tinta-2">{texto}</p>
     </Modal>
   );
 }
