@@ -26,5 +26,9 @@ export const config = {
   // formulário por token (`f/`, com a barra para não pegar /fiscal e /folha, e
   // o `experiencia/` dos e-mails antigos), a denúncia e a avaliação de clima.
   // `/rh/denuncias` e `/rh/clima` seguem protegidas, porque começam com `rh`.
-  matcher: ["/((?!api|_next/static|_next/image|login|sistema|f/|experiencia/|denuncia|clima|.*\.[\w]+$).*)"],
+  //
+  // Barra dupla de propósito: numa string, `\.` vira `.` e `\w` vira `w`, e o
+  // padrão deixava de pular arquivo com extensão. Sem sessão, o ícone da aba e
+  // as imagens de `public/` redirecionavam para o login.
+  matcher: ["/((?!api|_next/static|_next/image|login|sistema|f/|experiencia/|denuncia|clima|.*\\.[\\w]+$).*)"],
 };
