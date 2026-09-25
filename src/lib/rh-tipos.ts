@@ -78,7 +78,13 @@ export interface ExperienciaItem {
   gestores: number; // quantos gestores cadastrados no setor
   ultimoLembrete: string | null; // ISO do último lembrete enviado
   resposta: {
+    /**
+     * A decisão dos gestores. Na resposta pelo formulário montado, o texto
+     * marcado na pergunta de decisão; na legada, o código antigo (efetivar...).
+     */
     recomendacao: string;
+    /** Gravada antes do formulário montado (migration 012): não há formulário para desenhar. */
+    legada: boolean;
     respondidoPor: string;
     respondidoEm: string;
     comentarios: string | null;

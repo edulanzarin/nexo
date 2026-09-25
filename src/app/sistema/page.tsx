@@ -17,6 +17,7 @@ import { BlocosFiscalVisao } from "./blocos/fiscal-visao";
 import { BlocosFundamentos } from "./blocos/fundamentos";
 import { BlocosGraficos } from "./blocos/graficos";
 import { BlocosProduto } from "./blocos/produto";
+import { BlocosRhAvaliacoes } from "./blocos/rh-avaliacoes";
 import { BlocosRhBase } from "./blocos/rh-base";
 import { BlocosRhPessoas } from "./blocos/rh-pessoas";
 import { BlocosSobreposicoes } from "./blocos/sobreposicoes";
@@ -56,6 +57,7 @@ export default function PaginaSistema() {
         <Familia id="rh" titulo="RH" descricao="Peças que só o RH usa, nascidas nas telas dele e nas páginas abertas do canal.">
           <BlocosRhBase />
           <BlocosRhPessoas />
+          <BlocosRhAvaliacoes />
         </Familia>
       </div>
     </Semeador>

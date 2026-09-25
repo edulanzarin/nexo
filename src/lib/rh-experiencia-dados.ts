@@ -345,6 +345,7 @@ interface LinhaExperiencia {
   marco: Marco;
   status: StatusExperiencia;
   recomendacao: string | null;
+  legada: boolean;
   respondido_por_nome: string | null;
   respondido_em: string | null;
   comentarios: string | null;
@@ -378,8 +379,20 @@ export async function montarPainelExperiencia(
   ]);
 
   const linhas = await appQuery<LinhaExperiencia>(
+    // A resposta pelo formulário montado grava só os valores (jsonb): a coluna
+    // `recomendacao` ficou da versão de critérios fixos e chega vazia. A decisão
+    // sai da pergunta marcada como decisão, aqui, uma vez para a lista toda; no
+    // nexo2 a lista mostrava a decisão em branco desde a migration 012.
     `select e.id, e.codigoempresa, e.codigofunccontr, e.marco, e.status,
-            r.recomendacao, r.respondido_por_nome,
+            coalesce(nullif(r.recomendacao, ''), (
+              select r.respostas -> 'valores' ->> fc.id::text
+                from formulario_campo fc
+               where fc.formulario_id = e.formulario_id and fc.config ->> 'papel' = 'decisao'
+               order by fc.ordem
+               limit 1
+            )) as recomendacao,
+            (e.formulario_id is null) as legada,
+            r.respondido_por_nome,
             to_char(r.respondido_em, 'YYYY-MM-DD"T"HH24:MI:SS') as respondido_em,
             r.comentarios,
             (select to_char(max(l.enviado_em), 'YYYY-MM-DD"T"HH24:MI:SS')
@@ -437,6 +450,7 @@ export async function montarPainelExperiencia(
           respondido && linha
             ? {
                 recomendacao: linha.recomendacao ?? "",
+                legada: linha.legada,
                 respondidoPor: linha.respondido_por_nome ?? "",
                 respondidoEm: linha.respondido_em ?? "",
                 comentarios: linha.comentarios,
