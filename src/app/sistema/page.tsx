@@ -8,6 +8,7 @@ import { BlocosContabilConciliacao } from "./blocos/contabil-conciliacao";
 import { BlocosContabilProdutividade } from "./blocos/contabil-produtividade";
 import { BlocosContabilRotina } from "./blocos/contabil-rotina";
 import { BlocosContabilVisao } from "./blocos/contabil-visao";
+import { BlocosConfig } from "./blocos/config";
 import { BlocosControles } from "./blocos/controles";
 import { BlocosDados } from "./blocos/dados";
 import { BlocosDpPessoal } from "./blocos/dp-pessoal";
@@ -62,6 +63,13 @@ export default function PaginaSistema() {
           <BlocosRhAvaliacoes />
           <BlocosRhFormularios />
           <BlocosRhCanais />
+        </Familia>
+        <Familia
+          id="config"
+          titulo="Configurações"
+          descricao="Os cadastros que as telas dos outros módulos leem, como os grupos de empresa."
+        >
+          <BlocosConfig />
         </Familia>
       </div>
     </Semeador>

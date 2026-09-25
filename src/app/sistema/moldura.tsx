@@ -19,6 +19,7 @@ export const FAMILIAS = [
   { id: "fiscal", titulo: "Fiscal" },
   { id: "dp", titulo: "DP" },
   { id: "rh", titulo: "RH" },
+  { id: "config", titulo: "Configurações" },
 ];
 
 /** A moldura do catálogo: famílias à esquerda, tema e prévia no topo. */

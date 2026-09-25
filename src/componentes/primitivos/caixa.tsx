@@ -59,7 +59,9 @@ export function Caixa({
         ) : null}
       </span>
       {(rotulo || detalhe) && (
-        <span className="min-w-0">
+        // flex-1: numa caixa de largura cheia (a linha de uma lista), o rótulo
+        // ocupa o resto e pode alinhar um detalhe à direita.
+        <span className="min-w-0 flex-1">
           {rotulo && <span className="block truncate">{rotulo}</span>}
           {detalhe && <span className="block truncate text-pequeno text-apagado">{detalhe}</span>}
         </span>

@@ -32,7 +32,3 @@ export const SECOES_OBRIGACOES: Secao[] = [
 ];
 
 export const SECOES_SOCIETARIO: Secao[] = [...secoesPostMortem("societario", "Equipe")];
-
-export const SECOES_CONFIG: Secao[] = [
-  secao("config", "grupos-empresa", "Grupos de Empresa", "camadas", "Cadastros", "Empresas agrupadas por grupo de negócio"),
-];

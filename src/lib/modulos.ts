@@ -1,7 +1,8 @@
 import { SECOES_CONTABIL } from "./secoes/contabil";
 import { SECOES_FISCAL } from "./secoes/fiscal";
 import { SECOES_FOLHA } from "./secoes/folha";
-import { SECOES_CONFIG, SECOES_OBRIGACOES, SECOES_SOCIETARIO } from "./secoes/outros";
+import { SECOES_CONFIG } from "./secoes/config";
+import { SECOES_OBRIGACOES, SECOES_SOCIETARIO } from "./secoes/outros";
 import { SECOES_RH } from "./secoes/rh";
 import type { Aba, Secao } from "./secoes/tipos";
 
@@ -81,7 +82,7 @@ export const MODULOS: Modulo[] = [
     titulo: "Configurações",
     descricao: "Cadastros do sistema, como grupos de empresa",
     imagem: "/modulos/config.png",
-    pronto: false,
+    pronto: true,
   },
 ];
 

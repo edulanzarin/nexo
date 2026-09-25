@@ -7,8 +7,12 @@ Reescrita do Nexo: a camada de domínio vem do nexo2, a interface é nova.
 
 | Módulo | Situação |
 |---|---|
-| Contábil, Fiscal, DP, RH | prontos, conferidos contra o Questor |
-| Obrigações, Societário, Configurações | seguem no Nexo |
+| Contábil, Fiscal, DP, RH, Configurações | prontos, conferidos contra o Questor |
+| Obrigações, Societário | seguem no Nexo |
+| Administração (usuários, cargos, grupos de permissão, auditoria) e perfil | seguem no Nexo |
+
+Sem a Administração, o NaveX só tem o admin que o `npm run setup` cria. No dia
+da troca, os usuários e cargos vêm junto com o banco do app.
 
 O agendador (avisos de rescisão, lembretes de experiência, envios recorrentes)
 ainda não sobe no compose: enquanto o nexo2 estiver no ar, é ele quem manda os
