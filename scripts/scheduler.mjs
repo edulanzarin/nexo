@@ -6,8 +6,10 @@
 //
 // Config (via ambiente / .env):
 //   RH_CRON_SECRET     obrigatório — segredo das rotas de cron (x-cron-secret).
-//   SCHEDULER_APP_URL  base do app (default http://app:3000, nome do serviço na
-//                      rede do compose).
+//   SCHEDULER_APP_URL  base do app (default http://navex-app:3000, nome do
+//                      serviço na rede do compose).
+//   TZ                 as horas abaixo são locais; o compose fixa
+//                      America/Sao_Paulo (sem isso o container roda em UTC).
 //   SCHEDULER_ENVIOS_MIN   intervalo das campanhas/regras (min, default 15).
 //   SCHEDULER_EXPERIENCIA_HORA  hora local do disparo diário da experiência
 //                      (0-23, default 8).
@@ -34,7 +36,7 @@ for (const arquivo of [".env.local", ".env"]) {
 }
 
 const SEGREDO = process.env.RH_CRON_SECRET;
-const BASE = (process.env.SCHEDULER_APP_URL ?? "http://app:3000").replace(/\/$/, "");
+const BASE = (process.env.SCHEDULER_APP_URL ?? "http://navex-app:3000").replace(/\/$/, "");
 const ENVIOS_MS = Math.max(1, Number(process.env.SCHEDULER_ENVIOS_MIN ?? 15)) * 60_000;
 const HORA_EXPERIENCIA = Math.min(23, Math.max(0, Number(process.env.SCHEDULER_EXPERIENCIA_HORA ?? 8)));
 const HORA_RESCISOES = Math.min(23, Math.max(0, Number(process.env.SCHEDULER_RESCISOES_HORA ?? 8)));

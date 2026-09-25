@@ -40,6 +40,29 @@ services:
       navex-db:
         condition: service_healthy
 
+  # Agendador: bate as rotas de cron do app pela rede interna (e-mails do RH e
+  # do DP, varredura do Acessórias). Fica atrás do perfil `agendador` porque só
+  # pode existir UM ligado no escritório: dois mandariam cada aviso em dobro e
+  # dividiriam o limite de chamadas do Acessórias. Liga no servidor com
+  # COMPOSE_PROFILES=agendador no .env; na máquina de desenvolvimento, nunca.
+  navex-scheduler:
+    image: navex-app
+    container_name: navex-scheduler
+    restart: unless-stopped
+    profiles: ["agendador"]
+    entrypoint: ["node", "scripts/scheduler.mjs"]
+    env_file:
+      - .env
+    environment:
+      # Vem depois do env_file: um .env herdado do nexo2 traz http://app:3000.
+      SCHEDULER_APP_URL: http://navex-app:3000
+      # As horas do agendador são locais. Sem isto o container roda em UTC e
+      # tudo dispara três horas antes (a varredura das 5h sairia às 2h).
+      TZ: America/Sao_Paulo
+    depends_on:
+      navex-app:
+        condition: service_healthy
+
   navex-db:
     image: postgres:17-alpine
     container_name: navex-db
