@@ -10,6 +10,9 @@ import { BlocosContabilRotina } from "./blocos/contabil-rotina";
 import { BlocosContabilVisao } from "./blocos/contabil-visao";
 import { BlocosControles } from "./blocos/controles";
 import { BlocosDados } from "./blocos/dados";
+import { BlocosDpPessoal } from "./blocos/dp-pessoal";
+import { BlocosDpProdutividade } from "./blocos/dp-produtividade";
+import { BlocosDpRotina } from "./blocos/dp-rotina";
 import { BlocosFiscalVisao } from "./blocos/fiscal-visao";
 import { BlocosFundamentos } from "./blocos/fundamentos";
 import { BlocosGraficos } from "./blocos/graficos";
@@ -39,6 +42,13 @@ export default function PaginaSistema() {
             abas dela não criaram peça nova, só estenderam a composição. */}
         <Familia id="fiscal" titulo="Fiscal" descricao="Peças que só o Fiscal usa, nascidas nas telas dele.">
           <BlocosFiscalVisao />
+        </Familia>
+        {/* A ficha e as quebras de pessoal moram em produto/pessoal porque o RH
+            vai usar as mesmas peças; o catálogo as mostra aqui, onde nasceram. */}
+        <Familia id="dp" titulo="DP" descricao="Peças que só o DP usa, nascidas nas telas dele.">
+          <BlocosDpRotina />
+          <BlocosDpPessoal />
+          <BlocosDpProdutividade />
         </Familia>
       </div>
     </Semeador>
