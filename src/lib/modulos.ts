@@ -33,8 +33,6 @@ export interface Modulo {
    * `public/modulos/`, a partir dos originais de 1254 px do nexo2.
    */
   imagem: string;
-  /** O módulo já foi refeito no NaveX. Os outros aparecem como "a caminho". */
-  pronto: boolean;
   /**
    * Só administrador entra, e nenhum cargo concede as seções dele: a
    * Administração. Fica fora da matriz de permissões, e uma `cargo_secao`
@@ -49,56 +47,48 @@ export const MODULOS: Modulo[] = [
     titulo: "Contábil",
     descricao: "Conciliação, conferência, balancetes e a produtividade do time",
     imagem: "/modulos/contabil.png",
-    pronto: true,
   },
   {
     id: "fiscal",
     titulo: "Fiscal",
     descricao: "Painéis, análises e tributos sobre as notas",
     imagem: "/modulos/fiscal.png",
-    pronto: true,
   },
   {
     id: "folha",
     titulo: "DP",
     descricao: "Rotatividade, custo de folha, férias, rescisões e eSocial",
     imagem: "/modulos/folha.png",
-    pronto: true,
   },
   {
     id: "rh",
     titulo: "RH",
     descricao: "Pessoal da Navecon: diretório, experiência e canais",
     imagem: "/modulos/rh.png",
-    pronto: true,
   },
   {
     id: "obrigacoes",
     titulo: "Obrigações",
     descricao: "Fila de entregas do Acessórias, por setor e responsável",
     imagem: "/modulos/obrigacoes.png",
-    pronto: true,
   },
   {
     id: "societario",
     titulo: "Societário",
     descricao: "Post Mortem do setor de contratos, alterações, aberturas e baixas",
     imagem: "/modulos/societario.png",
-    pronto: true,
   },
   {
     id: "config",
     titulo: "Configurações",
     descricao: "Cadastros do sistema, como grupos de empresa",
     imagem: "/modulos/config.png",
-    pronto: true,
   },
   {
     id: "admin",
     titulo: "Administração",
     descricao: "Usuários, cargos, grupos de permissão e a trilha de auditoria",
     imagem: "/modulos/admin.png",
-    pronto: true,
     soAdmin: true,
   },
 ];

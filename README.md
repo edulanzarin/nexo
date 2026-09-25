@@ -8,15 +8,18 @@ Reescrita do Nexo: a camada de domínio vem do nexo2, a interface é nova.
 | Módulo | Situação |
 |---|---|
 | Contábil, Fiscal, DP, RH, Societário, Configurações | prontos, conferidos contra o Questor |
-| Obrigações | segue no Nexo |
-| Administração (usuários, cargos, grupos de permissão, auditoria) e perfil | seguem no Nexo |
+| Obrigações | pronto; a fila local só enche com a varredura do Acessórias |
+| Administração (usuários, cargos, setores, grupos de permissão, auditoria) e Meu Perfil | prontos |
 
-Sem a Administração, o NaveX só tem o admin que o `npm run setup` cria. No dia
-da troca, os usuários e cargos vêm junto com o banco do app.
+Tudo o que o nexo2 tinha existe no NaveX. No dia da troca, os usuários, os
+cargos e a fila do Acessórias vêm junto com o banco do app (o schema é o mesmo).
 
-O agendador (avisos de rescisão, lembretes de experiência, envios recorrentes)
-ainda não sobe no compose: enquanto o nexo2 estiver no ar, é ele quem manda os
-e-mails. Dois agendadores mandariam cada aviso em dobro.
+O agendador (avisos de rescisão, lembretes de experiência, envios recorrentes,
+varredura do Acessórias às 5h) ainda não sobe no compose: enquanto o nexo2
+estiver no ar, é ele quem manda os e-mails e varre o Acessórias. Dois
+agendadores mandariam cada aviso em dobro e dividiriam o limite de chamadas da
+API do Acessórias. Até lá, a fila do NaveX enche pela varredura manual
+(Obrigações, Configurações) ou pela consulta de uma empresa.
 
 ## Rodar
 

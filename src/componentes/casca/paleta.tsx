@@ -76,7 +76,7 @@ export function Paleta() {
     // A tela leva junto o contexto em que a pessoa está (empresa, período).
     const qs = qsSoContexto(lerContexto(sp));
     const ir = (path: string) => () => router.push(`${path}${qs ? `?${qs}` : ""}`);
-    const modulos = MODULOS.filter((m) => m.pronto && acessos[m.id]?.length);
+    const modulos = MODULOS.filter((m) => acessos[m.id]?.length);
     const secoes = modulos.flatMap((m) =>
       secoesDoModulo(m.id)
         .filter((s) => acessos[m.id]!.includes(s.id))

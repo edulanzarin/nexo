@@ -144,8 +144,6 @@ function TrocaModulo({ modulo, outros, recolhida }: { modulo: Modulo; outros: Mo
         ...outros.map((m) => ({
           rotulo: m.titulo,
           marca: <IconeModulo modulo={m} tamanho={18} />,
-          detalhe: m.pronto ? undefined : "a caminho",
-          desabilitado: !m.pronto,
           aoEscolher: () => (window.location.href = `/${m.id}`),
         })),
       ]}

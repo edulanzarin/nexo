@@ -3,11 +3,9 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { useCasca } from "@/componentes/casca/casca-cliente";
-import { AssinaturaNavex } from "@/componentes/casca/marca";
-import { MenuUsuario } from "@/componentes/casca/menu-usuario";
-import { abrirPaleta, Paleta } from "@/componentes/casca/paleta";
-import { IconeModulo } from "@/componentes/casca/modulo";
+import { abrirPaleta } from "@/componentes/casca/paleta";
 import { PortaModulo } from "@/componentes/casca/porta-modulo";
+import { TopoAvulso } from "@/componentes/casca/topo-avulso";
 import { Icone } from "@/componentes/primitivos/icone";
 import { Tecla } from "@/componentes/primitivos/selo";
 import { Vazio } from "@/componentes/primitivos/estados";
@@ -60,9 +58,6 @@ function recorteDaVisita(v: Visita, nomes: Map<number, string>): string {
  * relação da pessoa com ele (onde parou ou onde ele abre); o mapa das seções
  * mora dentro do módulo, e repetido aqui tirava o motivo de entrar. Ir direto a
  * uma tela é a busca (Ctrl+K), e voltar a uma tela é o Continuar ao lado.
- *
- * Os módulos que ainda estão no Nexo ficam numa faixa compacta embaixo: do
- * tamanho de uma porta, eles ocupavam mais tela que os prontos.
  */
 export function Inicio() {
   const { usuario, acessos } = useCasca();
@@ -70,18 +65,11 @@ export function Inicio() {
   const empresas = useEmpresas();
   const nomes = useMemo(() => new Map((empresas.data ?? []).map((e) => [e.codigo, e.nome])), [empresas.data]);
   const meus = MODULOS.filter((m) => acessos[m.id]?.length);
-  const prontos = meus.filter((m) => m.pronto);
-  const caminho = meus.filter((m) => !m.pronto);
   const primeiroNome = usuario.nome.split(/\s+/)[0];
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[1320px] flex-col px-4 pb-14 sm:px-8">
-      <header className="flex h-20 items-center gap-3">
-        <AssinaturaNavex />
-        <div className="ml-auto w-[220px]">
-          <MenuUsuario usuario={usuario} />
-        </div>
-      </header>
+      <TopoAvulso />
 
       <div className="nx-entra flex flex-col gap-8 pt-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
@@ -119,9 +107,8 @@ export function Inicio() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
-            <div className="flex min-w-0 flex-col gap-6">
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-4">
-                {prontos.map((m) => (
+            <div className="grid min-w-0 grid-cols-[repeat(auto-fill,minmax(250px,1fr))] content-start gap-4">
+                {meus.map((m) => (
                   <PortaModulo
                     key={m.id}
                     modulo={m}
@@ -129,23 +116,6 @@ export function Inicio() {
                     rodape={rodapePorta(m, acessos[m.id] ?? [], visitas)}
                   />
                 ))}
-              </div>
-              {caminho.length > 0 && (
-                <section>
-                  <h2 className="mb-2 text-pequeno font-[600] text-apagado">Ainda no Nexo</h2>
-                  <ul className="flex flex-wrap gap-2">
-                    {caminho.map((m) => (
-                      <li
-                        key={m.id}
-                        className="flex h-10 items-center gap-2 rounded-controle border border-dashed border-linha-forte pr-3 pl-1.5 text-corpo text-tinta-2"
-                      >
-                        <IconeModulo modulo={m} tamanho={26} />
-                        {m.titulo}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
             </div>
             <aside className="nx-vidro flex min-w-0 flex-col self-start rounded-painel">
               <h2 className="border-b border-linha px-4 py-3 text-medio font-[600] text-tinta">Continuar</h2>
@@ -179,7 +149,6 @@ export function Inicio() {
         )}
 
       </div>
-      <Paleta />
     </div>
   );
 }
