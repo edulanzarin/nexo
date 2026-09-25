@@ -211,6 +211,13 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     // pode ver, e se o relatório é dela, quem confere é o handler.
     "post-mortem": [SECAO_PM, SECAO_PM_GESTAO],
   },
+  ti: {
+    // Uma seção só, com três abas: o inventário, a movimentação e a lista de
+    // quem pode receber (o Diretório do RH reduzido ao que a TI precisa ler).
+    equipamentos: ["equipamentos"],
+    movimentacoes: ["equipamentos"],
+    pessoas: ["equipamentos"],
+  },
   config: {
     // O cadastro (lista, grupo aberto, criar, salvar, remover) e o universo
     // de empresas que ele marca. A lista de todas as empresas do Questor é

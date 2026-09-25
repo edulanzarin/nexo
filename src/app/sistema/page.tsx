@@ -29,6 +29,7 @@ import { BlocosRhCanais } from "./blocos/rh-canais";
 import { BlocosRhFormularios } from "./blocos/rh-formularios";
 import { BlocosRhPessoas } from "./blocos/rh-pessoas";
 import { BlocosSobreposicoes } from "./blocos/sobreposicoes";
+import { BlocosTi } from "./blocos/ti";
 import { Familia } from "./bloco";
 import { Semeador } from "./semeador";
 
@@ -72,6 +73,9 @@ export default function PaginaSistema() {
         <Familia id="obrigacoes" titulo="Obrigações" descricao="A fila de entregas do Acessórias e a varredura que a alimenta.">
           <BlocosObrigacoesFila />
           <BlocosObrigacoesVarredura />
+        </Familia>
+        <Familia id="ti" titulo="TI" descricao="Os equipamentos da Navecon, com quem está cada um e o histórico de posse.">
+          <BlocosTi />
         </Familia>
         <Familia
           id="config"

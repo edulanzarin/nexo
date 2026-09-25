@@ -6,6 +6,7 @@ import { SECOES_ADMIN } from "./secoes/admin";
 import { SECOES_OBRIGACOES } from "./secoes/obrigacoes";
 import { SECOES_RH } from "./secoes/rh";
 import { SECOES_SOCIETARIO } from "./secoes/societario";
+import { SECOES_TI } from "./secoes/ti";
 import type { Aba, Secao } from "./secoes/tipos";
 
 export type ModuloId =
@@ -15,6 +16,7 @@ export type ModuloId =
   | "societario"
   | "rh"
   | "obrigacoes"
+  | "ti"
   | "config"
   | "admin";
 
@@ -79,6 +81,12 @@ export const MODULOS: Modulo[] = [
     imagem: "/modulos/societario.png",
   },
   {
+    id: "ti",
+    titulo: "TI",
+    descricao: "Equipamentos da Navecon e com quem está cada um",
+    imagem: "/modulos/ti.png",
+  },
+  {
     id: "config",
     titulo: "Configurações",
     descricao: "Cadastros do sistema, como grupos de empresa",
@@ -103,6 +111,7 @@ const SECOES: Record<ModuloId, Secao[]> = {
   rh: SECOES_RH,
   obrigacoes: SECOES_OBRIGACOES,
   societario: SECOES_SOCIETARIO,
+  ti: SECOES_TI,
   config: SECOES_CONFIG,
   admin: SECOES_ADMIN,
 };
