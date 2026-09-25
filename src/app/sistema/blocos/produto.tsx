@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { PainelPaleta, type ItemPaleta } from "@/componentes/casca/paleta";
+import { PortaModulo } from "@/componentes/casca/porta-modulo";
 import { CabecalhoPapel } from "@/componentes/produto/cabecalho-papel";
 import { MenuExportar } from "@/componentes/produto/menu-exportar";
 import { AguardandoExecucao, BotaoExecutar, CabecalhoPagina, EscolhaEmpresa } from "@/componentes/produto/pagina";
@@ -9,7 +10,11 @@ import { SeletorConta } from "@/componentes/produto/seletor-conta";
 import { SeletorEmpresa } from "@/componentes/produto/seletor-empresa";
 import { SeletorFilial } from "@/componentes/produto/seletor-filial";
 import { SeletorPeriodoDia, SeletorPeriodoMes } from "@/componentes/produto/seletor-periodo";
+import { getModulo, type Modulo } from "@/lib/modulos";
 import { Bloco, Familia, Variante } from "../bloco";
+
+const CONTABIL = getModulo("contabil") as Modulo;
+const FISCAL = getModulo("fiscal") as Modulo;
 
 const ITENS_PALETA: ItemPaleta[] = [
   { id: "1", grupo: "Seções", rotulo: "Conferência Fiscal", detalhe: "Contábil", icone: "conferencia", busca: "", agir: () => {} },
@@ -107,6 +112,20 @@ export function BlocosProduto() {
           <EscolhaEmpresa />
         </Bloco>
       </div>
+
+      <Bloco
+        titulo="Porta do módulo"
+        porque="O início mostra uma porta por módulo, e não o mapa das seções: o mapa já é a barra lateral de dentro, e repetido na entrada tirava o motivo de entrar. A linha de baixo é a relação da pessoa com o módulo (onde parou, ou onde ele abre); ir direto a uma tela é a busca. Módulo que ainda não foi refeito não ganha porta: do mesmo tamanho, ocupava mais tela que os prontos."
+      >
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-4">
+          <Variante nome="Onde parou">
+            <PortaModulo modulo={CONTABIL} href="#" rodape="Parou em Conferência Fiscal · há 3 h" />
+          </Variante>
+          <Variante nome="Ainda não aberto">
+            <PortaModulo modulo={FISCAL} href="#" rodape="Abre em Painel" />
+          </Variante>
+        </div>
+      </Bloco>
 
       <Bloco
         titulo="Paleta de comandos"
