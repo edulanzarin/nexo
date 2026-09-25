@@ -4,6 +4,7 @@ import { parseFilters, FilterError, periodoAnterior, type FiscalFilters } from "
 import {
   construirBase,
   parseFolhaFiltrosSel,
+  rotuloVinculo,
   sexoValor,
   type FolhaFiltrosSel,
   EXPR_FAIXA_ETARIA,
@@ -12,7 +13,9 @@ import {
   EXPR_ESTADOCIVIL,
 } from "./folha-turnover";
 import type {
+  FolhaFiltros,
   FolhaMovimentacao,
+  FolhaOpcao,
   TurnoverContagem,
   TurnoverGrupo,
   TurnoverPonto,
@@ -315,6 +318,57 @@ export async function montarPessoas(
     params
   );
   return rows.map(paraMov);
+}
+
+interface OpcaoRaw {
+  valor: string;
+  contratos: number;
+}
+
+/**
+ * Opções dos filtros da Rotatividade (estabelecimento, setor, cargo, vínculo e
+ * horário), cada uma com a contagem de contratos. Sempre sem a seleção
+ * aplicada: a lista não encolhe conforme se marca. Sem período também, porque
+ * a opção de quem saiu antes do período ainda precisa existir para o filtro.
+ */
+export async function montarFiltros(f: FiscalFilters, empresasForcadas?: number[]): Promise<FolhaFiltros> {
+  const { cte, params } = await construirBase(
+    f,
+    { estabs: [], setores: [], cargos: [], vinculos: [], horarios: [] },
+    false,
+    empresasForcadas
+  );
+
+  const [row] = await query<{
+    estabs: OpcaoRaw[];
+    setores: OpcaoRaw[];
+    cargos: OpcaoRaw[];
+    vinculos: OpcaoRaw[];
+    horarios: OpcaoRaw[];
+  }>(
+    `${cte}
+     select
+       (select coalesce(json_agg(x order by x.contratos desc, x.valor), '[]'::json) from (
+          select estab as valor, count(*)::int as contratos from base group by estab) x) as estabs,
+       (select coalesce(json_agg(x order by x.contratos desc, x.valor), '[]'::json) from (
+          select setor as valor, count(*)::int as contratos from base group by setor) x) as setores,
+       (select coalesce(json_agg(x order by x.contratos desc, x.valor), '[]'::json) from (
+          select cargo as valor, count(*)::int as contratos from base group by cargo) x) as cargos,
+       (select coalesce(json_agg(x order by x.contratos desc, x.valor), '[]'::json) from (
+          select vinc as valor, count(*)::int as contratos from base group by vinc) x) as vinculos,
+       (select coalesce(json_agg(x order by x.contratos desc, x.valor), '[]'::json) from (
+          select horario as valor, count(*)::int as contratos from base group by horario) x) as horarios`,
+    params
+  );
+
+  const simples = (o: OpcaoRaw): FolhaOpcao => ({ valor: o.valor, rotulo: o.valor, contratos: o.contratos });
+  return {
+    estabelecimentos: row.estabs.map(simples),
+    setores: row.setores.map(simples),
+    cargos: row.cargos.map(simples),
+    vinculos: row.vinculos.map((o) => ({ valor: o.valor, rotulo: rotuloVinculo(o.valor), contratos: o.contratos })),
+    horarios: row.horarios.map(simples),
+  };
 }
 
 /** Parse dos filtros da Rotatividade a partir da querystring (compartilhado). */

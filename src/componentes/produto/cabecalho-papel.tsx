@@ -18,7 +18,8 @@ export function CabecalhoPapel({
 }: {
   /** O nome do relatório ("Balancete de Verificação"). */
   titulo: string;
-  empresa: { codigo: number; nome: string; cnpj?: string | null };
+  /** Sem código quando o papel cobre mais de uma empresa (o RH com as três da Navecon). */
+  empresa: { codigo?: number | null; nome: string; cnpj?: string | null };
   /** Período, filial, filtros da tela e a hora dos dados, já formatados. */
   itens: { rotulo: string; valor: ReactNode }[];
   /** No catálogo: aparece na tela também. */
@@ -36,9 +37,11 @@ export function CabecalhoPapel({
       <p className="text-pequeno font-[600] text-apagado">{titulo}</p>
       <h2 className="nx-titulo text-titulo text-tinta">{empresa.nome}</h2>
       <dl className="flex flex-wrap gap-x-6 gap-y-2">
-        <Par rotulo="Código">
-          <span className="num">{String(empresa.codigo)}</span>
-        </Par>
+        {empresa.codigo != null && (
+          <Par rotulo="Código">
+            <span className="num">{String(empresa.codigo)}</span>
+          </Par>
+        )}
         {empresa.cnpj && (
           <Par rotulo="CNPJ">
             <span className="num">{documento(empresa.cnpj)}</span>
