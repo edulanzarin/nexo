@@ -12,6 +12,11 @@ import type {
  *   recibo preenchido = aceito · sem recibo + status 13 = rejeitado ·
  *   sem recibo, sem rejeição = pendente · sem transação = não enviado.
  *
+ * Só conta evento do eSocial (`S-xxxx`). A tabela guarda também o envelope do
+ * lote (`ENVIOLOTEEVENTOS`, que nunca tem recibo: o recibo é de cada evento) e
+ * a EFD-Reinf (`R-xxxx`, obrigação fiscal). Em set/2026, 23 mil das 39,6 mil
+ * transmissões "sem recibo" de 90 dias do escritório eram envelope de lote.
+ *
  * Duas lentes: o PANORAMA por tipo de evento (volume × situação, direto da
  * transação) e as PENDÊNCIAS obrigatórias que o DP precisa caçar — admissão sem
  * S-2200 aceito e rescisão sem S-2299 aceito (liga o contrato à transação pela
@@ -63,6 +68,9 @@ const NOME_EVENTO: Record<string, string> = {
 const nomeEvento = (ev: string) => NOME_EVENTO[ev] ?? ev;
 
 /** Expressão SQL: recibo preenchido (aceito pelo governo). */
+/** Evento do eSocial, fora o envelope de lote e a EFD-Reinf (ver o topo). */
+export const SO_EVENTO_ESOCIAL = `et.evento like 'S-%'`;
+
 const ACEITO = `t.recibo is not null and btrim(t.recibo) <> ''`;
 
 export async function montarConformidadeEsocial(
@@ -90,7 +98,7 @@ export async function montarConformidadeEsocial(
             count(*) filter (where (et.recibo is null or btrim(et.recibo) = '') and coalesce(et.status, 0) <> 13)::int pendentes
        from esocialtransacao et
       where et.codigoempresa = $1 and et.datahoralcto::date between $2 and $3
-        and et.evento is not null
+        and ${SO_EVENTO_ESOCIAL}
       group by et.evento`,
     [empresa, inicio, fim]
   );
@@ -148,7 +156,8 @@ export async function montarConformidadeEsocial(
 /**
  * Contratos cujo evento obrigatório do período não foi aceito. Liga o contrato à
  * transação pela `esocialdadoss<NNNN>` (última por `datahoralcto`) e mantém só os
- * NÃO aceitos: `pendente` quando há transação sem recibo, `nao_enviado` sem
+ * NÃO aceitos: `rejeitado` quando a última transação voltou com status 13,
+ * `pendente` quando há transação sem recibo e sem rejeição, `nao_enviado` sem
  * transação. `dataCol` é `dataadm` (admissão) ou `datadem` (desligamento).
  */
 async function pendencias(
@@ -164,16 +173,18 @@ async function pendencias(
     contrato: number;
     funcionario: string;
     data: string;
-    situacao: "pendente" | "nao_enviado";
+    situacao: "pendente" | "rejeitado" | "nao_enviado";
   }>(
     `select src.codigofunccontr contrato,
             coalesce(nullif(btrim(p.nomefunc), ''), 'Contrato ' || src.codigofunccontr) funcionario,
             to_char(src.${dataCol}, 'YYYY-MM-DD') data,
-            case when t.codigoesocialtransacao is not null then 'pendente' else 'nao_enviado' end situacao
+            case when t.codigoesocialtransacao is null then 'nao_enviado'
+                 when t.status = 13 then 'rejeitado'
+                 else 'pendente' end situacao
        from funccontrato src
        left join funcpessoa p on p.codigofuncpessoa = src.codigofuncpessoa
        left join lateral (
-         select et.recibo, et.codigoesocialtransacao
+         select et.recibo, et.status, et.codigoesocialtransacao
            from ${tabelaDados} d
            join esocialtransacao et
              on et.codigoempresa = d.codigoempresa and et.codigoesocialtransacao = d.codigoesocialtransacao

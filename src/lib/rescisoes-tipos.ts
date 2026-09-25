@@ -7,14 +7,19 @@
  */
 
 /**
- * Situação da rescisão na fila de pagamento. `resolvida` = paga/homologada (por
- * override manual ou pela folha de rescisão fechada no Questor). As demais são
+ * Situação da rescisão na fila de pagamento. `resolvida` = paga/homologada,
+ * só pela marcação manual do DP (a data de pagamento da folha do Questor é a
+ * prevista, e resolver por ela apagaria o alarme antes da hora). As demais são
  * pendentes, pela urgência contra o prazo: `vencida` já passou do prazo,
  * `vence_breve` está dentro da antecedência de aviso, `no_prazo` ainda folgado.
  */
 export type RescisaoSituacao = "vencida" | "vence_breve" | "no_prazo" | "resolvida";
 
-/** De onde veio o sinal de "resolvida": marcação manual do DP ou a folha do Questor. */
+/**
+ * De onde veio o sinal de "resolvida". Hoje só `manual` é gravado (ver
+ * `montarItem`); `questor` fica reservado para quando houver um sinal de
+ * pagamento de fato no Questor.
+ */
 export type RescisaoResolvidaFonte = "manual" | "questor";
 
 /** Uma rescisão na fila: o fato do Questor + a situação derivada do prazo. */

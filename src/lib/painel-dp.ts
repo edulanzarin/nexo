@@ -3,7 +3,8 @@ import { query } from "./db";
 import { getSessaoOpcional, empresasPermitidas } from "./sessao";
 import { montarResumoDp } from "./dp-produtividade";
 import { montarRescisoes } from "./rescisoes";
-import { periodosEmAberto } from "./controle-ferias";
+import { SO_EVENTO_ESOCIAL } from "./conformidade-esocial";
+import { periodosEmAberto, sqlComFolha, sqlFolhaDoContrato } from "./controle-ferias";
 import type { DpContagem } from "./dp-tipos";
 import type {
   PainelAtividade,
@@ -83,22 +84,36 @@ async function blocoFerias(
 ): Promise<{ counts: PainelFerias; criticas: PainelFeriasCritica[] }> {
   const ref = hojeISO();
   const empF = scope === "todas" ? "" : ` and f.codigoempresa = any($2::int[])`;
+  const empFolha = scope === "todas" ? "" : ` and fpc.codigoempresa = any($2::int[])`;
   const paramsF = scope === "todas" ? [ref] : [ref, scope];
   const empR = scope === "todas" ? "" : ` where codigoempresa = any($1::int[])`;
   const paramsR = scope === "todas" ? [] : [scope];
 
   const [ativos, recibos] = await Promise.all([
-    query<{ chave: string; codigoempresa: number; empresa: string; contrato: number; funcionario: string; admissao: string }>(
+    // Mesma regra da tela de Férias: só conta contrato com folha recente, e a
+    // primeira folha dele no Questor é o horizonte dos períodos.
+    query<{
+      chave: string;
+      codigoempresa: number;
+      empresa: string;
+      contrato: number;
+      funcionario: string;
+      admissao: string;
+      primeira: string | null;
+    }>(
       `select (f.codigoempresa || ':' || f.codigofunccontr) as chave,
               f.codigoempresa,
               coalesce(nullif(btrim(e.nomeempresa), ''), 'Empresa ' || f.codigoempresa) as empresa,
               f.codigofunccontr as contrato,
               coalesce(nullif(btrim(f.nomefunc), ''), 'Contrato ' || f.codigofunccontr) as funcionario,
-              to_char(f.dataadm, 'YYYY-MM-DD') as admissao
+              to_char(f.dataadm, 'YYYY-MM-DD') as admissao,
+              fo.primeira
          from funcionario f
          left join empresa e on e.codigoempresa = f.codigoempresa
+         ${sqlFolhaDoContrato(empFolha)}
         where f.dataadm is not null and (f.datadem is null or f.datadem > $1)
-          and f.categoria = '01'${empF}`,
+          and f.categoria = '01'${empF}
+          and ${sqlComFolha("$1")}`,
       paramsF
     ),
     query<{ chave: string; aquis: string | null }>(
@@ -121,7 +136,7 @@ async function blocoFerias(
   let aVencer = 0;
   const criticas: PainelFeriasCritica[] = [];
   for (const a of ativos) {
-    const abertos = periodosEmAberto(a.admissao, ref, gozados.get(a.chave) ?? []);
+    const abertos = periodosEmAberto(a.admissao, ref, gozados.get(a.chave) ?? [], a.primeira);
     const nVencidos = abertos.filter((p) => p.vencido).length;
     if (nVencidos > 0) {
       vencidas++;
@@ -149,10 +164,10 @@ async function blocoEsocial(scope: number[] | "todas"): Promise<PainelEsocial> {
   const emp = scope === "todas" ? "" : ` and codigoempresa = any($2::int[])`;
   const params = scope === "todas" ? [desde] : [desde, scope];
   const [row] = await query<{ pendentes: number; rejeitados: number }>(
-    `select count(*) filter (where (recibo is null or btrim(recibo) = '') and status <> 13)::int as pendentes,
+    `select count(*) filter (where (recibo is null or btrim(recibo) = '') and coalesce(status, 0) <> 13)::int as pendentes,
             count(*) filter (where (recibo is null or btrim(recibo) = '') and status = 13)::int as rejeitados
-       from esocialtransacao
-      where datahoralcto::date >= $1${emp}`,
+       from esocialtransacao et
+      where datahoralcto::date >= $1 and ${SO_EVENTO_ESOCIAL}${emp}`,
     params
   );
   return { pendentes: row?.pendentes ?? 0, rejeitados: row?.rejeitados ?? 0 };

@@ -53,4 +53,13 @@ describe("periodosEmAberto — período aquisitivo/concessivo", () => {
     const abertos = periodosEmAberto("2024-01-15", "2026-03-01", ["2019-05-05"]);
     expect(abertos).toHaveLength(2);
   });
+
+  it("período cujo limite caiu antes da primeira folha no Questor não entra", () => {
+    // Admitido em 1988, primeira folha no Questor em 2020-01-31: os períodos com
+    // limite de concessão até ali aconteceram fora do banco.
+    const abertos = periodosEmAberto("1988-08-17", "2026-09-25", [], "2020-01-31");
+    expect(abertos.every((p) => p.limite >= "2020-01-31")).toBe(true);
+    expect(abertos[0]).toMatchObject({ inicio: "2018-08-17", limite: "2020-08-17" });
+    expect(periodosEmAberto("1988-08-17", "2026-09-25", []).length).toBeGreaterThan(30);
+  });
 });

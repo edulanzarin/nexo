@@ -1239,7 +1239,7 @@ export interface PendenciaEsocial {
   funcionario: string;
   /** Data do fato (admissão ou desligamento), "YYYY-MM-DD". */
   data: string;
-  /** `pendente` (transação sem recibo) ou `nao_enviado` (sem transação). */
+  /** `rejeitado` (status 13), `pendente` (sem recibo, sem rejeição) ou `nao_enviado` (sem transação). */
   situacao: EsocialSituacao;
 }
 
@@ -1301,6 +1301,8 @@ export interface ControleFeriasResp {
     aVencer: number;
     /** Total de períodos vencidos na empresa (o passivo a zerar). */
     periodosVencidos: number;
+    /** Contratos sem demissão e sem folha recente, deixados fora da conta. */
+    semFolha: number;
   };
   /** Ordenados por criticidade (mais vencido primeiro). */
   funcionarios: FeriasFuncionario[];
