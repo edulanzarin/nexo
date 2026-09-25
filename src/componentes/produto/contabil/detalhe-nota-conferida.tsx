@@ -72,7 +72,7 @@ export function CorpoNotaConferida({
       </dl>
 
       {dup && (
-        <DestaqueDetalhe tom="perigo" icone="copiar" titulo="Contabilizada em duplicidade">
+        <DestaqueDetalhe tom="perigo" icone="copiar" titulo="Contabilizada em Duplicidade">
           Lançada <span className="num font-[600] text-tinta">{num(dup.vezes)} vezes</span> com a mesma partida, em{" "}
           <span className="num">{emLista(dup.datas.map(dataBR))}</span>.{" "}
           <span className="num font-[600] text-tinta">{brl(dup.valor)}</span> lançado a mais.
@@ -80,7 +80,7 @@ export function CorpoNotaConferida({
       )}
 
       {cons && (
-        <DestaqueDetalhe tom="rota" icone="camadas" titulo="Contabilizada em bloco">
+        <DestaqueDetalhe tom="rota" icone="camadas" titulo="Contabilizada em Bloco">
           <p>Sem lançamento por nota: a venda entra na consolidação do varejo (origem MOV).</p>
           {cons.lancamentos.length > 0 && (
             <ul className="mt-2 flex flex-col gap-1">
@@ -125,7 +125,7 @@ export function CorpoNotaConferida({
 
       {extra}
 
-      <BlocoDetalhe titulo="Itens da nota">{itens}</BlocoDetalhe>
+      <BlocoDetalhe titulo="Itens da Nota">{itens}</BlocoDetalhe>
     </div>
   );
 }

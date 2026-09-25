@@ -108,7 +108,7 @@ export function FiltroContraparte({
     <Modal
       aberto={aberto}
       onFechar={onFechar}
-      titulo="Filtrar por contraparte"
+      titulo="Filtrar por Contraparte"
       descricao={tipo === "ent" ? "Fornecedores com nota no recorte" : "Clientes com nota no recorte"}
       corpo="flex flex-col gap-3"
       rodape={

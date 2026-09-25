@@ -71,7 +71,7 @@ export function ListaMinha({ modulo }: { modulo: ModuloId }) {
 
       <FaixaResumoPM lista={data} carregando={carregando} />
 
-      <Painel titulo="Meus relatórios" descricao="Só os seus. A gestão do setor lê todos." corpo="p-0">
+      <Painel titulo="Meus Relatórios" descricao="Só os seus. A gestão do setor lê todos." corpo="p-0">
         {carregando ? (
           <EsqueletoTabela colunas={6} linhas={6} />
         ) : !data.length ? (

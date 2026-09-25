@@ -102,7 +102,20 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
+import type { ComponentType, SVGProps } from "react";
 import { cn } from "@/lib/cn";
+import {
+  SetorConfig,
+  SetorContabil,
+  SetorDp,
+  SetorFiscal,
+  SetorObrigacoes,
+  SetorRh,
+  SetorSocietario,
+} from "./icones-setor";
+
+/** O que o registro aceita: os ícones da biblioteca e os desenhados para o sistema. */
+type ComponenteIcone = LucideIcon | ComponentType<SVGProps<SVGSVGElement> & { strokeWidth?: number | string }>;
 
 /**
  * Registro de ícones por nome. Menu, seção e módulo vêm de catálogo em dado, e
@@ -111,7 +124,16 @@ import { cn } from "@/lib/cn";
  * é mudar uma linha, e nenhuma tela fica sabendo.
  */
 export const ICONES = {
-  // navegação e módulos
+  // setores: desenhados para o NaveX, no idioma do logo (ver icones-setor)
+  "setor-contabil": SetorContabil,
+  "setor-fiscal": SetorFiscal,
+  "setor-dp": SetorDp,
+  "setor-rh": SetorRh,
+  "setor-obrigacoes": SetorObrigacoes,
+  "setor-societario": SetorSocietario,
+  "setor-config": SetorConfig,
+
+  // navegação e seções
   inicio: Home,
   painel: LayoutDashboard,
   grade: LayoutGrid,
@@ -221,7 +243,7 @@ export const ICONES = {
   noite: Moon,
   dia: Sun,
   sistema: Monitor,
-} satisfies Record<string, LucideIcon>;
+} satisfies Record<string, ComponenteIcone>;
 
 export type NomeIcone = keyof typeof ICONES;
 

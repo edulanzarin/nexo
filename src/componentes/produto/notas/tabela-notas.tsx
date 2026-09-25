@@ -109,7 +109,7 @@ export function TabelaNotas({
 }) {
   return (
     <TabelaDados
-      rotulo="Notas fiscais"
+      rotulo="Notas Fiscais"
       colunas={colunasNotas(tipo, mostraEmpresa)}
       linhas={linhas}
       chave={(n) => `${n.empresa}-${n.chave}`}

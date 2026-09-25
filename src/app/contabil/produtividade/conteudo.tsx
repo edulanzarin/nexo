@@ -337,7 +337,7 @@ export function Conteudo() {
 
       <Nota>Período pela data em que o lançamento foi feito, não pela data do fato.</Nota>
 
-      <Painel titulo="Por natureza" descricao={pessoa ? `Lançamentos de ${pessoa.nome}` : "Lançamentos do time"}>
+      <Painel titulo="Por Natureza" descricao={pessoa ? `Lançamentos de ${pessoa.nome}` : "Lançamentos do time"}>
         {d ? (
           <ComposicaoClasses classes={CLASSES} porClasse={porClasse} total={lancamentos} ocultarVazio={["outros"]} />
         ) : (
@@ -346,7 +346,7 @@ export function Conteudo() {
       </Painel>
 
       <RankingPessoas
-        titulo="Quem lançou"
+        titulo="Quem Lançou"
         descricao={pessoa ? "O ranking segue com o time todo" : "Clique numa pessoa para isolar o resto da tela"}
         linhas={d?.ranking}
         colunas={COLUNAS}
@@ -359,7 +359,7 @@ export function Conteudo() {
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <PainelQuebra
-          titulo="Por origem"
+          titulo="Por Origem"
           descricao={`De onde vieram os lançamentos · ${escopo}`}
           itens={origens}
           carregando={carregando}
@@ -367,7 +367,7 @@ export function Conteudo() {
           selecionado={origemAberta}
         />
         <PainelQuebra
-          titulo="Por empresa"
+          titulo="Por Empresa"
           descricao={pessoa ? `Empresas atendidas por ${pessoa.nome}` : "Onde o trabalho aconteceu"}
           itens={empresas}
           carregando={carregando}

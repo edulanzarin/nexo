@@ -27,7 +27,7 @@ import type {
  *  consolidada, não exige, cancelada) não entra na fila. */
 const CONF_META: Record<string, { titulo: string; severidade: "alta" | "media" }> = {
   pendente: { titulo: "Não contabilizada", severidade: "alta" },
-  duplicada: { titulo: "Contabilizada em duplicidade", severidade: "alta" },
+  duplicada: { titulo: "Contabilizada em Duplicidade", severidade: "alta" },
   divergente: { titulo: "Conta divergente", severidade: "media" },
 };
 

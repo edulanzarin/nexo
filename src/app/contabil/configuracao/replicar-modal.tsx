@@ -202,7 +202,7 @@ export function ReplicarModal({
       aberto={aberto}
       onFechar={onFechar}
       largura="g"
-      titulo="Replicar overrides"
+      titulo="Replicar Overrides"
       descricao={`De ${origemNome} para outra empresa`}
       corpo="flex flex-col gap-3"
       rodape={

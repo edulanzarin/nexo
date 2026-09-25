@@ -242,7 +242,7 @@ export default function Conteudo() {
           },
           {
             id: "diferencas",
-            rotulo: "Contas com diferença",
+            rotulo: "Contas com Diferença",
             nome: `balancete-fiscal-diferencas-${sufixo}`,
             montar: () => ({ cabecalhos: CABECALHOS_CSV, linhas: resumo.comDif.map(linhaCsv) }),
           },
@@ -250,7 +250,7 @@ export default function Conteudo() {
             ? [
                 {
                   id: "nfse",
-                  rotulo: "NFS-e a contabilizar",
+                  rotulo: "NFS-e a Contabilizar",
                   nome: `nfse-a-contabilizar-${sufixo}`,
                   montar: () => ({
                     cabecalhos: ["Número", "Data", "Origem", "Contraparte", "Conta prevista", "Descrição da conta", "Valor"],
@@ -336,7 +336,7 @@ export default function Conteudo() {
 
       <Painel
         corpo="p-0"
-        titulo={soDif ? "Contas com diferença" : "Contas"}
+        titulo={soDif ? "Contas com Diferença" : "Contas"}
         descricao={
           soDif
             ? "Analíticas em que o esperado não bate com o lançado, maior desvio primeiro"
@@ -381,7 +381,7 @@ export default function Conteudo() {
         ) : (
           <TabelaDados
             key={soDif ? "diferencas" : "arvore"}
-            rotulo="Balancete fiscal"
+            rotulo="Balancete Fiscal"
             colunas={colunas}
             linhas={linhas}
             chave={(l) => `${l.classif}:${l.conta}`}
@@ -496,7 +496,7 @@ function ModalPendentes({
       onFechar={onFechar}
       largura="g"
       corpo="p-0"
-      titulo="NFS-e a contabilizar"
+      titulo="NFS-e a Contabilizar"
       descricao={`${num(pendentes.length)} ${pendentes.length === 1 ? "nota" : "notas"} · ${brl(total)}`}
       rodape={<Botao onClick={onFechar}>Fechar</Botao>}
     >
@@ -506,7 +506,7 @@ function ModalPendentes({
         </Nota>
       </div>
       <TabelaDados
-        rotulo="NFS-e a contabilizar"
+        rotulo="NFS-e a Contabilizar"
         colunas={COLUNAS_PENDENTES}
         linhas={pendentes}
         chave={(p) => `${p.origem}:${p.chave}`}

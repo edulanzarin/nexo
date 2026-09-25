@@ -151,7 +151,7 @@ export function Conteudo() {
     return [
       {
         id: "pessoas",
-        rotulo: "Quem excluiu",
+        rotulo: "Quem Excluiu",
         nome: arquivo("pessoas", true),
         montar: () => ({
           cabecalhos: [
@@ -176,7 +176,7 @@ export function Conteudo() {
       },
       {
         id: "autores",
-        rotulo: pessoa ? `De quem ${pessoa.nome} apagou` : "De quem era o lançamento",
+        rotulo: pessoa ? `De quem ${pessoa.nome} apagou` : "De Quem Era o Lançamento",
         nome: arquivo("autores"),
         montar: () => ({ cabecalhos: ["Código", "Pessoa", "Exclusões"], linhas: (autores ?? []).map((a) => [a.chave, a.nome, a.qtd]) }),
       },
@@ -311,7 +311,7 @@ export function Conteudo() {
       <Nota>Período pela data da exclusão. Reimportar um mês apaga e regrava em lote.</Nota>
 
       <PainelEscada
-        titulo="Idade do que foi apagado"
+        titulo="Idade do Que Foi Apagado"
         descricao={`Quanto tempo o lançamento tinha quando foi excluído · ${escopo}`}
         faixas={FAIXAS_IDADE}
         valores={pessoa ? pessoa.porFaixa : d?.totais.porFaixa}
@@ -320,7 +320,7 @@ export function Conteudo() {
       />
 
       <RankingPessoas
-        titulo="Quem excluiu"
+        titulo="Quem Excluiu"
         descricao={pessoa ? "O ranking segue com o time todo" : "Clique numa pessoa para isolar o resto da tela"}
         linhas={d?.ranking}
         colunas={COLUNAS}
@@ -333,20 +333,20 @@ export function Conteudo() {
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <PainelQuebra
-          titulo="De quem era o lançamento"
+          titulo="De Quem Era o Lançamento"
           descricao={pessoa ? `O que ${pessoa.nome} apagou, por quem tinha lançado` : "Quem tinha lançado o que o time apagou"}
           itens={autores}
           corPadrao={COR_EXCLUSAO}
           carregando={carregando}
         />
         <PainelQuebra
-          titulo="Por origem"
+          titulo="Por Origem"
           descricao={`Que tipo de lançamento foi apagado · ${escopo}`}
           itens={origens}
           carregando={carregando}
         />
         <PainelQuebra
-          titulo="Por empresa"
+          titulo="Por Empresa"
           descricao={pessoa ? `Onde ${pessoa.nome} apagou` : "Onde as exclusões aconteceram"}
           itens={empresas}
           carregando={carregando}
@@ -355,7 +355,7 @@ export function Conteudo() {
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <CaixaGrafico
-          titulo="Ritmo das exclusões"
+          titulo="Ritmo das Exclusões"
           descricao={`Exclusões por ${nomeGranularidade(g)} · ${escopo}`}
           carregando={carregando}
           vazio={serie && serie.every((p) => p.total === 0) ? "Nenhuma exclusão no período." : false}

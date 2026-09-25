@@ -204,7 +204,7 @@ export function DetalhePendencia({
       {p && (
         <div className="flex flex-col gap-4">
           {l?.detalhe && (
-            <DestaqueDetalhe tom={p.severidade === "alta" ? "perigo" : "atencao"} icone="alerta" titulo="O que a auditoria achou">
+            <DestaqueDetalhe tom={p.severidade === "alta" ? "perigo" : "atencao"} icone="alerta" titulo="O Que a Auditoria Achou">
               {l.detalhe}
             </DestaqueDetalhe>
           )}

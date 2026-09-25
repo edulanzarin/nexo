@@ -122,7 +122,7 @@ export function BlocosContabilVisao() {
             <Segmentado opcoes={ESTADOS} valor={estFaixa} onMudar={setEstFaixa} rotulo="Estado da faixa" />
           </div>
           <FaixaAtividade
-            titulo="Atividade do time"
+            titulo="Atividade do Time"
             periodo={estFaixa === "carregando" ? undefined : PERIODO}
             atividade={atividade}
             carregando={estFaixa === "carregando"}
@@ -153,7 +153,7 @@ export function BlocosContabilVisao() {
             </Variante>
             <Variante nome="Meu painel: sem autor, na largura toda" className="xl:col-span-2">
               <FeedAtividade
-                titulo="Sua atividade recente"
+                titulo="Sua Atividade Recente"
                 eventos={eventos}
                 carregando={estFeed === "carregando"}
                 vazio={{

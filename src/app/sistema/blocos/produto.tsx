@@ -11,9 +11,9 @@ import { SeletorPeriodoDia, SeletorPeriodoMes } from "@/componentes/produto/sele
 import { Bloco, Familia, Variante } from "../bloco";
 
 const ITENS_PALETA: ItemPaleta[] = [
-  { id: "1", grupo: "Seções", rotulo: "Conferência fiscal", detalhe: "Contábil", icone: "conferencia", busca: "", agir: () => {} },
-  { id: "2", grupo: "Seções", rotulo: "Conciliação bancária", detalhe: "Contábil", icone: "banco", busca: "", agir: () => {} },
-  { id: "3", grupo: "Seções", rotulo: "Balancete contábil", detalhe: "Contábil", icone: "planilha", busca: "", agir: () => {} },
+  { id: "1", grupo: "Seções", rotulo: "Conferência Fiscal", detalhe: "Contábil", icone: "conferencia", busca: "", agir: () => {} },
+  { id: "2", grupo: "Seções", rotulo: "Conciliação Bancária", detalhe: "Contábil", icone: "banco", busca: "", agir: () => {} },
+  { id: "3", grupo: "Seções", rotulo: "Balancete Contábil", detalhe: "Contábil", icone: "planilha", busca: "", agir: () => {} },
   { id: "4", grupo: "Empresas", rotulo: "MAGALHAES COMERCIO DE ALIMENTOS LTDA", detalhe: "1318", icone: "historico", busca: "", agir: () => {} },
   { id: "5", grupo: "Empresas", rotulo: "NAVECON CONTABILIDADE LTDA", detalhe: "1200", icone: "historico", busca: "", agir: () => {} },
 ];
@@ -75,7 +75,7 @@ export function BlocosProduto() {
       >
         <div className="nx-vidro flex flex-col gap-6 rounded-painel p-5">
           <CabecalhoPagina
-            titulo="Conferência fiscal"
+            titulo="Conferência Fiscal"
             descricao="Notas não contabilizadas, na conta errada, em bloco ou duplicadas"
             acoes={
               <>
@@ -85,7 +85,7 @@ export function BlocosProduto() {
             }
           />
           <CabecalhoPagina
-            titulo="Balancete contábil"
+            titulo="Balancete Contábil"
             descricao="Saldo anterior, movimento do mês e saldo atual, conta a conta"
             acoes={<BotaoExecutar rotulo="Gerar" onExecutar={() => {}} desatualizado />}
           />

@@ -103,7 +103,7 @@ export function BlocosContabilBalancetes() {
       >
         <Painel
           corpo="p-0"
-          titulo="Balancete de verificação"
+          titulo="Balancete de Verificação"
           descricao="A seta de uma sintética recolhe e abre as filhas"
           acoes={<SeletorNivel nivelMax={4} valor={nivel} onMudar={setNivel} />}
         >
@@ -140,7 +140,7 @@ export function BlocosContabilBalancetes() {
           <div className="nx-vidro rounded-painel p-5">
             <CabecalhoPapel
               naTela
-              titulo="Análise de balancete"
+              titulo="Análise de Balancete"
               empresa={{ codigo: 1318, nome: "MAGALHAES COMERCIO DE ALIMENTOS LTDA", cnpj: "12345678000195" }}
               itens={[
                 { rotulo: "Período", valor: "junho de 2026 a agosto de 2026 (3 meses)" },

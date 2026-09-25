@@ -44,7 +44,7 @@ export default function Conteudo() {
       </AcoesPagina>
 
       <FaixaAtividade
-        titulo="Atividade do time"
+        titulo="Atividade do Time"
         periodo={data?.periodo}
         atividade={data?.atividade}
         carregando={carregando}

@@ -110,7 +110,7 @@ export function ReplicarModal({ origem, onFechar }: { origem: ContaBanco; onFech
       aberto
       onFechar={onFechar}
       fecharNoVeu={false}
-      titulo="Replicar regras"
+      titulo="Replicar Regras"
       descricao={`${num(origem.regras.length)} ${origem.regras.length === 1 ? "regra" : "regras"} de ${nomeOrigem} (conta ${origem.conta})`}
       rodape={
         <>

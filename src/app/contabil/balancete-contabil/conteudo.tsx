@@ -193,7 +193,7 @@ export default function Conteudo() {
                       ? [
                           {
                             id: "atipicas",
-                            rotulo: "Contas com sinal atípico",
+                            rotulo: "Contas com Sinal Atípico",
                             nome: `balancete-contabil-sinal-atipico-${sufixo}`,
                             montar: () => ({
                               cabecalhos: ["Classificação", "Código", "Descrição", "Natureza", "Saldo atual", "D/C"],
@@ -218,7 +218,7 @@ export default function Conteudo() {
 
       {data && (
         <CabecalhoPapel
-          titulo="Balancete de verificação"
+          titulo="Balancete de Verificação"
           empresa={data.empresa}
           itens={[
             { rotulo: "Período", valor: rotuloMeses(data.periodo.meses) },
@@ -287,7 +287,7 @@ export default function Conteudo() {
 
       <Painel
         corpo="p-0"
-        titulo="Balancete de verificação"
+        titulo="Balancete de Verificação"
         descricao={<span className="nx-sem-papel">Clique numa conta para ver o detalhe e, na sintética, a composição</span>}
         acoes={
           <span className="nx-sem-papel flex flex-wrap items-center gap-1.5">
@@ -308,7 +308,7 @@ export default function Conteudo() {
           <EsqueletoTabela linhas={12} colunas={5} />
         ) : (
           <TabelaDados
-            rotulo="Balancete de verificação"
+            rotulo="Balancete de Verificação"
             colunas={colunas}
             linhas={linhas}
             chave={(l) => `${l.classif}:${l.conta}`}

@@ -67,7 +67,7 @@ const COBRADO = {
   empresa: "Cliente / Empresa afetada",
   processo: "Processo / Rotina envolvida",
   ocorrido: "Data em que o erro ocorreu",
-  descricao: "Descrição do erro",
+  descricao: "Descrição do Erro",
   causa: "Causa raiz identificada",
 } as const;
 
@@ -442,7 +442,7 @@ export function FormularioPM({
         </dl>
       </div>
 
-      <Secao n={1} titulo="Identificação do incidente">
+      <Secao n={1} titulo="Identificação do Incidente">
         <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2 xl:grid-cols-3">
           <Rotulado
             rotulo="Criticidade"
@@ -574,7 +574,7 @@ export function FormularioPM({
         </div>
       </Secao>
 
-      <Secao n={2} titulo="Descrição do erro">
+      <Secao n={2} titulo="Descrição do Erro">
         <CampoTexto
           rotulo="O que aconteceu"
           ajuda="Objetivo, sem julgar pessoas"
@@ -596,7 +596,7 @@ export function FormularioPM({
         />
       </Secao>
 
-      <Secao n={3} titulo="Impacto e consequências">
+      <Secao n={3} titulo="Impacto e Consequências">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {impactos.map((i) => (
             <CampoTexto
@@ -612,7 +612,7 @@ export function FormularioPM({
         </div>
       </Secao>
 
-      <Secao n={4} titulo="Análise de causa raiz">
+      <Secao n={4} titulo="Análise de Causa Raiz">
         <div className="flex flex-col gap-2">
           <p className="text-pequeno font-[560] text-tinta-2">Cinco porquês</p>
           {ro ? (
@@ -667,7 +667,7 @@ export function FormularioPM({
         />
       </Secao>
 
-      <Secao n={5} titulo="Ações imediatas de correção">
+      <Secao n={5} titulo="Ações Imediatas de Correção">
         <Repetivel
           rotulo="Ações corretivas"
           linhas={d.acoesCorretivas}
@@ -680,7 +680,7 @@ export function FormularioPM({
         />
       </Secao>
 
-      <Secao n={6} titulo="Ações preventivas e melhoria de processo">
+      <Secao n={6} titulo="Ações Preventivas e Melhoria de Processo">
         <Repetivel
           rotulo="Ações preventivas"
           linhas={d.acoesPreventivas}
@@ -693,7 +693,7 @@ export function FormularioPM({
         />
       </Secao>
 
-      <Secao n={7} titulo="Lições aprendidas">
+      <Secao n={7} titulo="Lições Aprendidas">
         <CampoTexto
           rotulo="Principal aprendizado deste incidente para o time"
           linhas={3}

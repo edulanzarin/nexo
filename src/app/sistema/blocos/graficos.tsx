@@ -100,7 +100,7 @@ export function BlocosGraficos() {
           titulo="Dispersão"
           porque="Horas no Questor contra lançamentos, uma bolinha por pessoa. Separa quem produz muito em pouco tempo de quem passa o dia aberto sem lançar."
         >
-          <CaixaGrafico titulo="Horas × lançamentos" altura={220}>
+          <CaixaGrafico titulo="Horas × Lançamentos" altura={220}>
             <GraficoDispersao dados={PESSOAS_FALSAS} x="horas" y="lancamentos" rotuloX="Horas" rotuloY="Lançamentos" nome={(p) => p.nome} formatarX={horas} />
           </CaixaGrafico>
         </Bloco>

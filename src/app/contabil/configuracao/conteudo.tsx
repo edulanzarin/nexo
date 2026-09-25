@@ -229,7 +229,7 @@ export default function ConteudoConfiguracao() {
 
       <Painel
         corpo="p-0"
-        titulo="CFOPs da empresa"
+        titulo="CFOPs da Empresa"
         descricao={
           dados ? (
             <span className="inline-flex items-center gap-1.5">
@@ -268,7 +268,7 @@ export default function ConteudoConfiguracao() {
         ) : (
           <>
             <TabelaDados
-              rotulo="Plano de contabilização"
+              rotulo="Plano de Contabilização"
               colunas={cols}
               linhas={dados.cfops}
               chave={(c) => `${c.estab}:${c.cfop}`}

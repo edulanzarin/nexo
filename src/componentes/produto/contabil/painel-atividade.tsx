@@ -44,6 +44,9 @@ const ROTULO_ACAO: Record<string, string> = {
 const TRABALHOS = trabalhosDe("contabil");
 
 /** Rótulo e cor de um verbo da trilha. */
+/** Título leva maiúscula nas palavras principais, e o mês entra nele como nome. */
+const maiuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+
 export function acaoDaTrilha(acao: string): { rotulo: string; cor: string } {
   const classe = classeDaAcao("contabil", acao);
   const trabalho = TRABALHOS.find((t) => t.id === classe);
@@ -126,7 +129,7 @@ export function FaixaAtividade({
   carregando,
   onTentar,
 }: {
-  /** "Atividade do time" ou "O que você rodou"; o mês entra depois. */
+  /** "Atividade do Time" ou "O Que Você Rodou"; o mês entra depois. */
   titulo: string;
   periodo?: { inicio: string; fim: string };
   atividade: ContabilAtividade | null | undefined;
@@ -135,7 +138,7 @@ export function FaixaAtividade({
 }) {
   const cabeca = (
     <TituloBloco
-      titulo={periodo ? `${titulo} em ${nomeMes(periodo.inicio.slice(0, 7), true)}` : `${titulo} no mês`}
+      titulo={periodo ? `${titulo} em ${maiuscula(nomeMes(periodo.inicio.slice(0, 7), true))}` : `${titulo} no Mês`}
       apoio={periodo ? `${dataBR(periodo.inicio)} a ${dataBR(periodo.fim)}` : undefined}
     />
   );
@@ -205,7 +208,7 @@ export function FaixaBase({
   carregando?: boolean;
   onTentar?: () => void;
 }) {
-  const cabeca = <TituloBloco titulo="Base configurada" apoio="Escritório inteiro" />;
+  const cabeca = <TituloBloco titulo="Base Configurada" apoio="Escritório inteiro" />;
   if (!carregando && !base)
     return (
       <section className="flex flex-col gap-2">
@@ -219,7 +222,7 @@ export function FaixaBase({
       {cabeca}
       <FaixaIndicadores colunas={5}>
         <Indicador
-          rotulo="Plano de contabilização"
+          rotulo="Plano de Contabilização"
           icone="tabela"
           carregando={carregando}
           valor={b ? num(b.plano) : ""}

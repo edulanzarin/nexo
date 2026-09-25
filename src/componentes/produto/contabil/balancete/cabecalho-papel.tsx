@@ -16,7 +16,7 @@ export function CabecalhoPapel({
   naTela,
   className,
 }: {
-  /** O nome do relatório ("Balancete de verificação"). */
+  /** O nome do relatório ("Balancete de Verificação"). */
   titulo: string;
   empresa: { codigo: number; nome: string; cnpj?: string | null };
   /** Período, filial, filtros da tela e a hora dos dados, já formatados. */

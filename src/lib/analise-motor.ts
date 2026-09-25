@@ -323,7 +323,7 @@ export function analisarMotor(bal: BalanceteContabil): AnaliseDeterministica {
   }
 
   addInd(
-    "resultado", "Resultado do período", resultadoLiqP, resultadoSerie, "reais", true,
+    "resultado", "Resultado do Período", resultadoLiqP, resultadoSerie, "reais", true,
     (v) => (v == null ? "neutro" : v > 0 ? "bom" : v < 0 ? "ruim" : "atencao"),
     (v) => v == null ? "—" : v >= 0 ? "Receitas superaram custos e despesas no período." : "Custos e despesas superaram as receitas no período."
   );

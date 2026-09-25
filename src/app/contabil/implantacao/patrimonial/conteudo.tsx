@@ -429,7 +429,7 @@ export default function Conteudo() {
             cortes={[
               {
                 id: "contas",
-                rotulo: "Contas do relatório",
+                rotulo: "Contas do Relatório",
                 nome: `patrimonial_contas_${empresa}`,
                 montar: () => ({
                   cabecalhos: [
@@ -513,7 +513,7 @@ export default function Conteudo() {
             <Indicador rotulo="Depreciação acumulada" valor="" carregando />
             <Indicador rotulo="Total do relatório" valor="" carregando />
           </FaixaIndicadores>
-          <Painel corpo="p-0" titulo="Contas do relatório">
+          <Painel corpo="p-0" titulo="Contas do Relatório">
             <EsqueletoTabela colunas={5} linhas={4} />
           </Painel>
         </>
@@ -556,7 +556,7 @@ export default function Conteudo() {
 
           <Painel
             corpo="p-0"
-            titulo="Contas do relatório"
+            titulo="Contas do Relatório"
             descricao="Onde cada conta de bens entra no plano do Questor"
           >
             <TabelaDados

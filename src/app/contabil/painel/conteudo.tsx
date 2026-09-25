@@ -41,7 +41,7 @@ export default function Conteudo() {
       </AcoesPagina>
 
       <FaixaAtividade
-        titulo="O que você rodou"
+        titulo="O Que Você Rodou"
         periodo={data?.periodo}
         atividade={data?.atividade}
         carregando={carregando}
@@ -52,7 +52,7 @@ export default function Conteudo() {
         {/* Feed só dos meus eventos: sem autor, a coluna repetiria o mesmo nome. */}
         <FeedAtividade
           className="xl:col-span-2"
-          titulo="Sua atividade recente"
+          titulo="Sua Atividade Recente"
           eventos={data?.recentes}
           carregando={carregando}
           vazio={{

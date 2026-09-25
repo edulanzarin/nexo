@@ -52,13 +52,13 @@ export function BlocosFundamentos() {
     <Familia id="fundamentos" titulo="Fundamentos" descricao="Cor, tipo, raio, marca e ícones. Tudo sai de token.">
       <Bloco
         titulo="Marca"
-        porque="Dois traços que se cruzam, o azul por baixo do laranja: a conferência que o sistema faz, duas fontes se encontrando. O nome já está escrito ao lado, então a marca não repete a inicial."
+        porque="O monograma NX que o Eduardo desenhou, redesenhado em vetor a partir da geometria do original: fica nítido da guia do navegador ao login e ganha um tom mais claro no tema noite, onde o azul original sumiria. No login as três peças entram uma depois da outra."
         palco
       >
         <div className="flex flex-wrap items-center gap-10">
-          <MarcaNavex tamanho={72} desenhar />
+          <MarcaNavex tamanho={72} entrada />
           <AssinaturaNavex />
-          <MarcaNavex tamanho={16} />
+          <MarcaNavex tamanho={10} />
         </div>
       </Bloco>
 
@@ -97,12 +97,12 @@ export function BlocosFundamentos() {
 
       <Bloco
         titulo="Identidade dos módulos"
-        porque="A paleta dos módulos é do Eduardo. Ela pinta só a marca do módulo, nunca cabeçalho nem estado: vermelho de Contábil num cabeçalho viraria alarme."
+        porque="O ícone de cada setor é desenhado para o NaveX, no idioma do logo (peças sólidas, cortes a 45°, um canto arredondado): ícone de biblioteca é o mesmo de mil sistemas, e o do setor é identidade. Contábil é o razonete, Fiscal o % do tributo, DP a pessoa, RH o coração, Obrigações o calendário com o visto, Societário o quadro societário, Configurações os ajustes. A paleta é do Eduardo e pinta só a marca do módulo, nunca cabeçalho nem estado."
       >
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-5">
           {MODULOS.map((m) => (
             <div key={m.id} className="flex items-center gap-2">
-              <CorModulo modulo={m} />
+              <CorModulo modulo={m} tamanho={36} />
               <span className="text-corpo text-tinta-2">{m.titulo}</span>
             </div>
           ))}

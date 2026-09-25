@@ -96,7 +96,7 @@ export function Conteudo() {
     return [
       {
         id: "pessoas",
-        rotulo: "Tempo por pessoa",
+        rotulo: "Tempo por Pessoa",
         nome: `tempo-contabil-pessoas-${periodo}`,
         montar: () => ({
           cabecalhos: [
@@ -140,7 +140,7 @@ export function Conteudo() {
       },
       {
         id: "serie",
-        rotulo: "Horas no período",
+        rotulo: "Horas no Período",
         nome: `tempo-contabil-evolucao-${periodo}`,
         montar: () => ({
           cabecalhos: [g === "mes" ? "Mês" : "Dia", "Horas"],
@@ -246,7 +246,7 @@ export function Conteudo() {
       </div>
 
       <RankingPessoas
-        titulo="Tempo por pessoa"
+        titulo="Tempo por Pessoa"
         descricao={pessoa ? "O ranking segue com o time todo" : "Só quem lançou no contábil no período"}
         linhas={d?.ranking}
         colunas={COLUNAS}
@@ -267,14 +267,14 @@ export function Conteudo() {
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <PainelQuebra
-          titulo="Empresas que mais consomem tempo"
+          titulo="Empresas que Mais Consomem Tempo"
           descricao={pessoa ? `Onde ${pessoa.nome} passou o tempo` : "Horas do time contábil por empresa"}
           itens={empresas}
           formatar={horas}
           carregando={carregando}
         />
         <PainelQuebra
-          titulo="Por dia da semana"
+          titulo="Por Dia da Semana"
           descricao="Quando o time está dentro do sistema"
           itens={porDiaSemana}
           formatar={horas}
@@ -286,7 +286,7 @@ export function Conteudo() {
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <CaixaGrafico
-          titulo="Horas no período"
+          titulo="Horas no Período"
           descricao={`Tempo dentro do Questor por ${nomeGranularidade(g)} · Time todo`}
           carregando={carregando}
           vazio={d && d.serie.every((p) => p.horas === 0) ? "Nenhuma hora registrada no período." : false}
@@ -304,7 +304,7 @@ export function Conteudo() {
             direito. O que o gráfico serve é a dispersão: duas pessoas com a
             mesma carga em pontos opostos do eixo vertical são uma pergunta. */}
         <CaixaGrafico
-          titulo="Horas × lançamentos"
+          titulo="Horas × Lançamentos"
           descricao="Uma bolinha por pessoa. Clique para isolar"
           carregando={carregando}
           vazio={dispersao.length === 0 ? "Sem tempo registrado no período." : false}

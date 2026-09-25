@@ -140,7 +140,7 @@ export function TabelaItensNota({ itens }: { itens: NotaItem[] }) {
       </div>
       <div className="overflow-hidden rounded-controle border border-linha">
         <TabelaDados
-          rotulo="Itens da nota"
+          rotulo="Itens da Nota"
           colunas={colunas}
           linhas={filtrados}
           chave={(it) => String(it.seq)}

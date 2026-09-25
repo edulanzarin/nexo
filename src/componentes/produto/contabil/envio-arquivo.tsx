@@ -214,7 +214,7 @@ export function JanelaSenha({
       </Botao>
     </>
   );
-  const texto = { titulo: "PDF protegido", descricao: "O arquivo só abre com a senha que o banco definiu." };
+  const texto = { titulo: "PDF Protegido", descricao: "O arquivo só abre com a senha que o banco definiu." };
   if (estatico) {
     return (
       <PainelModal estatico largura="p" {...texto} rodape={rodape} onFechar={onFechar}>

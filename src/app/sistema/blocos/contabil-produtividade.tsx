@@ -116,7 +116,7 @@ const ORIGENS: ItemQuebra[] = [
   { chave: "CB", nome: "Contabilidade", qtd: 9102, cor: cor("digitado"), detalhe: `7 pessoas · ${brlCompact(4212380)}` },
   { chave: "IP", nome: "Importação de lançamentos", qtd: 4380, cor: cor("importado"), detalhe: `5 pessoas · ${brlCompact(2904100)}` },
   { chave: "FI", nome: "Fiscal", qtd: 3920, cor: cor("integrado"), detalhe: `6 pessoas · ${brlCompact(8120450)}` },
-  { chave: "CC", nome: "Conciliação bancária", qtd: 1740, cor: cor("importado"), detalhe: `4 pessoas · ${brlCompact(1098300)}` },
+  { chave: "CC", nome: "Conciliação Bancária", qtd: 1740, cor: cor("importado"), detalhe: `4 pessoas · ${brlCompact(1098300)}` },
   { chave: "FP", nome: "Folha de pagamento", qtd: 952, cor: cor("integrado"), detalhe: `3 pessoas · ${brlCompact(640220)}` },
   { chave: "ZZ", nome: "Zeramento", qtd: 318, cor: cor("apuracao"), detalhe: `2 pessoas · ${brlCompact(212800)}` },
 ];
@@ -247,7 +247,7 @@ export function BlocosContabilProdutividade() {
       >
         <div className="flex flex-col gap-4">
           <RankingPessoas
-            titulo="Quem lançou"
+            titulo="Quem Lançou"
             descricao={pessoa ? "O ranking segue com o time todo" : "Clique numa pessoa para isolar o resto da tela"}
             linhas={PESSOAS}
             colunas={COLUNAS}
@@ -258,7 +258,7 @@ export function BlocosContabilProdutividade() {
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             <Variante nome="Carregando">
               <RankingPessoas
-                titulo="Quem lançou"
+                titulo="Quem Lançou"
                 linhas={undefined}
                 colunas={COLUNAS}
                 ordemInicial="lancamentos"
@@ -269,7 +269,7 @@ export function BlocosContabilProdutividade() {
             </Variante>
             <Variante nome="Vazio">
               <RankingPessoas
-                titulo="Quem excluiu"
+                titulo="Quem Excluiu"
                 linhas={[]}
                 colunas={COLUNAS}
                 ordemInicial="lancamentos"
@@ -286,7 +286,7 @@ export function BlocosContabilProdutividade() {
         titulo="Composição por classe"
         porque="De que é feito o total: natureza do lançamento, espécie da nota, tipo de gesto no NaveX. Uma barra e o peso de cada classe, na cor do catálogo do dado. Classe zerada pode sumir (Outras origens num mês em que tudo se classificou); as outras ficam, porque zero em Digitado é afirmação."
       >
-        <Painel titulo="Por natureza" descricao="Lançamentos do time">
+        <Painel titulo="Por Natureza" descricao="Lançamentos do time">
           <ComposicaoClasses classes={CLASSES} porClasse={POR_CLASSE} total={TOTAL_CLASSES} ocultarVazio={["outros"]} />
         </Painel>
       </Bloco>
@@ -330,7 +330,7 @@ export function BlocosContabilProdutividade() {
         >
           <div className="flex flex-col gap-4">
             <PainelQuebra
-              titulo="Por origem"
+              titulo="Por Origem"
               descricao="De onde vieram os lançamentos · Time todo"
               itens={ORIGENS}
               limite={5}
@@ -338,7 +338,7 @@ export function BlocosContabilProdutividade() {
               selecionado={origem}
             />
             <Variante nome="Carregando">
-              <PainelQuebra titulo="Por empresa" itens={undefined} carregando />
+              <PainelQuebra titulo="Por Empresa" itens={undefined} carregando />
             </Variante>
           </div>
         </Bloco>
@@ -382,14 +382,14 @@ export function BlocosContabilProdutividade() {
         >
           <div className="flex flex-col gap-4">
             <PainelEscada
-              titulo="Idade do que foi apagado"
+              titulo="Idade do Que Foi Apagado"
               descricao="Quanto tempo o lançamento tinha quando foi excluído · Time todo"
               faixas={FAIXAS_IDADE}
               valores={[1210, 402, 148, 61, 19]}
               rotuloItem="Exclusões"
             />
             <Variante nome="Carregando">
-              <PainelEscada titulo="Distribuição do atraso" faixas={FAIXAS_IDADE} valores={undefined} rotuloItem="Lançamentos" carregando />
+              <PainelEscada titulo="Distribuição do Atraso" faixas={FAIXAS_IDADE} valores={undefined} rotuloItem="Lançamentos" carregando />
             </Variante>
           </div>
         </Bloco>

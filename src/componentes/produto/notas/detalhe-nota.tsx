@@ -59,14 +59,14 @@ export function CorpoNotaLista({
 
       {nota.chaveNfe && (
         <BlocoDetalhe
-          titulo="Chave de acesso"
+          titulo="Chave de Acesso"
           acoes={<BotaoIcone icone="copiar" rotulo="Copiar chave" linha onClick={() => copiar(nota.chaveNfe!)} />}
         >
           <p className="num text-corpo break-all text-tinta-2 select-all">{nota.chaveNfe}</p>
         </BlocoDetalhe>
       )}
 
-      <BlocoDetalhe titulo="Itens da nota">{itens}</BlocoDetalhe>
+      <BlocoDetalhe titulo="Itens da Nota">{itens}</BlocoDetalhe>
     </div>
   );
 }

@@ -40,7 +40,7 @@ function Carregando() {
           <Indicador key={r} rotulo={r} valor="" detalhe="" carregando />
         ))}
       </FaixaIndicadores>
-      <Painel titulo="Validação contábil" icone="escudo">
+      <Painel titulo="Validação Contábil" icone="escudo">
         <div aria-busy className="flex flex-col gap-3">
           <p className="flex items-center gap-2 text-pequeno text-apagado">
             <Girando />
@@ -134,7 +134,7 @@ export default function Conteudo() {
     },
     {
       id: "estrutura",
-      rotulo: "Estrutura patrimonial",
+      rotulo: "Estrutura Patrimonial",
       nome: `analise-estrutura-${sufixo}`,
       montar: () => ({
         cabecalhos: ["Grupo", "Saldo", "Parte (%)"],
@@ -147,7 +147,7 @@ export default function Conteudo() {
     },
     {
       id: "dre",
-      rotulo: "Resultado do período",
+      rotulo: "Resultado do Período",
       nome: `analise-dre-${sufixo}`,
       montar: () => ({
         cabecalhos: ["Linha", "Valor", "Da receita (%)"],
@@ -182,7 +182,7 @@ export default function Conteudo() {
       </AcoesPagina>
 
       <CabecalhoPapel
-        titulo="Análise de balancete"
+        titulo="Análise de Balancete"
         empresa={empresa}
         itens={[
           { rotulo: "Período", valor: `${rotuloPeriodo} (${num(meses.length)} ${meses.length === 1 ? "mês" : "meses"})` },
@@ -201,13 +201,13 @@ export default function Conteudo() {
       {meses.length > 1 && (
         <>
           <PainelSerieMensal
-            titulo="Patrimônio mês a mês"
+            titulo="Patrimônio Mês a Mês"
             descricao="Saldo de cada grupo ao fim do mês"
             meses={meses}
             linhas={patrimonio}
           />
           <PainelSerieMensal
-            titulo="Resultado mês a mês"
+            titulo="Resultado Mês a Mês"
             descricao="Receita, custos e resultado no movimento de cada mês"
             meses={meses}
             linhas={fluxo}

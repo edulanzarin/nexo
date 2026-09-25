@@ -39,7 +39,7 @@ export function ComposicaoMes({
   const total = partes.reduce((s, p) => s + p.valor, 0);
 
   return (
-    <Painel titulo="Como o seu mês se divide" descricao="Por tipo de trabalho" icone="grafico">
+    <Painel titulo="Como o Seu Mês Se Divide" descricao="Por Tipo de Trabalho" icone="grafico">
       {carregando ? (
         <div aria-busy className="flex flex-col gap-3">
           <Esqueleto className="h-2 w-full" />

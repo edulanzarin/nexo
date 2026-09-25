@@ -25,14 +25,14 @@ export const SECOES_FISCAL: Secao[] = [
 ];
 
 export const SECOES_FOLHA: Secao[] = [
-  secao("folha", "painel-gestao", "Painel da equipe", "painel", "Visão", "Pendências e atividade do DP no mês"),
-  secao("folha", "painel", "Meu painel", "grade", "Visão", "Rescisões a pagar, férias vencidas e eSocial"),
+  secao("folha", "painel-gestao", "Painel da Equipe", "painel", "Visão", "Pendências e atividade do DP no mês"),
+  secao("folha", "painel", "Meu Painel", "grade", "Visão", "Rescisões a pagar, férias vencidas e eSocial"),
   secao("folha", "rotatividade", "Rotatividade", "rotatividade", "Análise", "Admissões e desligamentos sobre o efetivo"),
   secao("folha", "produtividade", "Produtividade", "velocimetro", "Equipe", "Movimentação, férias, folha e eSocial por colaborador"),
-  secao("folha", "custo", "Custo de folha", "moedas", "Análise", "Proventos por rubrica, tipo e setor"),
+  secao("folha", "custo", "Custo de Folha", "moedas", "Análise", "Proventos por rubrica, tipo e setor"),
   secao("folha", "esocial", "eSocial", "escudo", "Rotina", "Eventos aceitos, pendentes e rejeitados"),
   secao("folha", "ferias", "Férias", "calendario", "Rotina", "Férias vencidas e a vencer"),
-  secao("folha", "rescisoes", "Rescisões a pagar", "recibo", "Rotina", "Prazo de pagamento e avisos por e-mail"),
+  secao("folha", "rescisoes", "Rescisões a Pagar", "recibo", "Rotina", "Prazo de pagamento e avisos por e-mail"),
   ...secoesPostMortem("folha", "Equipe"),
 ];
 
@@ -58,7 +58,7 @@ export const SETORES_OBRIGACOES: Record<string, number[]> = {
 };
 
 export const SECOES_OBRIGACOES: Secao[] = [
-  secao("obrigacoes", "geral", "Visão geral", "grade", "Filas", "Entregas do escritório inteiro"),
+  secao("obrigacoes", "geral", "Visão Geral", "grade", "Filas", "Entregas do escritório inteiro"),
   secao("obrigacoes", "contabil", "Contábil", "calculadora", "Filas", "Balancetes e escriturações pendentes"),
   secao("obrigacoes", "fiscal", "Fiscal", "recibo", "Filas", "Guias, apurações e declarações pendentes"),
   secao("obrigacoes", "dp", "DP", "pessoas", "Filas", "Folha, encargos e obrigações de pessoal"),
@@ -68,5 +68,5 @@ export const SECOES_OBRIGACOES: Secao[] = [
 export const SECOES_SOCIETARIO: Secao[] = [...secoesPostMortem("societario", "Equipe")];
 
 export const SECOES_CONFIG: Secao[] = [
-  secao("config", "grupos-empresa", "Grupos de empresa", "camadas", "Cadastros", "Empresas agrupadas por grupo de negócio"),
+  secao("config", "grupos-empresa", "Grupos de Empresa", "camadas", "Cadastros", "Empresas agrupadas por grupo de negócio"),
 ];

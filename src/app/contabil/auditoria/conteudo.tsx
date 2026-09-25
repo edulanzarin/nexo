@@ -205,7 +205,7 @@ export default function Conteudo() {
 
       <Painel
         corpo="p-0"
-        titulo="Achados por checagem"
+        titulo="Achados por Checagem"
         descricao="Clique numa checagem para ver os lançamentos, maior valor primeiro"
         rodape={
           resumo && data && data.grupos.length > 0 && resumo.passaram.length > 0 ? (
@@ -224,7 +224,7 @@ export default function Conteudo() {
           <EsqueletoTabela linhas={6} colunas={5} />
         ) : (
           <TabelaDados
-            rotulo="Achados por checagem"
+            rotulo="Achados por Checagem"
             colunas={COLUNAS}
             linhas={data.grupos}
             chave={(g) => g.tipo}

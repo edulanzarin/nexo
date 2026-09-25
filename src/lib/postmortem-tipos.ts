@@ -271,7 +271,7 @@ export function validarEnvio(d: DadosPM): string[] {
   if (!d.empresaAfetada.trim()) faltando.push("Cliente / Empresa afetada");
   if (!d.processo.trim()) faltando.push("Processo / Rotina envolvida");
   if (!d.dataOcorrido) faltando.push("Data em que o erro ocorreu");
-  if (!d.descricao.trim()) faltando.push("Descrição do erro");
+  if (!d.descricao.trim()) faltando.push("Descrição do Erro");
   if (!d.causaRaiz.trim()) faltando.push("Causa raiz identificada");
   return faltando;
 }

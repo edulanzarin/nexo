@@ -39,7 +39,7 @@ export function LaudoEscrito({ qs }: { qs: string }) {
 
   return (
     <Painel
-      titulo="Laudo escrito"
+      titulo="Laudo Escrito"
       descricao="Redação por IA sobre a análise acima"
       icone="ia"
       // Sem laudo, o painel não vai para o papel: sairia um quadro vazio.

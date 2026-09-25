@@ -186,7 +186,7 @@ export function Conteudo() {
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <PainelEscada
-          titulo="Há quanto tempo cada empresa está parada"
+          titulo="Há Quanto Tempo Cada Empresa Está Parada"
           descricao="Carteira ativa pelo último lançamento de todos os tempos, não só do período"
           faixas={FAIXAS_PARADA}
           valores={d?.porFaixa}
@@ -196,7 +196,7 @@ export function Conteudo() {
         {/* Empresa atendida por uma pessoa só depende dela; atendida por muitas
             pode estar sem dono. As duas pontas são conversa com o gestor. */}
         <PainelQuebra
-          titulo="Quantas pessoas por empresa"
+          titulo="Quantas Pessoas por Empresa"
           descricao="Empresas pelo tamanho da equipe que lançou nelas"
           itens={porPessoas}
           corPadrao="var(--serie-5)"
@@ -207,7 +207,7 @@ export function Conteudo() {
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <PainelQuebra
-          titulo="Empresas com mais movimento"
+          titulo="Empresas com Mais Movimento"
           descricao="Onde o trabalho do período se concentrou"
           itens={topEmpresas}
           carregando={carregando}

@@ -40,7 +40,7 @@
   --apagado: #677289;
 
   --marca-laranja: #ff7a2e;
-  --marca-azul: #2f6bff;
+  --marca-azul: #154ffb;
 
   --acento: #c24d06;
   --acento-solido: #ff7a2e;
@@ -102,7 +102,8 @@
   --apagado: #7f8aa3;
 
   --marca-laranja: #ff7a2e;
-  --marca-azul: #5b8cff;
+  /* O azul do logo, um tom acima: o original some sobre o fundo noite. */
+  --marca-azul: #4a78ff;
 
   --acento: #ff9352;
   --acento-solido: #ff7a2e;
@@ -466,9 +467,10 @@
   }
 }
 
-@keyframes nx-traco {
+@keyframes nx-peca {
   from {
-    stroke-dashoffset: var(--traco, 40);
+    opacity: 0;
+    transform: translate(var(--dx, 0), var(--dy, 0));
   }
 }
 

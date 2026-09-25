@@ -14,21 +14,21 @@ export function secoesPostMortem(modulo: string, grupo: string): Secao[] {
   return [
     {
       id: SECAO_PM,
-      rotulo: "Post mortem",
+      rotulo: "Post Mortem",
       icone: "relatorio",
       grupo,
       path: pm,
       descricao: "Análise de incidente: preencha e acompanhe os seus relatórios",
-      abas: [abaAutonoma(SECAO_PM, "Post mortem", pm, "Os seus relatórios de incidente")],
+      abas: [abaAutonoma(SECAO_PM, "Post Mortem", pm, "Os seus relatórios de incidente")],
     },
     {
       id: SECAO_PM_GESTAO,
-      rotulo: "Post mortem da equipe",
+      rotulo: "Post Mortem da Equipe",
       icone: "relatorio-conferido",
       grupo,
       path: gestao,
       descricao: `Todos os relatórios do ${setor.rotulo}, de qualquer analista`,
-      abas: [abaAutonoma(SECAO_PM_GESTAO, "Post mortem da equipe", gestao, `Relatórios do ${setor.rotulo}`)],
+      abas: [abaAutonoma(SECAO_PM_GESTAO, "Post Mortem da Equipe", gestao, `Relatórios do ${setor.rotulo}`)],
     },
   ];
 }

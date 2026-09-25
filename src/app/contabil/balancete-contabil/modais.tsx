@@ -193,7 +193,7 @@ export function ModalAtipicas({
       onFechar={onFechar}
       largura="g"
       corpo="p-0"
-      titulo="Contas com sinal atípico"
+      titulo="Contas com Sinal Atípico"
       descricao="Devedoras com saldo credor e credoras com saldo devedor"
       rodape={<Botao onClick={onFechar}>Fechar</Botao>}
     >
@@ -201,7 +201,7 @@ export function ModalAtipicas({
         <Nota>Contas redutoras ficam de fora: o sinal trocado é o normal delas.</Nota>
       </div>
       <TabelaDados
-        rotulo="Contas com sinal atípico"
+        rotulo="Contas com Sinal Atípico"
         colunas={colunas}
         linhas={atipicas}
         chave={(a) => `${a.classif}:${a.conta}`}

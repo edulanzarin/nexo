@@ -156,7 +156,7 @@ export function BlocosContabilRotina() {
       </Bloco>
 
       <Bloco
-        titulo="Itens da nota"
+        titulo="Itens da Nota"
         porque="A soma de total, ICMS e IPI respeita o filtro de produto: quem filtra quer saber quanto deu naquele item. Serve o detalhe do explorador (Fiscal e Contábil) e o da conferência; a consulta dos itens vai pela rota do módulo, que registra a abertura na trilha."
       >
         <div className="nx-vidro rounded-painel p-4">
@@ -229,7 +229,7 @@ export function BlocosContabilRotina() {
         titulo="Filtro por contraparte"
         porque="Só aparece quem tem nota no recorte, com quantas notas tem. Um campo livre deixaria digitar um nome que não existe no período e descobrir depois, com a tabela vazia. A busca é no servidor, de 20 em 20: há empresa com milhares de fornecedores."
       >
-        <PainelModal estatico titulo="Filtrar por contraparte" descricao="Fornecedores com nota no recorte" onFechar={() => {}}>
+        <PainelModal estatico titulo="Filtrar por Contraparte" descricao="Fornecedores com nota no recorte" onFechar={() => {}}>
           <ListaContrapartes linhas={CONTRAPARTES} selecionada={1203} onEscolher={() => {}} />
         </PainelModal>
       </Bloco>

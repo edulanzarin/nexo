@@ -126,7 +126,7 @@ export function BlocosControles() {
             onMudar={setAba}
             itens={[
               { chave: "conferencia", rotulo: "Conferência", contagem: 32 },
-              { chave: "plano", rotulo: "Plano de contabilização" },
+              { chave: "plano", rotulo: "Plano de Contabilização" },
               { chave: "historico", rotulo: "Histórico" },
             ]}
           />

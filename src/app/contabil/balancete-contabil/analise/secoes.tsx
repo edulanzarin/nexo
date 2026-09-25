@@ -150,7 +150,7 @@ export function PainelValidacao({ analise }: { analise: AnaliseDeterministica })
   const lista = [...analise.inconsistencias].sort((a, b) => SEVERIDADE[a.severidade].ordem - SEVERIDADE[b.severidade].ordem);
   return (
     <Painel
-      titulo="Validação contábil"
+      titulo="Validação Contábil"
       descricao="Regras aplicadas aos saldos, da mais grave à mais leve"
       icone="escudo"
       corpo="p-0"
@@ -383,7 +383,7 @@ export function PainelEstrutura({ analise }: { analise: AnaliseDeterministica })
 
   return (
     <Painel
-      titulo="Estrutura patrimonial"
+      titulo="Estrutura Patrimonial"
       descricao="Saldo no último mês do período"
       icone="camadas"
       corpo="p-0"
@@ -407,7 +407,7 @@ export function PainelEstrutura({ analise }: { analise: AnaliseDeterministica })
         </div>
         <Legenda itens={[...ativo, ...passivo].map((l) => ({ rotulo: l.nome, cor: l.cor ?? "var(--serie-outras)" }))} />
       </div>
-      <TabelaDados rotulo="Estrutura patrimonial" colunas={COLUNAS_ESTRUTURA} linhas={linhas} chave={(l) => l.chave} />
+      <TabelaDados rotulo="Estrutura Patrimonial" colunas={COLUNAS_ESTRUTURA} linhas={linhas} chave={(l) => l.chave} />
     </Painel>
   );
 }
@@ -445,7 +445,7 @@ const COLUNAS_DRE: Coluna<LinhaDRE>[] = [
 export function PainelDre({ dre }: { dre: LinhaDRE[] }) {
   return (
     <Painel
-      titulo="Resultado do período"
+      titulo="Resultado do Período"
       descricao="DRE condensada"
       icone="relatorio"
       corpo="p-0"
@@ -457,7 +457,7 @@ export function PainelDre({ dre }: { dre: LinhaDRE[] }) {
       }
     >
       <TabelaDados
-        rotulo="Resultado do período"
+        rotulo="Resultado do Período"
         colunas={COLUNAS_DRE}
         linhas={dre}
         chave={(l) => l.chave}

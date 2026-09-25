@@ -16,12 +16,9 @@ export default async function PaginaLogin({
   return (
     <main className="grid min-h-dvh grid-cols-1 lg:grid-cols-[1.1fr_1fr]">
       <section className="flex flex-col justify-between gap-10 px-8 pt-10 pb-8 sm:px-14 lg:py-14">
-        <div className="flex items-center gap-2 text-corpo text-apagado">
-          <MarcaNavex tamanho={18} />
-          Navecon
-        </div>
+        <p className="text-corpo text-apagado">Navecon</p>
         <div className="max-w-xl">
-          <MarcaNavex tamanho={88} desenhar className="-ml-2" />
+          <MarcaNavex tamanho={64} entrada />
           <h1 className="mt-6 text-[56px] leading-[0.95] font-[680] tracking-[-0.035em] text-tinta [font-stretch:88%]">
             NaveX
           </h1>

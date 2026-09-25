@@ -119,7 +119,7 @@ export function TelaNoNavex({ modulo, dados: d }: { modulo: ModuloApp; dados: Pr
     return [
       {
         id: "pessoas",
-        rotulo: "Quem usou o NaveX",
+        rotulo: "Quem Usou o NaveX",
         nome: arquivo("pessoas", true),
         montar: () => ({
           cabecalhos: ["Pessoa", "Situação", "Concluídos", "Consultas", "Total", "Empresas", "Dias", "Último dia", ...trabalhos.map((t) => t.rotulo)],
@@ -318,7 +318,7 @@ export function TelaNoNavex({ modulo, dados: d }: { modulo: ModuloApp; dados: Pr
         )}
       </div>
 
-      <Painel titulo="Por tipo de trabalho" descricao={pessoa ? `Registros de ${pessoa.nome}` : "Registros do time"}>
+      <Painel titulo="Por Tipo de Trabalho" descricao={pessoa ? `Registros de ${pessoa.nome}` : "Registros do time"}>
         {porClasse ? (
           <ComposicaoClasses classes={classes} porClasse={porClasse} total={eventos} ocultarVazio={classes.map((c) => c.id)} />
         ) : (
@@ -327,7 +327,7 @@ export function TelaNoNavex({ modulo, dados: d }: { modulo: ModuloApp; dados: Pr
       </Painel>
 
       <RankingPessoas
-        titulo="Quem usou o NaveX"
+        titulo="Quem Usou o NaveX"
         descricao={pessoa ? "O ranking segue com o time todo" : "Clique numa pessoa para isolar o resto da tela"}
         linhas={d?.ranking}
         colunas={COLUNAS}
@@ -340,7 +340,7 @@ export function TelaNoNavex({ modulo, dados: d }: { modulo: ModuloApp; dados: Pr
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <PainelQuebra
-          titulo="Por ação"
+          titulo="Por Ação"
           descricao={`O gesto exato registrado na trilha · ${escopo}`}
           itens={acoes}
           carregando={carregando}
@@ -348,7 +348,7 @@ export function TelaNoNavex({ modulo, dados: d }: { modulo: ModuloApp; dados: Pr
           selecionado={acaoAberta}
         />
         <PainelQuebra
-          titulo="Por empresa"
+          titulo="Por Empresa"
           descricao={pessoa ? `Onde ${pessoa.nome} trabalhou` : "Onde o trabalho no app aconteceu"}
           itens={empresas}
           carregando={carregando}

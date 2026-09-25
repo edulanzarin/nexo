@@ -135,7 +135,7 @@ export function Conteudo() {
     return [
       {
         id: "pessoas",
-        rotulo: "Atraso por pessoa",
+        rotulo: "Atraso por Pessoa",
         nome: `atraso-contabil-pessoas-${periodo}`,
         montar: () => ({
           cabecalhos: [
@@ -170,7 +170,7 @@ export function Conteudo() {
       },
       {
         id: "competencias",
-        rotulo: "Competências trabalhadas",
+        rotulo: "Competências Trabalhadas",
         nome: `atraso-contabil-competencias-${periodo}`,
         montar: () => ({
           cabecalhos: ["Competência", "Lançamentos", "Atraso mediano (dias)", "Pessoas"],
@@ -179,7 +179,7 @@ export function Conteudo() {
       },
       {
         id: "serie",
-        rotulo: "Atraso ao longo do período",
+        rotulo: "Atraso ao Longo do Período",
         nome: `atraso-contabil-evolucao-${periodo}`,
         montar: () => ({
           cabecalhos: [g === "mes" ? "Mês" : "Dia", "Lançamentos", "Atraso mediano (dias)", "p90 (dias)"],
@@ -277,7 +277,7 @@ export function Conteudo() {
       </div>
 
       <PainelEscada
-        titulo="Distribuição do atraso"
+        titulo="Distribuição do Atraso"
         descricao={`Quanto cada lançamento esperou entre o fato e o registro · ${pessoa ? pessoa.nome : "Time todo"}`}
         faixas={FAIXAS_ATRASO}
         valores={pessoa ? pessoa.porFaixa : d?.totais.porFaixa}
@@ -287,7 +287,7 @@ export function Conteudo() {
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <CaixaGrafico
-          titulo="Competências trabalhadas"
+          titulo="Competências Trabalhadas"
           descricao="Lançamentos por mês do fato, na cor do atraso mediano daquele mês"
           carregando={carregando}
           vazio={competencias.length === 0 ? "Nenhuma competência no período." : false}
@@ -316,7 +316,7 @@ export function Conteudo() {
         </CaixaGrafico>
 
         <CaixaGrafico
-          titulo="Atraso ao longo do período"
+          titulo="Atraso ao Longo do Período"
           descricao={`Dias entre o fato e o registro, por ${nomeGranularidade(g)} de trabalho`}
           carregando={carregando}
           vazio={d && d.serie.every((p) => p.total === 0) ? "Nenhum lançamento no período." : false}
@@ -350,7 +350,7 @@ export function Conteudo() {
       </div>
 
       <RankingPessoas
-        titulo="Atraso por pessoa"
+        titulo="Atraso por Pessoa"
         descricao={pessoa ? "O ranking segue com o time todo" : "Clique numa pessoa para isolar os números do topo"}
         linhas={d?.ranking}
         colunas={COLUNAS}
@@ -363,7 +363,7 @@ export function Conteudo() {
       />
 
       <PainelQuebra
-        titulo="Empresas mais atrasadas"
+        titulo="Empresas Mais Atrasadas"
         descricao={`Atraso mediano, só empresas com ${num(d?.minimoEmpresa ?? 20)} ou mais lançamentos no período`}
         itens={empresas}
         formatar={(v) => emDias(v)}

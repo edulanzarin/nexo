@@ -14,7 +14,7 @@ export const SECOES_CONTABIL: Secao[] = [
   // módulo cai na primeira seção visível.
   {
     id: "painel-gestao",
-    rotulo: "Painel da equipe",
+    rotulo: "Painel da Equipe",
     icone: "painel",
     grupo: "Visão",
     path: "/contabil/painel-gestao",
@@ -22,7 +22,7 @@ export const SECOES_CONTABIL: Secao[] = [
     abas: [
       abaAutonoma(
         "painel-gestao",
-        "Painel da equipe",
+        "Painel da Equipe",
         "/contabil/painel-gestao",
         "Atividade do time no mês, série de seis meses e a base configurada"
       ),
@@ -30,18 +30,18 @@ export const SECOES_CONTABIL: Secao[] = [
   },
   {
     id: "painel",
-    rotulo: "Meu painel",
+    rotulo: "Meu Painel",
     icone: "grade",
     grupo: "Visão",
     path: "/contabil/painel",
     descricao: "O que você rodou no mês e a base configurada",
     abas: [
-      abaAutonoma("painel", "Meu painel", "/contabil/painel", "O que você rodou no mês e a base configurada"),
+      abaAutonoma("painel", "Meu Painel", "/contabil/painel", "O que você rodou no mês e a base configurada"),
     ],
   },
   {
     id: "conciliacao",
-    rotulo: "Conciliação bancária",
+    rotulo: "Conciliação Bancária",
     icone: "banco",
     grupo: "Rotina",
     path: "/contabil/conciliacao",
@@ -49,7 +49,7 @@ export const SECOES_CONTABIL: Secao[] = [
     abas: [
       {
         id: "importar",
-        rotulo: "Importar extrato",
+        rotulo: "Importar Extrato",
         path: "/contabil/conciliacao",
         descricao: "Leia o OFX ou o PDF do banco e gere o arquivo de lançamentos",
         periodo: "nenhum",
@@ -67,7 +67,7 @@ export const SECOES_CONTABIL: Secao[] = [
   },
   {
     id: "conferencia",
-    rotulo: "Conferência fiscal",
+    rotulo: "Conferência Fiscal",
     icone: "conferencia",
     grupo: "Rotina",
     path: "/contabil/conferencia",
@@ -82,7 +82,7 @@ export const SECOES_CONTABIL: Secao[] = [
       },
       {
         id: "configuracao",
-        rotulo: "Plano de contabilização",
+        rotulo: "Plano de Contabilização",
         path: "/contabil/configuracao",
         descricao: "Como cada CFOP é lançado nesta empresa",
         periodo: "nenhum",
@@ -92,7 +92,7 @@ export const SECOES_CONTABIL: Secao[] = [
   },
   {
     id: "pendencias",
-    rotulo: "Central de pendências",
+    rotulo: "Central de Pendências",
     icone: "fila",
     grupo: "Rotina",
     path: "/contabil/pendencias",
@@ -108,7 +108,7 @@ export const SECOES_CONTABIL: Secao[] = [
   },
   {
     id: "notas",
-    rotulo: "Notas fiscais",
+    rotulo: "Notas Fiscais",
     icone: "nota",
     grupo: "Rotina",
     path: "/contabil/notas",
@@ -125,7 +125,7 @@ export const SECOES_CONTABIL: Secao[] = [
   },
   {
     id: "balancete",
-    rotulo: "Balancete fiscal",
+    rotulo: "Balancete Fiscal",
     icone: "balanca",
     grupo: "Balancetes",
     path: "/contabil/balancete-fiscal",
@@ -133,7 +133,7 @@ export const SECOES_CONTABIL: Secao[] = [
     abas: [
       {
         id: "balancete",
-        rotulo: "Balancete fiscal",
+        rotulo: "Balancete Fiscal",
         path: "/contabil/balancete-fiscal",
         descricao: "Movimento esperado pelas regras de cada CFOP, conta a conta, contra o contábil",
         filial: true,
@@ -143,7 +143,7 @@ export const SECOES_CONTABIL: Secao[] = [
   {
     // id "analise" é a chave de permissão da seção desde o nexo2.
     id: "analise",
-    rotulo: "Balancete contábil",
+    rotulo: "Balancete Contábil",
     icone: "planilha",
     grupo: "Balancetes",
     path: "/contabil/balancete-contabil",
@@ -169,7 +169,7 @@ export const SECOES_CONTABIL: Secao[] = [
   },
   {
     id: "auditoria",
-    rotulo: "Auditoria de lançamentos",
+    rotulo: "Auditoria de Lançamentos",
     icone: "lupa",
     grupo: "Revisão",
     path: "/contabil/auditoria",

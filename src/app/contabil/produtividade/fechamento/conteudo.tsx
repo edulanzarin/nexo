@@ -249,7 +249,7 @@ export function Conteudo() {
       },
       {
         id: "analistas",
-        rotulo: "Por analista",
+        rotulo: "Por Analista",
         nome: `fechamento-contabil-analistas-${ref}`,
         montar: () => ({
           cabecalhos: ["Analista", "Carteira", "Fechadas", "Em aberto", "Sem movimento", "Fechado (%)"],
@@ -377,7 +377,7 @@ export function Conteudo() {
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <Painel
-          titulo="Por analista"
+          titulo="Por Analista"
           descricao={d ? `Responsável pelo setor Contábil no Acessórias, em ${ref}` : "Responsável pelo setor Contábil"}
           corpo="p-0"
           rodape={<Nota>Os nomes vêm como estão no Acessórias, marcadores de fluxo inclusive.</Nota>}
@@ -396,7 +396,7 @@ export function Conteudo() {
           )}
         </Painel>
         <CaixaGrafico
-          titulo="Por competência"
+          titulo="Por Competência"
           descricao="Empresas fechadas e em aberto em cada mês do período"
           carregando={carregando}
           vazio={porMes.length === 0 || porMes.every((m) => m.fechadas + m.abertas === 0) ? "Nada para medir no período." : false}
