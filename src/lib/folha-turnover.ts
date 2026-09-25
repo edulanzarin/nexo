@@ -24,7 +24,9 @@ export interface FolhaFiltrosSel {
 
 export function parseFolhaFiltrosSel(sp: URLSearchParams): FolhaFiltrosSel {
   return {
-    estabs: sp.getAll("estabs"),
+    // Pelo nome, em parâmetro próprio: `estabs` é a filial numérica do contexto
+    // (ver `serializarFolhaSelecao`).
+    estabs: sp.getAll("estabelecimentos"),
     setores: sp.getAll("setores"),
     cargos: sp.getAll("cargos"),
     vinculos: sp.getAll("vinculos"),
@@ -172,14 +174,8 @@ export const EXPR_ESTADOCIVIL = `case coalesce(estadocivil, 0)
     else '(n/d)'
   end`;
 
-/** Rótulo amigável do vínculo (categoria|tipovinculo). Sem tabela de domínio na
- *  base, mapeia só o certo (CLT) e mostra o resto cru — honesto. */
-export function rotuloVinculo(vinc: string): string {
-  const [categoria, tipo] = vinc.split("|");
-  if (categoria === "01" && tipo === "10") return "Empregado (CLT)";
-  if (categoria === "01") return `Empregado · tipo ${tipo || "?"}`;
-  return `Categoria ${categoria || "?"} · tipo ${tipo || "?"}`;
-}
+// O rótulo do vínculo mora no lado neutro: a ficha, no cliente, também o usa.
+export { rotuloVinculo } from "./folha-filtros";
 
 /** eSocial tabela 18 — grau de instrução. */
 const ESCOLARIDADE: Record<number, string> = {
