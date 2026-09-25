@@ -19,6 +19,7 @@ export const FAMILIAS = [
   { id: "fiscal", titulo: "Fiscal" },
   { id: "dp", titulo: "DP" },
   { id: "rh", titulo: "RH" },
+  { id: "obrigacoes", titulo: "Obrigações" },
   { id: "config", titulo: "Configurações" },
 ];
 

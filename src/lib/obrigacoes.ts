@@ -171,6 +171,8 @@ export interface EstadoVarredura {
   retomadaDe: number | null;
   /** Segundos estimados para o fim, pela média já observada. Null sem base. */
   restanteSegundos: number | null;
+  /** Iniciar agora continua de onde a última parou (o botão vira Retomar). */
+  retomavel: boolean;
 }
 
 /**
@@ -187,6 +189,22 @@ const MINUTOS_SEM_BATIMENTO = 2;
  * índice que aponta para outra empresa.
  */
 const HORAS_RETOMAVEL = 24;
+
+/**
+ * A execução de onde a próxima continua, se houver: a ÚLTIMA encerrada, e só
+ * quando ela parou no meio há menos de `HORAS_RETOMAVEL`. O nexo2 procurava a
+ * última parcial entre todas, e uma varredura completa feita depois dela não
+ * impedia a próxima de recomeçar do meio de um retrato já superado.
+ */
+const SQL_RETOMADA = `
+  select progresso, total from (
+    select progresso, total, iniciado_em from obr_sync
+     where concluido_em is not null
+     order by iniciado_em desc
+     limit 1
+  ) u
+  where progresso > 0 and progresso < total
+    and iniciado_em > now() - ($1 || ' hours')::interval`;
 
 /**
  * Varre a carteira e materializa a fila. Idempotente: `ent_id` é a chave, então
@@ -213,16 +231,7 @@ export async function sincronizarObrigacoes(): Promise<ResumoSync> {
   // Retomada: uma execução interrompida nas últimas horas deixa por onde
   // continuar. É o que torna um restart de container um atraso, e não a perda de
   // meia hora de varredura.
-  const [anterior] = await appQuery<{ progresso: number; total: number }>(
-    `select progresso, total from obr_sync
-      where concluido_em is not null
-        and progresso > 0
-        and progresso < total
-        and iniciado_em > now() - ($1 || ' hours')::interval
-      order by iniciado_em desc
-      limit 1`,
-    [String(HORAS_RETOMAVEL)]
-  );
+  const [anterior] = await appQuery<{ progresso: number; total: number }>(SQL_RETOMADA, [String(HORAS_RETOMAVEL)]);
   const retomadaDe = anterior?.progresso ?? null;
 
   const [{ id: syncId }] = await appQuery<{ id: string }>(
@@ -538,7 +547,7 @@ export async function estadoVarredura(): Promise<EstadoVarredura> {
     return {
       id: null, rodando: false, progresso: 0, total: 0, entregas: 0, falhas: 0,
       iniciadoEm: null, concluidoEm: null, erro: null, cancelamentoPedido: false,
-      retomadaDe: null, restanteSegundos: null,
+      retomadaDe: null, restanteSegundos: null, retomavel: false,
     };
   }
 
@@ -564,6 +573,7 @@ export async function estadoVarredura(): Promise<EstadoVarredura> {
     cancelamentoPedido: r.cancelar,
     retomadaDe: r.retomada_de,
     restanteSegundos,
+    retomavel: !r.aberta && (await appQuery(SQL_RETOMADA, [String(HORAS_RETOMAVEL)])).length > 0,
   };
 }
 
@@ -794,6 +804,9 @@ export async function montarPainelObrigacoes(
     return null;
   };
 
+  // Os totais não caem em silêncio como os outros blocos: zerados, eles diriam
+  // "escritório em dia" quando a consulta falhou. Sem eles, a tela mostra o erro.
+  if (totais.status === "rejected") throw totais.reason;
   const t = colher(totais, "totais")?.[0];
   return {
     sync,

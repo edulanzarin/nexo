@@ -16,6 +16,8 @@ import { BlocosDpProdutividade } from "./blocos/dp-produtividade";
 import { BlocosDpRotina } from "./blocos/dp-rotina";
 import { BlocosFiscalVisao } from "./blocos/fiscal-visao";
 import { BlocosFundamentos } from "./blocos/fundamentos";
+import { BlocosObrigacoesFila } from "./blocos/obrigacoes-fila";
+import { BlocosObrigacoesVarredura } from "./blocos/obrigacoes-varredura";
 import { BlocosGraficos } from "./blocos/graficos";
 import { BlocosProduto } from "./blocos/produto";
 import { BlocosRhAvaliacoes } from "./blocos/rh-avaliacoes";
@@ -63,6 +65,10 @@ export default function PaginaSistema() {
           <BlocosRhAvaliacoes />
           <BlocosRhFormularios />
           <BlocosRhCanais />
+        </Familia>
+        <Familia id="obrigacoes" titulo="Obrigações" descricao="A fila de entregas do Acessórias e a varredura que a alimenta.">
+          <BlocosObrigacoesFila />
+          <BlocosObrigacoesVarredura />
         </Familia>
         <Familia
           id="config"
