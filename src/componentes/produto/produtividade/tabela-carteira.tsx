@@ -91,6 +91,10 @@ export function TabelaCarteira<T extends LinhaCarteira>({
       {
         id: "nome",
         cabecalho: "Empresa",
+        // Em porcentagem para o nome truncar: sem largura, a razão social mais
+        // longa alargava a tabela e empurrava Último e Parada há para fora da
+        // vista, e essas são as colunas que a aba existe para mostrar.
+        largura: "34%",
         ordenar: (e) => e.nome,
         celula: (e) => (
           <span className="flex min-w-0 items-center gap-2">
@@ -119,7 +123,7 @@ export function TabelaCarteira<T extends LinhaCarteira>({
       {
         id: "principal",
         cabecalho: rotuloPrincipal,
-        largura: "180px",
+        largura: "20%",
         secundaria: true,
         ordenar: (e) => e.principal ?? "",
         celula: (e) => <span className="block truncate">{e.principal ?? "—"}</span>,

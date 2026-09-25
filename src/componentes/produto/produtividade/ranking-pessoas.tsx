@@ -102,6 +102,9 @@ export function RankingPessoas<K extends ChavePessoa, T extends LinhaPessoa<K>>(
     {
       id: "pessoa",
       cabecalho: "Pessoa",
+      // Em porcentagem para o nome truncar quando o ranking tem muita coluna
+      // (o do Fiscal passa de dez): sem isso a última coluna saía da vista.
+      largura: "24%",
       celula: (l) => {
         const sel = selecionada === l.codigo;
         return (
