@@ -7,8 +7,12 @@ Reescrita do Nexo: a camada de domínio vem do nexo2, a interface é nova.
 
 | Módulo | Situação |
 |---|---|
-| Contábil | em construção |
-| Fiscal, DP, RH, Obrigações, Societário, Configurações | seguem no Nexo |
+| Contábil, Fiscal, DP, RH | prontos, conferidos contra o Questor |
+| Obrigações, Societário, Configurações | seguem no Nexo |
+
+O agendador (avisos de rescisão, lembretes de experiência, envios recorrentes)
+ainda não sobe no compose: enquanto o nexo2 estiver no ar, é ele quem manda os
+e-mails. Dois agendadores mandariam cada aviso em dobro.
 
 ## Rodar
 

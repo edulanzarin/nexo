@@ -33,6 +33,10 @@ Executar. Ela lê `useExecucao()`: `qs` é a query do recorte executado, pronta
 para mandar à API. A moldura já decidiu que a tela só monta com empresa (se a
 aba exige) e depois da primeira execução (se a aba é de botão).
 
+A exceção é o RH: o dado dele é fixo nas empresas da própria Navecon, que o
+seletor do topo nem lista. As abas do RH não leem empresa do contexto, e a
+tela que recorta por empresa usa `SeletorEmpresaRh` (`produto/rh/empresa-rh`).
+
 Filtro próprio da tela (entradas/saídas, situação, busca) aplica na hora e vai
 junto na query; ações próprias no cabeçalho vão por `<AcoesPagina>`.
 
