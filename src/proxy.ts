@@ -21,6 +21,10 @@ export function proxy(req: NextRequest) {
 
 export const config = {
   // Tudo, exceto: API, assets do Next, o /login, o catálogo de componentes
-  // (/sistema, só dado de mentira) e arquivos estáticos com extensão.
-  matcher: ["/((?!api|_next/static|_next/image|login|sistema|.*\.[\w]+$).*)"],
+  // (/sistema, só dado de mentira), as páginas públicas do RH e arquivos
+  // estáticos com extensão. As do RH são abertas por link, sem conta: o
+  // formulário por token (`f/`, com a barra para não pegar /fiscal e /folha, e
+  // o `experiencia/` dos e-mails antigos), a denúncia e a avaliação de clima.
+  // `/rh/denuncias` e `/rh/clima` seguem protegidas, porque começam com `rh`.
+  matcher: ["/((?!api|_next/static|_next/image|login|sistema|f/|experiencia/|denuncia|clima|.*\.[\w]+$).*)"],
 };

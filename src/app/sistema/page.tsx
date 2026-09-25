@@ -17,6 +17,7 @@ import { BlocosFiscalVisao } from "./blocos/fiscal-visao";
 import { BlocosFundamentos } from "./blocos/fundamentos";
 import { BlocosGraficos } from "./blocos/graficos";
 import { BlocosProduto } from "./blocos/produto";
+import { BlocosRhBase } from "./blocos/rh-base";
 import { BlocosSobreposicoes } from "./blocos/sobreposicoes";
 import { Familia } from "./bloco";
 import { Semeador } from "./semeador";
@@ -43,12 +44,16 @@ export default function PaginaSistema() {
         <Familia id="fiscal" titulo="Fiscal" descricao="Peças que só o Fiscal usa, nascidas nas telas dele.">
           <BlocosFiscalVisao />
         </Familia>
-        {/* A ficha e as quebras de pessoal moram em produto/pessoal porque o RH
-            vai usar as mesmas peças; o catálogo as mostra aqui, onde nasceram. */}
+        {/* A ficha, as quebras e a tela inteira da Rotatividade moram em
+            produto/pessoal porque o RH usa as mesmas peças; o catálogo as
+            mostra aqui, onde nasceram. */}
         <Familia id="dp" titulo="DP" descricao="Peças que só o DP usa, nascidas nas telas dele.">
           <BlocosDpRotina />
           <BlocosDpPessoal />
           <BlocosDpProdutividade />
+        </Familia>
+        <Familia id="rh" titulo="RH" descricao="Peças que só o RH usa, nascidas nas telas dele e nas páginas abertas do canal.">
+          <BlocosRhBase />
         </Familia>
       </div>
     </Semeador>

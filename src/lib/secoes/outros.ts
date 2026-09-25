@@ -14,18 +14,6 @@ function secao(modulo: string, id: string, rotulo: string, icone: string, grupo:
   return { id, rotulo, icone, grupo, path, descricao, abas: [] };
 }
 
-export const SECOES_RH: Secao[] = [
-  secao("rh", "painel", "Painel", "painel", "Visão", "Pendências e panorama do mês"),
-  secao("rh", "diretorio", "Diretório", "pessoas", "Pessoas", "Funcionários, com filtro e ficha"),
-  secao("rh", "experiencia", "Experiência", "calendario", "Pessoas", "Avaliação de 45 e 90 dias"),
-  secao("rh", "desempenho", "Desempenho", "tendencia", "Pessoas", "Avaliação respondida pelos gestores"),
-  secao("rh", "formularios", "Formulários", "relatorio", "Canais", "Formulários e envios aos gestores"),
-  secao("rh", "rotatividade", "Rotatividade", "rotatividade", "Pessoas", "Turnover das empresas do RH"),
-  secao("rh", "denuncias", "Denúncias", "escudo", "Canais", "Canal anônimo: fila, tratativa e status"),
-  secao("rh", "clima", "Avaliações", "coracao", "Canais", "eNPS, temas e comentários"),
-  secao("rh", "gestores", "Gestores", "pessoas", "Pessoas", "Supervisores e coordenadores por setor"),
-];
-
 /** Setores do Acessórias que cada seção mostra (ids do Acessórias; vazio = todos). */
 export const SETORES_OBRIGACOES: Record<string, number[]> = {
   geral: [],

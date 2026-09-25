@@ -1,12 +1,8 @@
 import { SECOES_CONTABIL } from "./secoes/contabil";
 import { SECOES_FISCAL } from "./secoes/fiscal";
 import { SECOES_FOLHA } from "./secoes/folha";
-import {
-  SECOES_CONFIG,
-  SECOES_OBRIGACOES,
-  SECOES_RH,
-  SECOES_SOCIETARIO,
-} from "./secoes/outros";
+import { SECOES_CONFIG, SECOES_OBRIGACOES, SECOES_SOCIETARIO } from "./secoes/outros";
+import { SECOES_RH } from "./secoes/rh";
 import type { Aba, Secao } from "./secoes/tipos";
 
 export type ModuloId =
@@ -69,7 +65,7 @@ export const MODULOS: Modulo[] = [
     descricao: "Pessoal da Navecon: diretório, experiência e canais",
     icone: "setor-rh",
     cor: "rosa",
-    pronto: false,
+    pronto: true,
   },
   {
     id: "obrigacoes",
