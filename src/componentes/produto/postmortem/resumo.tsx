@@ -147,7 +147,7 @@ export function TabelaPM({
           {
             id: "autor",
             cabecalho: "Analista",
-            largura: "18%",
+            largura: "14%",
             ordenar: (r: ResumoPM) => r.autorNome,
             classe: "text-tinta",
             celula: (r: ResumoPM) => <span className="block truncate">{r.autorNome}</span>,
@@ -157,6 +157,10 @@ export function TabelaPM({
     {
       id: "empresa",
       cabecalho: "Empresa afetada",
+      // As três colunas de texto em porcentagem: sem largura elas crescem até
+      // o texto inteiro, e no Societário, com a gravidade a mais, empurravam o
+      // Atualizado para fora da tabela a 1440 px.
+      largura: "26%",
       ordenar: (r) => r.empresaAfetada,
       celula: (r) =>
         r.empresaAfetada ? (
@@ -170,6 +174,7 @@ export function TabelaPM({
           {
             id: "grupo",
             cabecalho: "Grupo",
+            largura: "14%",
             secundaria: true,
             ordenar: (r: ResumoPM) => r.grupoNome,
             celula: (r: ResumoPM) => <span className="block truncate text-apagado">{r.grupoNome ?? "—"}</span>,
@@ -179,6 +184,7 @@ export function TabelaPM({
     {
       id: "processo",
       cabecalho: "Processo",
+      largura: "22%",
       ordenar: (r) => r.processo,
       celula: (r) => <span className="block truncate text-tinta-2">{r.processo || "—"}</span>,
     },
