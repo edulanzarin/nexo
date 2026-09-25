@@ -13,17 +13,22 @@ import type { ClasseInfo, PorClasseGen } from "@/lib/prod-tipos";
  * Classe zerada listada em `ocultarVazio` some em vez de virar um zero que não
  * diz nada ("Outras origens" num mês em que tudo se classificou). As outras
  * ficam: zero em "Digitado" é afirmação.
+ *
+ * O que se compõe é de quem chama: quase sempre contagem, mas a aba Impostos
+ * do Fiscal compõe reais, e aí o `formatar` troca o número pelo valor.
  */
 export function ComposicaoClasses({
   classes,
   porClasse,
   total,
   ocultarVazio = [],
+  formatar = num,
 }: {
   classes: ClasseInfo[];
   porClasse: PorClasseGen;
   total: number;
   ocultarVazio?: string[];
+  formatar?: (v: number) => string;
 }) {
   const visiveis = classes.filter((c) => !(ocultarVazio.includes(c.id) && !porClasse[c.id]));
   if (total === 0)
@@ -35,7 +40,7 @@ export function ComposicaoClasses({
         partes={visiveis.map((c) => ({
           valor: porClasse[c.id] ?? 0,
           cor: c.cor,
-          rotulo: `${c.rotulo}: ${num(porClasse[c.id] ?? 0)}`,
+          rotulo: `${c.rotulo}: ${formatar(porClasse[c.id] ?? 0)}`,
         }))}
       />
       <div className="grid gap-x-5 gap-y-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
@@ -50,7 +55,7 @@ export function ComposicaoClasses({
                 </span>
               </Dica>
               <p className="mt-0.5 flex items-baseline gap-2">
-                <span className="nx-leitura text-titulo text-tinta">{num(n)}</span>
+                <span className="nx-leitura text-titulo text-tinta">{formatar(n)}</span>
                 <span className="num text-pequeno text-apagado">{pct((n / total) * 100)}</span>
               </p>
             </div>

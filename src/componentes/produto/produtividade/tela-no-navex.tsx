@@ -56,8 +56,13 @@ export function TelaNoNavex({ modulo, dados: d }: { modulo: ModuloApp; dados: Pr
   const classes = useMemo(() => classesDe(modulo), [modulo]);
   const trabalhos = useMemo(() => trabalhosDe(modulo), [modulo]);
   // O módulo que não produz nada dentro do app não ganha um indicador sempre
-  // zerado: no lugar dele entram os dias com registro.
+  // zerado: no lugar dele entram os dias com registro. A coluna Concluídos do
+  // ranking sai pelo mesmo motivo (no Fiscal ela seria zero para todo mundo).
   const temProducao = trabalhos.some((t) => t.tipo === "producao");
+  const colunas = useMemo(
+    () => (temProducao ? COLUNAS : COLUNAS.filter((c) => c.id !== "producao")),
+    [temProducao]
+  );
   const carregando = !d;
 
   const pessoa = useMemo(
@@ -330,7 +335,7 @@ export function TelaNoNavex({ modulo, dados: d }: { modulo: ModuloApp; dados: Pr
         titulo="Quem Usou o NaveX"
         descricao={pessoa ? "O ranking segue com o time todo" : "Clique numa pessoa para isolar o resto da tela"}
         linhas={d?.ranking}
-        colunas={COLUNAS}
+        colunas={colunas}
         ordemInicial={temProducao ? "producao" : "eventos"}
         carregando={carregando}
         selecionada={pessoa ? pessoa.codigo : null}

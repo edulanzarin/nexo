@@ -29,6 +29,7 @@ import { FAIXAS_PARADA } from "@/lib/contabil-carteira-tipos";
 import { FAIXAS_IDADE } from "@/lib/contabil-exclusoes-tipos";
 import type { SituacaoFechamento } from "@/lib/contabil-fechamento-tipos";
 import { CLASSES } from "@/lib/contabil-produtividade-tipos";
+import { TRIBUTOS } from "@/lib/fiscal-impostos-tipos";
 import { Bloco, Variante } from "../bloco";
 import { diasFalsos, EMPRESAS_FALSAS, PESSOAS_FALSAS } from "../dados-falsos";
 
@@ -78,6 +79,10 @@ const COLUNAS: ColunaRanking<PessoaFalsa>[] = [
 
 const POR_CLASSE = { digitado: 9214, importado: 6120, integrado: 4872, apuracao: 318, outros: 0 };
 const TOTAL_CLASSES = Object.values(POR_CLASSE).reduce((a, b) => a + b, 0);
+
+// A mesma composição medindo reais, como na aba Impostos do Fiscal.
+const POR_TRIBUTO: Record<string, number> = { icms: 1842300, st: 412800, ipi: 210450, pis: 96120, cofins: 442900, iss: 88400 };
+const TOTAL_TRIBUTOS = Object.values(POR_TRIBUTO).reduce((a, b) => a + b, 0);
 
 const SERIE: SeriePontoGen[] = Array.from({ length: 31 }, (_, i) => {
   const dia = new Date(Date.UTC(2026, 7, i + 1));
@@ -286,9 +291,21 @@ export function BlocosContabilProdutividade() {
         titulo="Composição por classe"
         porque="De que é feito o total: natureza do lançamento, espécie da nota, tipo de gesto no NaveX. Uma barra e o peso de cada classe, na cor do catálogo do dado. Classe zerada pode sumir (Outras origens num mês em que tudo se classificou); as outras ficam, porque zero em Digitado é afirmação."
       >
-        <Painel titulo="Por Natureza" descricao="Lançamentos do time">
-          <ComposicaoClasses classes={CLASSES} porClasse={POR_CLASSE} total={TOTAL_CLASSES} ocultarVazio={["outros"]} />
-        </Painel>
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <Painel titulo="Por Natureza" descricao="Lançamentos do time">
+            <ComposicaoClasses classes={CLASSES} porClasse={POR_CLASSE} total={TOTAL_CLASSES} ocultarVazio={["outros"]} />
+          </Painel>
+          <Variante nome="Em reais (Impostos do Fiscal)">
+            <Painel titulo="Por Tributo" descricao="Tributo das notas do time">
+              <ComposicaoClasses
+                classes={TRIBUTOS.filter((t) => POR_TRIBUTO[t.id])}
+                porClasse={POR_TRIBUTO}
+                total={TOTAL_TRIBUTOS}
+                formatar={brlCompact}
+              />
+            </Painel>
+          </Variante>
+        </div>
       </Bloco>
 
       <Bloco

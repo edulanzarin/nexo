@@ -1,0 +1,7 @@
+import { assertSecao } from "@/lib/sessao";
+import { Conteudo } from "./conteudo";
+
+export default async function Pagina() {
+  await assertSecao("fiscal", "produtividade");
+  return <Conteudo />;
+}
