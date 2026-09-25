@@ -11,7 +11,8 @@ import { PortaModulo } from "@/componentes/casca/porta-modulo";
 import { Icone } from "@/componentes/primitivos/icone";
 import { Tecla } from "@/componentes/primitivos/selo";
 import { Vazio } from "@/componentes/primitivos/estados";
-import { MODULOS, secoesDoModulo, type Modulo } from "@/lib/modulos";
+import { localDoCaminho, MODULOS, secoesDoModulo, type Modulo } from "@/lib/modulos";
+import { empresaDaAba } from "@/lib/secoes/tipos";
 import { useEmpresas } from "@/hooks/use-consulta";
 import { useVisitas, type Visita } from "@/hooks/use-visitas";
 
@@ -40,6 +41,18 @@ function ha(ms: number): string {
   if (h < 24) return `há ${h} h`;
   const d = Math.round(h / 24);
   return d === 1 ? "ontem" : `há ${d} dias`;
+}
+
+/**
+ * O que a visita tinha aberto: a empresa, o escritório inteiro ou, na tela que
+ * não lê empresa (o RH, que é a Navecon, e os cadastros), o módulo. "Escritório
+ * inteiro" ali dizia um recorte que a tela nunca teve.
+ */
+function recorteDaVisita(v: Visita, nomes: Map<number, string>): string {
+  if (v.empresa) return `${v.empresa} · ${nomes.get(v.empresa) ?? "empresa"}`;
+  const local = localDoCaminho(v.path);
+  if (local && empresaDaAba(local.aba) === "nenhuma") return local.modulo.titulo;
+  return "Escritório inteiro";
 }
 
 /**
@@ -152,7 +165,7 @@ export function Inicio() {
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-corpo font-[560] text-tinta">{v.rotulo}</span>
                           <span className="block truncate text-pequeno text-apagado">
-                            {v.empresa ? `${v.empresa} · ${nomes.get(v.empresa) ?? "empresa"}` : "Escritório inteiro"}
+                            {recorteDaVisita(v, nomes)}
                           </span>
                         </span>
                         <span className="shrink-0 text-micro text-apagado">{ha(v.quando)}</span>
