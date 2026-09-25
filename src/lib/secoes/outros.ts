@@ -14,16 +14,6 @@ function secao(modulo: string, id: string, rotulo: string, icone: string, grupo:
   return { id, rotulo, icone, grupo, path, descricao, abas: [] };
 }
 
-export const SECOES_FISCAL: Secao[] = [
-  secao("fiscal", "painel", "Painel", "painel", "Visão", "Resumo da movimentação"),
-  secao("fiscal", "analises", "Análises", "tendencia", "Visão", "Rankings e distribuições"),
-  secao("fiscal", "tributos", "Tributos", "moedas", "Rotina", "Carga, DIFAL e regime"),
-  secao("fiscal", "conformidade", "Conformidade", "escudo", "Rotina", "Pendências e saúde fiscal"),
-  secao("fiscal", "dados", "Dados", "nota", "Rotina", "Todas as notas, com filtros"),
-  secao("fiscal", "produtividade", "Produtividade", "velocimetro", "Equipe", "Notas, apuração, impostos, atraso, carteira e tempo"),
-  ...secoesPostMortem("fiscal", "Equipe"),
-];
-
 export const SECOES_FOLHA: Secao[] = [
   secao("folha", "painel-gestao", "Painel da Equipe", "painel", "Visão", "Pendências e atividade do DP no mês"),
   secao("folha", "painel", "Meu Painel", "grade", "Visão", "Rescisões a pagar, férias vencidas e eSocial"),

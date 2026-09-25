@@ -1,7 +1,7 @@
 import { SECOES_CONTABIL } from "./secoes/contabil";
+import { SECOES_FISCAL } from "./secoes/fiscal";
 import {
   SECOES_CONFIG,
-  SECOES_FISCAL,
   SECOES_FOLHA,
   SECOES_OBRIGACOES,
   SECOES_RH,
@@ -53,7 +53,7 @@ export const MODULOS: Modulo[] = [
     descricao: "Painéis, análises e tributos sobre as notas",
     icone: "setor-fiscal",
     cor: "amarelo",
-    pronto: false,
+    pronto: true,
   },
   {
     id: "folha",

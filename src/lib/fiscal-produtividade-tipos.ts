@@ -39,7 +39,7 @@ export const ESPECIES_PROD: ClasseInfo[] = [
   { id: "NFE", rotulo: "NF-e", descricao: "Nota fiscal eletrônica (modelo 55)", cor: "var(--esp-1)" },
   { id: "NFCE", rotulo: "NFC-e", descricao: "Consumidor final, varejo (modelo 65)", cor: "var(--esp-2)" },
   { id: "CTE", rotulo: "CT-e", descricao: "Conhecimento de transporte (modelo 57)", cor: "var(--esp-3)" },
-  { id: "NFSE", rotulo: "NFS-e", descricao: "Serviço — conta decidida caso a caso", cor: "var(--esp-4)" },
+  { id: "NFSE", rotulo: "NFS-e", descricao: "Nota fiscal de serviço, municipal", cor: "var(--esp-4)" },
   { id: "NF", rotulo: "NF", descricao: "Nota em papel / modelos antigos", cor: "var(--esp-5)" },
   { id: "OUTRAS", rotulo: "Outras", descricao: "Demais espécies do período", cor: "var(--esp-outras)" },
 ];
