@@ -57,11 +57,26 @@ const dataHoraFmt = new Intl.DateTimeFormat("pt-BR", {
   year: "numeric",
   hour: "2-digit",
   minute: "2-digit",
+  timeZone: "America/Sao_Paulo",
 });
 
-/** Data + hora a partir de um ISO/timestamp. Só em client (usa fuso local). */
+/** ISO sem fuso: "2026-09-24T15:42", com segundos e fração opcionais. */
+const RE_SEM_FUSO = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::\d{2}(?:\.\d+)?)?$/;
+
+/**
+ * Data + hora no fuso do escritório, igual no servidor e no navegador:
+ * componente client também renderiza no servidor, o container está em UTC, e
+ * texto diferente dos dois lados quebra a hidratação (#418).
+ *
+ * Com fuso ("…Z", o `Date` do driver), o instante é formatado em São Paulo.
+ * Sem fuso (o `to_char` do banco do app, a hora do Questor), o texto já é a
+ * hora do relógio e é lido como está: passar pelo `Date` o reinterpretaria no
+ * fuso de quem executa.
+ */
 export function dataHoraBR(iso: string | null | undefined): string {
   if (!iso) return "—";
+  const m = RE_SEM_FUSO.exec(iso);
+  if (m) return `${m[3]}/${m[2]}/${m[1]}, ${m[4]}:${m[5]}`;
   return dataHoraFmt.format(new Date(iso));
 }
 
