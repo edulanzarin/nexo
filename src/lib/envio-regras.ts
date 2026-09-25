@@ -174,7 +174,7 @@ export async function criarRegra(
        insert into envio_regra
          (formulario_id, titulo, mensagem, destinatario_tipo, alvo_tipo, alvo,
           freq_tipo, freq_valor, ativo, proximo_disparo, criado_por)
-       values ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, $10, $11, $12)
+       values ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10, $11)
        returning *
      )
      ${SELECT.replace("from envio_regra r", "from novo r")} where true`,
@@ -193,8 +193,8 @@ export async function atualizarRegra(id: number, entrada: EnvioRegraEntrada): Pr
     `with upd as (
        update envio_regra set
          formulario_id = $2, titulo = $3, mensagem = $4, destinatario_tipo = $5,
-         alvo_tipo = $7, alvo = $8::jsonb, freq_tipo = $9, freq_valor = $10, ativo = $11,
-         proximo_disparo = $12
+         alvo_tipo = $6, alvo = $7::jsonb, freq_tipo = $8, freq_valor = $9, ativo = $10,
+         proximo_disparo = $11
        where id = $1
        returning *
      )

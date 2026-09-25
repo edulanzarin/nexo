@@ -19,6 +19,7 @@ import { BlocosGraficos } from "./blocos/graficos";
 import { BlocosProduto } from "./blocos/produto";
 import { BlocosRhAvaliacoes } from "./blocos/rh-avaliacoes";
 import { BlocosRhBase } from "./blocos/rh-base";
+import { BlocosRhFormularios } from "./blocos/rh-formularios";
 import { BlocosRhPessoas } from "./blocos/rh-pessoas";
 import { BlocosSobreposicoes } from "./blocos/sobreposicoes";
 import { Familia } from "./bloco";
@@ -58,6 +59,7 @@ export default function PaginaSistema() {
           <BlocosRhBase />
           <BlocosRhPessoas />
           <BlocosRhAvaliacoes />
+          <BlocosRhFormularios />
         </Familia>
       </div>
     </Semeador>
