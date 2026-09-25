@@ -1,6 +1,7 @@
 import "server-only";
 import { appQuery } from "./app-db";
-import type { PainelRh, RhPanorama, RhPendencias } from "./painel-rh-tipos";
+import type { PainelRh, RhExperiencias, RhPanorama, RhPendencias } from "./painel-rh-tipos";
+import { montarPainelExperiencia } from "./rh-experiencia-dados";
 
 /**
  * PAINEL DO RH — a home do módulo interno da Navecon. Diferente do Contábil
@@ -9,10 +10,13 @@ import type { PainelRh, RhPanorama, RhPendencias } from "./painel-rh-tipos";
  * abertas, clima) e o que fluiu no mês. Materializa [[A home de um módulo é o
  * resumo que carrega sozinho; automação não abre sozinha]].
  *
- * Tudo é banco do app (as trilhas de experiência/denúncia/clima/envio vivem lá,
- * não no Questor) — carrega rápido, testável, sem escopo de empresa (é o pessoal
- * interno). Cada bloco é independente (`allSettled`).
+ * Denúncia, clima e envios vivem no banco do app. A experiência, não: quem
+ * está em experiência é o Questor que diz. Cada bloco é independente
+ * (`allSettled`).
  */
+
+/** Quantos marcos a lista de urgentes mostra. */
+const URGENTES = 6;
 
 function hojeISO(): string {
   const d = new Date();
@@ -23,18 +27,44 @@ function primeiroDiaMes(iso: string): string {
   return new Date(Date.UTC(y, m - 1, 1)).toISOString().slice(0, 10);
 }
 
+/**
+ * As experiências saem da MESMA montagem da tela de Experiência. O nexo2
+ * contava direto em `rh_experiencia` (status diferente de respondido), e a
+ * linha de quem foi desligado no meio da experiência ficava ali para sempre:
+ * o painel cobrava gente que a tela nem mostrava. E "em atraso" era o status
+ * gravado, que só muda quando o job manda o lembrete atrasado; a tela calcula
+ * pela data. Os dois números agora são os da tela.
+ */
+async function blocoExperiencias(): Promise<RhExperiencias> {
+  const itens = await montarPainelExperiencia();
+  const abertos = itens.filter((i) => i.status !== "respondido");
+  // A montagem já vem do mais atrasado para o mais folgado, respondidos ao fim.
+  return {
+    aDecidir: abertos.length,
+    atrasadas: abertos.filter((i) => i.status === "atraso").length,
+    semGestor: abertos.filter((i) => i.gestores === 0).length,
+    urgentes: abertos.slice(0, URGENTES).map((i) => ({
+      codigoempresa: i.codigoempresa,
+      contrato: i.contrato,
+      nome: i.nome,
+      setor: i.setor,
+      marco: i.marco,
+      vencimento: i.vencimento,
+      diasParaVencer: i.diasParaVencer,
+      status: i.status,
+      gestores: i.gestores,
+    })),
+  };
+}
+
 async function blocoPendencias(): Promise<RhPendencias> {
   const [row] = await appQuery<{
-    exp_pendentes: number;
-    exp_atrasadas: number;
     den_abertas: number;
     den_recebidas: number;
     clima_abertas: number;
     clima_respostas: number;
   }>(
     `select
-        (select count(*) from rh_experiencia where status <> 'respondido')::int as exp_pendentes,
-        (select count(*) from rh_experiencia where status = 'atraso')::int as exp_atrasadas,
         (select count(*) from denuncia where status in ('recebida', 'em_analise'))::int as den_abertas,
         (select count(*) from denuncia where status = 'recebida')::int as den_recebidas,
         (select count(*) from clima_rodada where status = 'aberta')::int as clima_abertas,
@@ -43,8 +73,6 @@ async function blocoPendencias(): Promise<RhPendencias> {
           where r.status = 'aberta')::int as clima_respostas`
   );
   return {
-    experienciasPendentes: row?.exp_pendentes ?? 0,
-    experienciasAtrasadas: row?.exp_atrasadas ?? 0,
     denunciasAbertas: row?.den_abertas ?? 0,
     denunciasRecebidas: row?.den_recebidas ?? 0,
     climaRodadasAbertas: row?.clima_abertas ?? 0,
@@ -87,10 +115,15 @@ export async function montarPainelRh(): Promise<PainelRh> {
   const fim = hojeISO();
   const inicio = primeiroDiaMes(fim);
 
-  const [pendencias, panorama] = await Promise.allSettled([blocoPendencias(), blocoPanorama(inicio)]);
+  const [experiencias, pendencias, panorama] = await Promise.allSettled([
+    blocoExperiencias(),
+    blocoPendencias(),
+    blocoPanorama(inicio),
+  ]);
 
   return {
     periodo: { inicio, fim },
+    experiencias: colher(experiencias, "experiencias"),
     pendencias: colher(pendencias, "pendencias"),
     panorama: colher(panorama, "panorama"),
   };

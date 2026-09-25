@@ -27,6 +27,9 @@ export function BarraTopo() {
   const periodo = periodoDaAba(aba);
   const efetivo = periodoEfetivo(contexto, aba);
   const qs = qsSoContexto(contexto);
+  // A aba pode ler só o período (a Rotatividade do RH escolhe a empresa dentro
+  // da tela): os controles aparecem pelo que a aba usa, não só pela empresa.
+  const temControles = escopo !== "nenhuma" || periodo !== "nenhum";
 
   return (
     <div className="nx-sem-papel sticky top-3 z-10 px-4 pt-3 sm:px-6">
@@ -43,14 +46,16 @@ export function BarraTopo() {
           ) : null}
         </nav>
 
-        {escopo !== "nenhuma" && (
+        {temControles && (
           <div className="ml-auto flex min-w-0 flex-wrap items-center gap-2">
-            <SeletorEmpresa
-              escopo={escopo}
-              empresas={contexto.empresas}
-              grupos={contexto.grupos}
-              onMudar={(m) => mudar(m)}
-            />
+            {escopo !== "nenhuma" && (
+              <SeletorEmpresa
+                escopo={escopo}
+                empresas={contexto.empresas}
+                grupos={contexto.grupos}
+                onMudar={(m) => mudar(m)}
+              />
+            )}
             {aba?.filial && contexto.empresas.length === 1 && (
               <SeletorFilial
                 empresa={contexto.empresas[0]}
@@ -72,7 +77,7 @@ export function BarraTopo() {
           onClick={abrirPaleta}
           className={cn(
             "flex h-controle items-center gap-2 rounded-controle border border-linha bg-poco px-2.5 text-corpo text-apagado transition-colors hover:border-linha-forte hover:text-tinta-2",
-            escopo === "nenhuma" && "ml-auto"
+            !temControles && "ml-auto"
           )}
         >
           <Icone nome="buscar" tamanho={15} />
