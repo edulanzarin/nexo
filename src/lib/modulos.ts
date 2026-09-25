@@ -2,8 +2,9 @@ import { SECOES_CONTABIL } from "./secoes/contabil";
 import { SECOES_FISCAL } from "./secoes/fiscal";
 import { SECOES_FOLHA } from "./secoes/folha";
 import { SECOES_CONFIG } from "./secoes/config";
-import { SECOES_OBRIGACOES, SECOES_SOCIETARIO } from "./secoes/outros";
+import { SECOES_OBRIGACOES } from "./secoes/outros";
 import { SECOES_RH } from "./secoes/rh";
+import { SECOES_SOCIETARIO } from "./secoes/societario";
 import type { Aba, Secao } from "./secoes/tipos";
 
 export type ModuloId =
@@ -73,9 +74,9 @@ export const MODULOS: Modulo[] = [
   {
     id: "societario",
     titulo: "Societário",
-    descricao: "Contratos, alterações, aberturas e baixas",
+    descricao: "Post Mortem do setor de contratos, alterações, aberturas e baixas",
     imagem: "/modulos/societario.png",
-    pronto: false,
+    pronto: true,
   },
   {
     id: "config",

@@ -97,6 +97,40 @@ const RELATORIO: RelatorioPM = {
   acoesCorretivas: [{ acao: "Estornar a segunda importação", responsavel: "Ana Paula", prazo: "2026-09-10", status: "Feita" }],
 };
 
+// O Societário troca o recorte de pessoal pela nota de gravidade e por quem avisou.
+const RESUMOS_SOCIETARIO: ResumoPM[] = [
+  { id: 17, numero: 9, status: "enviado", setor: "societario", criticidade: "alta", gravidade: 5, empresaAfetada: "MAGALHAES COMERCIO DE ALIMENTOS LTDA", grupoNome: "Grupo U FIT", autorNome: "Gabriela Nunes", processo: "Alteração contratual na Junta", dataOcorrido: "2026-09-04", atualizadoEm: "2026-09-12T10:30:00Z" },
+  { id: 16, numero: 8, status: "enviado", setor: "societario", criticidade: "media", gravidade: 3, empresaAfetada: "TRANSPORTES RIO DO PEIXE EIRELI", grupoNome: null, autorNome: "Rafael Tomasi", processo: "Abertura de filial", dataOcorrido: "2026-08-21", atualizadoEm: "2026-08-29T15:12:00Z" },
+  { id: 15, numero: null, status: "rascunho", setor: "societario", criticidade: "baixa", gravidade: null, empresaAfetada: "PANIFICADORA E CONFEITARIA TRIGO BOM LTDA ME", grupoNome: null, autorNome: "Gabriela Nunes", processo: "Baixa do CNPJ", dataOcorrido: "2026-09-16", atualizadoEm: "2026-09-23T08:44:00Z" },
+];
+
+const RELATORIO_SOCIETARIO: RelatorioPM = {
+  ...RELATORIO,
+  setor: "societario",
+  autorNome: "Gabriela Nunes",
+  gravidade: 4,
+  processo: "Alteração contratual na Junta",
+  dataOcorrido: "2026-09-04",
+  dataIdentificado: "2026-09-10",
+  quemIdentificou: "Banco do cliente",
+  responsavelInfo: "Contador do cliente, por telefone",
+  comoIdentificou: "O banco recusou o contrato por divergência de endereço",
+  descricao: "A alteração foi protocolada com o endereço antigo da sede, e a Junta registrou assim.",
+  linhaTempo: [
+    { data: "04/09 10h", evento: "Alteração protocolada na Junta", responsavel: "Gabriela" },
+    { data: "10/09 16h", evento: "Banco recusou o contrato", responsavel: "Cliente" },
+  ],
+  impactos: { ...pmVazio().impactos, cliente: "Conta PJ travada por seis dias." },
+  cincoPorques: ["O endereço antigo foi para o contrato", "A minuta partiu da alteração anterior", "", "", ""],
+  causaRaiz: "A minuta nova foi feita sobre a anterior, sem conferir o cadastro atual da empresa.",
+  acoesCorretivas: [{ acao: "Protocolar a retificação", responsavel: "Gabriela", prazo: "2026-09-12", status: "Feita" }],
+};
+
+const SETORES_CATALOGO: { valor: "contabil" | "societario"; rotulo: string }[] = [
+  { valor: "contabil", rotulo: "Contábil" },
+  { valor: "societario", rotulo: "Societário" },
+];
+
 const GRUPOS = [
   { id: 1, nome: "Todas menos NAVECON" },
   { id: 2, nome: "Grupo U FIT" },
@@ -107,6 +141,11 @@ export function BlocosContabilVisao() {
   const [estFeed, setEstFeed] = useState<Estado>("dado");
   const [estLista, setEstLista] = useState<Estado>("dado");
   const [leitura, setLeitura] = useState<"editar" | "ler">("editar");
+  const [setorLista, setSetorLista] = useState<"contabil" | "societario">("contabil");
+  const [setorForm, setSetorForm] = useState<"contabil" | "societario">("contabil");
+  const soc = setorLista === "societario";
+  const resumos = soc ? RESUMOS_SOCIETARIO : RESUMOS;
+  const nomeSetor = soc ? "Societário" : "Contábil";
 
   const atividade = estFaixa === "erro" ? null : estFaixa === "vazio" ? { ...ATIVIDADE, conciliacoes: 0, conciliacaoLinhas: 0, implantacoes: 0, laudos: 0, pendenciasTriadas: 0, pendenciasResolvidas: 0, pendenciasIgnoradas: 0, exportacoes: 0 } : ATIVIDADE;
   const eventos = estFeed === "erro" ? null : estFeed === "vazio" ? [] : EVENTOS;
@@ -189,28 +228,29 @@ export function BlocosContabilVisao() {
 
       <Bloco
         titulo="Lista de relatórios post mortem"
-        porque="Serve a todo módulo de setor: o módulo diz a rota da API, o setor diz os campos. Com autor e grupo é a leitura do gestor, que exporta e filtra no cliente (a lista de um setor é curta); sem autor, a do analista. Clicar num número da faixa recorta a lista. O relatório abre na página dele, porque o formulário é longo demais para modal."
+        porque="Serve a todo módulo de setor: o módulo diz a rota da API, o setor diz os campos. Com autor e grupo é a leitura do gestor, que exporta e filtra no cliente (a lista de um setor é curta); sem autor, a do analista. A coluna de gravidade só existe no setor que dá a nota. Clicar num número da faixa recorta a lista. O relatório abre na página dele, porque o formulário é longo demais para modal."
       >
         <div className="flex flex-col gap-4">
-          <div>
+          <div className="flex flex-wrap gap-2">
             <Segmentado opcoes={ESTADOS.map((e) => (e.valor === "erro" ? { ...e, rotulo: "Erro" } : e))} valor={estLista} onMudar={setEstLista} rotulo="Estado da lista" />
+            <Segmentado opcoes={SETORES_CATALOGO} valor={setorLista} onMudar={setSetorLista} rotulo="Setor da lista" />
           </div>
           {estLista === "erro" ? (
             <PainelErro titulo="Não deu para carregar os relatórios" mensagem="Você não lê os relatórios deste setor" onTentar={() => setEstLista("dado")} />
           ) : (
             <>
-              <FaixaResumoPM lista={estLista === "vazio" ? [] : RESUMOS} carregando={estLista === "carregando"} comAutor aoClicar={() => {}} />
-              <Painel corpo="p-0" titulo="Relatórios do Contábil" descricao={estLista === "carregando" ? "Carregando" : `${RESUMOS.length} no setor`}>
+              <FaixaResumoPM lista={estLista === "vazio" ? [] : resumos} carregando={estLista === "carregando"} comAutor aoClicar={() => {}} />
+              <Painel corpo="p-0" titulo={`Relatórios do ${nomeSetor}`} descricao={estLista === "carregando" ? "Carregando" : `${resumos.length} no setor`}>
                 {estLista === "carregando" ? (
-                  <EsqueletoTabela colunas={7} linhas={4} />
+                  <EsqueletoTabela colunas={soc ? 8 : 7} linhas={4} />
                 ) : estLista === "vazio" ? (
                   <Vazio
                     icone="relatorio"
-                    titulo="Nenhum relatório do Contábil ainda"
+                    titulo={`Nenhum relatório do ${nomeSetor} ainda`}
                     descricao="Quando alguém do setor abrir um relatório, ele aparece aqui, rascunho ou enviado."
                   />
                 ) : (
-                  <TabelaPM linhas={RESUMOS} comAutor onLinha={() => {}} />
+                  <TabelaPM linhas={resumos} comAutor mostraGravidade={soc} onLinha={() => {}} />
                 )}
               </Painel>
             </>
@@ -223,7 +263,7 @@ export function BlocosContabilVisao() {
         porque="O tronco é o mesmo para todo setor; os poucos campos que mudam (funcionários afetados, nota de gravidade, quem avisou) vêm do catálogo de setores, nunca de um if no meio da tela. Os obrigatórios só acendem depois da primeira tentativa de enviar, porque rascunho salva parcial. Em leitura o campo vira texto: campo desabilitado a meia opacidade é ruim de ler justamente para quem veio só ler."
       >
         <div className="flex flex-col gap-4">
-          <div>
+          <div className="flex flex-wrap gap-2">
             <Segmentado
               opcoes={[
                 { valor: "editar", rotulo: "Rascunho do dono" },
@@ -233,15 +273,16 @@ export function BlocosContabilVisao() {
               onMudar={setLeitura}
               rotulo="Modo do formulário"
             />
+            <Segmentado opcoes={SETORES_CATALOGO} valor={setorForm} onMudar={setSetorForm} rotulo="Setor do formulário" />
           </div>
           <div className="flex flex-col gap-4">
             <FormularioPM
-              key={leitura}
-              inicial={RELATORIO}
+              key={`${leitura}-${setorForm}`}
+              inicial={setorForm === "societario" ? RELATORIO_SOCIETARIO : RELATORIO}
               grupos={GRUPOS}
               somenteLeitura={leitura === "ler"}
               voltarPara="/sistema#contabil"
-              apiBase="/api/contabil/post-mortem"
+              apiBase={`/api/${setorForm}/post-mortem`}
             />
           </div>
         </div>

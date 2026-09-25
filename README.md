@@ -7,8 +7,8 @@ Reescrita do Nexo: a camada de domínio vem do nexo2, a interface é nova.
 
 | Módulo | Situação |
 |---|---|
-| Contábil, Fiscal, DP, RH, Configurações | prontos, conferidos contra o Questor |
-| Obrigações, Societário | seguem no Nexo |
+| Contábil, Fiscal, DP, RH, Societário, Configurações | prontos, conferidos contra o Questor |
+| Obrigações | segue no Nexo |
 | Administração (usuários, cargos, grupos de permissão, auditoria) e perfil | seguem no Nexo |
 
 Sem a Administração, o NaveX só tem o admin que o `npm run setup` cria. No dia

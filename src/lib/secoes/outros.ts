@@ -1,4 +1,3 @@
-import { secoesPostMortem } from "./postmortem";
 import type { Secao } from "./tipos";
 
 /**
@@ -30,5 +29,3 @@ export const SECOES_OBRIGACOES: Secao[] = [
   secao("obrigacoes", "dp", "DP", "pessoas", "Filas", "Folha, encargos e obrigações de pessoal"),
   secao("obrigacoes", "configuracoes", "Configurações", "engrenagem", "Integração", "Varredura do Acessórias"),
 ];
-
-export const SECOES_SOCIETARIO: Secao[] = [...secoesPostMortem("societario", "Equipe")];
