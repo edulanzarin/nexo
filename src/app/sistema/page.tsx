@@ -10,6 +10,7 @@ import { BlocosContabilRotina } from "./blocos/contabil-rotina";
 import { BlocosContabilVisao } from "./blocos/contabil-visao";
 import { BlocosControles } from "./blocos/controles";
 import { BlocosDados } from "./blocos/dados";
+import { BlocosFiscalVisao } from "./blocos/fiscal-visao";
 import { BlocosFundamentos } from "./blocos/fundamentos";
 import { BlocosGraficos } from "./blocos/graficos";
 import { BlocosProduto } from "./blocos/produto";
@@ -33,6 +34,11 @@ export default function PaginaSistema() {
           <BlocosContabilBalancetes />
           <BlocosContabilConciliacao />
           <BlocosContabilProdutividade />
+        </Familia>
+        {/* A Produtividade do Fiscal é montada com as peças do Contábil: as
+            abas dela não criaram peça nova, só estenderam a composição. */}
+        <Familia id="fiscal" titulo="Fiscal" descricao="Peças que só o Fiscal usa, nascidas nas telas dele.">
+          <BlocosFiscalVisao />
         </Familia>
       </div>
     </Semeador>
