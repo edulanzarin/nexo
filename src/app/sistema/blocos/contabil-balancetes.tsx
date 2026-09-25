@@ -11,7 +11,6 @@ import {
   ValorConta,
   type LinhaPlano,
 } from "@/componentes/produto/contabil/balancete/arvore-contas";
-import { CabecalhoPapel } from "@/componentes/produto/contabil/balancete/cabecalho-papel";
 import { Bloco, Variante } from "../bloco";
 
 interface LinhaFalsa extends LinhaPlano {
@@ -130,24 +129,6 @@ export function BlocosContabilBalancetes() {
             <Variante nome="Zero">
               <ValorConta valor={0} natureza />
             </Variante>
-          </div>
-        </Bloco>
-
-        <Bloco
-          titulo="Cabeçalho do papel"
-          porque="Na impressão a moldura some, e com ela a empresa, a filial e o período do topo. Relatório sem dizer de quem, de quando e com que recorte não se entrega a cliente, então a tela repõe tudo aqui: escondido na tela, visível no papel. No catálogo aparece na tela para ser visto."
-        >
-          <div className="nx-vidro rounded-painel p-5">
-            <CabecalhoPapel
-              naTela
-              titulo="Análise de Balancete"
-              empresa={{ codigo: 1318, nome: "MAGALHAES COMERCIO DE ALIMENTOS LTDA", cnpj: "12345678000195" }}
-              itens={[
-                { rotulo: "Período", valor: "junho de 2026 a agosto de 2026 (3 meses)" },
-                { rotulo: "Filiais", valor: "Todas, consolidado" },
-                { rotulo: "Dados de", valor: "02/09/2026 09:41" },
-              ]}
-            />
           </div>
         </Bloco>
       </div>

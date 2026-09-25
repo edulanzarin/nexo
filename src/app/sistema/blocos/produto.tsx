@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { PainelPaleta, type ItemPaleta } from "@/componentes/casca/paleta";
+import { CabecalhoPapel } from "@/componentes/produto/cabecalho-papel";
 import { MenuExportar } from "@/componentes/produto/menu-exportar";
 import { AguardandoExecucao, BotaoExecutar, CabecalhoPagina, EscolhaEmpresa } from "@/componentes/produto/pagina";
 import { SeletorConta } from "@/componentes/produto/seletor-conta";
@@ -130,6 +131,24 @@ export function BlocosProduto() {
       >
         <div className="flex max-w-md flex-col gap-2">
           <SeletorConta empresa={1200} valor={conta} onMudar={setConta} limpavel placeholder="Contrapartida do pagamento" />
+        </div>
+      </Bloco>
+
+      <Bloco
+        titulo="Cabeçalho do papel"
+        porque="Na impressão a moldura some, e com ela a empresa, a filial e o período do topo. Relatório sem dizer de quem, de quando e com que recorte não se entrega a cliente, então a tela repõe tudo aqui: escondido na tela, visível no papel. Serve o balancete e a rotatividade do DP; no catálogo aparece na tela para ser visto."
+      >
+        <div className="nx-vidro rounded-painel p-5">
+          <CabecalhoPapel
+            naTela
+            titulo="Análise de Balancete"
+            empresa={{ codigo: 1318, nome: "MAGALHAES COMERCIO DE ALIMENTOS LTDA", cnpj: "12345678000195" }}
+            itens={[
+              { rotulo: "Período", valor: "junho de 2026 a agosto de 2026 (3 meses)" },
+              { rotulo: "Filiais", valor: "Todas, consolidado" },
+              { rotulo: "Dados de", valor: "02/09/2026 09:41" },
+            ]}
+          />
         </div>
       </Bloco>
     </Familia>

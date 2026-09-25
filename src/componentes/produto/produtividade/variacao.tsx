@@ -11,16 +11,21 @@ import { deltaPct, pct } from "@/lib/format";
  * bom é de quem chama: mais lançamento é bom, mais exclusão não é.
  *
  * Sem período anterior (zero), não se desenha: "+∞%" não informa nada.
+ *
+ * `neutra` é para número sem lado bom (admissões na rotatividade): mostra o
+ * quanto andou, sem cor de julgamento.
  */
 export function Variacao({
   atual,
   anterior,
   bomQuandoSobe = true,
+  neutra = false,
   className,
 }: {
   atual: number;
   anterior: number;
   bomQuandoSobe?: boolean;
+  neutra?: boolean;
   className?: string;
 }) {
   const v = deltaPct(atual, anterior);
@@ -33,7 +38,7 @@ export function Variacao({
       <span
         className={cn(
           "num inline-flex items-center gap-0.5 font-[600]",
-          parado ? "text-apagado" : bom ? "text-ok" : "text-perigo",
+          parado ? "text-apagado" : neutra ? "text-tinta-2" : bom ? "text-ok" : "text-perigo",
           className
         )}
       >

@@ -4,7 +4,7 @@ import { AcoesPagina } from "@/componentes/casca/moldura-modulo";
 import { Esqueleto, Girando, Nota, PainelErro } from "@/componentes/primitivos/estados";
 import { FaixaIndicadores, Indicador } from "@/componentes/primitivos/indicador";
 import { Painel } from "@/componentes/primitivos/painel";
-import { CabecalhoPapel } from "@/componentes/produto/contabil/balancete/cabecalho-papel";
+import { CabecalhoPapel } from "@/componentes/produto/cabecalho-papel";
 import { MenuExportar, type CorteExportar } from "@/componentes/produto/menu-exportar";
 import { useConsulta } from "@/hooks/use-consulta";
 import { useExecucao } from "@/hooks/use-execucao";

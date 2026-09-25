@@ -188,12 +188,16 @@ export function GraficoSerie<T extends Record<string, unknown>>({
           tickFormatter={(v: number) => formatarEixo(v)}
         />
         {temDireito && (
+          // Sem decimais: o eixo da direita carrega contagem (volume) ou
+          // porcentagem pequena, e o Recharts arredonda em passos de 0,05 da
+          // ordem de grandeza, o que dava marcas como 0,85% e 2,55%.
           <YAxis
             yAxisId="d"
             orientation="right"
             tick={EIXO}
             tickLine={false}
             axisLine={false}
+            allowDecimals={false}
             width={52}
             tickFormatter={(v: number) => (formatarEixoDireito ?? formatarEixo)(v)}
           />

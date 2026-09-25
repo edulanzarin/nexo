@@ -18,7 +18,7 @@ import {
   SeletorNivel,
   ValorConta,
 } from "@/componentes/produto/contabil/balancete/arvore-contas";
-import { CabecalhoPapel } from "@/componentes/produto/contabil/balancete/cabecalho-papel";
+import { CabecalhoPapel } from "@/componentes/produto/cabecalho-papel";
 import { MenuExportar } from "@/componentes/produto/menu-exportar";
 import { useConsulta } from "@/hooks/use-consulta";
 import { useEstadoTela } from "@/hooks/use-estado-modulo";
