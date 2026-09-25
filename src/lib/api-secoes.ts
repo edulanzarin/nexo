@@ -211,9 +211,13 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     // pode ver, e se o relatório é dela, quem confere é o handler.
     "post-mortem": [SECAO_PM, SECAO_PM_GESTAO],
   },
-  // Configurações não tem rotas de API: o CRUD roda por Server Action (gateada
-  // por assertSecao). Mapa vazio; nenhum endpoint /api/config existe.
-  config: {},
+  config: {
+    // O cadastro (lista, grupo aberto, criar, salvar, remover) e o universo
+    // de empresas que ele marca. A lista de todas as empresas do Questor é
+    // dela, e não de /api/empresas, porque passa por cima do escopo da sessão.
+    "grupos-empresa": ["grupos-empresa"],
+    empresas: ["grupos-empresa"],
+  },
 };
 
 /**

@@ -12,13 +12,13 @@ type Handler = (req: NextRequest, ctx: RouteCtx) => Promise<unknown>;
 
 /**
  * A rota declara o módulo pelo próprio caminho: /api/fiscal/..., /api/contabil/...,
- * /api/folha/... e /api/obrigacoes/... Assim o gate mora num lugar só e nenhuma
+ * /api/folha/..., /api/config/... Assim o gate mora num lugar só e nenhuma
  * rota nasce desprotegida. Módulo novo ENTRA NESTE REGEX — fora dele a rota só
  * exige login, que é falhar em aberto. (/api/empresas é compartilhado — basta estar logado; /api/admin
  * exige admin.)
  */
 function moduloDaRota(pathname: string): ModuloId | undefined {
-  const m = pathname.match(/^\/api\/(fiscal|contabil|folha|societario|rh|obrigacoes)(?:\/|$)/);
+  const m = pathname.match(/^\/api\/(fiscal|contabil|folha|societario|rh|obrigacoes|config)(?:\/|$)/);
   return m ? (m[1] as ModuloId) : undefined;
 }
 
