@@ -1,8 +1,7 @@
 import "server-only";
 import { query } from "./db";
 import { appQuery } from "./app-db";
-import { FilterError } from "./fiscal-filters";
-import { getSessaoOpcional, empresasPermitidas } from "./sessao";
+import { escopoEfetivo, FilterError, parseGrupos } from "./fiscal-filters";
 import { enviarEmail } from "./mailer";
 import { appUrl } from "./app-url";
 import type {
@@ -54,6 +53,8 @@ export interface RescisoesFiltros {
   inicio: string;
   fim: string;
   empresas: number[];
+  /** Grupos de empresa do topo; o funil os traduz em empresas. */
+  grupos: number[];
 }
 
 export function parseRescisoesFiltros(sp: URLSearchParams): RescisoesFiltros {
@@ -75,15 +76,7 @@ export function parseRescisoesFiltros(sp: URLSearchParams): RescisoesFiltros {
       return n;
     });
 
-  return { inicio, fim, empresas };
-}
-
-/** Escopo efetivo de empresa: "todas" ou a lista permitida (interseção com o pedido). */
-async function escopoEmpresas(empresas: number[]): Promise<number[] | "todas"> {
-  const sessao = await getSessaoOpcional();
-  const escopo: number[] | "todas" = sessao ? empresasPermitidas(sessao) : [];
-  if (escopo === "todas") return empresas.length ? empresas : "todas";
-  return empresas.length ? empresas.filter((e) => escopo.includes(e)) : escopo;
+  return { inicio, fim, empresas, grupos: parseGrupos(sp) };
 }
 
 // ── Datas ────────────────────────────────────────────────────────────────────
@@ -250,7 +243,8 @@ async function carregarResolvidas(): Promise<Map<string, { resolvidaEm: string; 
 }
 
 export async function montarRescisoes(f: RescisoesFiltros, referencia: string): Promise<RescisoesResumo> {
-  const escopo = await escopoEmpresas(f.empresas);
+  // O funil do Fiscal: grupo vira empresas e a sessão recorta.
+  const escopo = await escopoEfetivo(f);
   const [raws, resolvidas, cfg] = await Promise.all([
     consultarQuestor(f.inicio, f.fim, escopo),
     carregarResolvidas(),

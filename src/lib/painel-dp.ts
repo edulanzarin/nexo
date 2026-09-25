@@ -60,7 +60,7 @@ const TOP_URGENTES = 8;
 
 async function blocoRescisoes(): Promise<{ counts: PainelRescisoes; urgentes: PainelRescisaoUrgente[] }> {
   const fim = hojeISO();
-  const r = await montarRescisoes({ inicio: addDias(fim, -180), fim, empresas: [] }, fim);
+  const r = await montarRescisoes({ inicio: addDias(fim, -180), fim, empresas: [], grupos: [] }, fim);
   const urgentes = r.itens
     .filter((i) => i.situacao !== "resolvida")
     .slice(0, TOP_URGENTES)
@@ -161,7 +161,7 @@ async function blocoEsocial(scope: number[] | "todas"): Promise<PainelEsocial> {
 // ── Atividade e série (só gestão) ────────────────────────────────────────────
 
 async function blocoAtividade(inicio: string, fim: string): Promise<PainelAtividade> {
-  const resumo = await montarResumoDp({ inicio, fim, empresas: [], usuario: null });
+  const resumo = await montarResumoDp({ inicio, fim, empresas: [], grupos: [], usuario: null });
   const topOperadores = resumo.ranking
     .filter((c) => !c.auto && c.total > 0)
     .slice(0, 5)

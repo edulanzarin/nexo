@@ -1,7 +1,6 @@
 import "server-only";
 import { query } from "./db";
-import { FilterError } from "./fiscal-filters";
-import { getSessaoOpcional, empresasPermitidas } from "./sessao";
+import { escopoEfetivo, FilterError, parseGrupos } from "./fiscal-filters";
 import {
   DP_TIPOS,
   infoDoTipo,
@@ -43,6 +42,8 @@ export interface DpFiltros {
   inicio: string;
   fim: string;
   empresas: number[];
+  /** Grupos de empresa do topo; o funil os traduz em empresas. */
+  grupos: number[];
   /** Filtra por um usuário do Questor (codigousuario). null = todos. */
   usuario: number | null;
 }
@@ -76,19 +77,7 @@ export function parseDpFiltros(sp: URLSearchParams): DpFiltros {
     throw new FilterError(`Usuário inválido: ${uRaw}`);
   }
 
-  return { inicio, fim, empresas, usuario };
-}
-
-/**
- * Escopo de empresa efetivo: `"todas"` = sem restrição de empresa (só o filtro do
- * cliente, se houver); senão a lista de códigos permitidos (interseção com o
- * pedido). Lista vazia não casa nada — usuário sem empresa não vê nada.
- */
-async function escopoEmpresas(f: DpFiltros): Promise<number[] | "todas"> {
-  const sessao = await getSessaoOpcional();
-  const escopo: number[] | "todas" = sessao ? empresasPermitidas(sessao) : [];
-  if (escopo === "todas") return f.empresas.length ? f.empresas : "todas";
-  return f.empresas.length ? f.empresas.filter((e) => escopo.includes(e)) : escopo;
+  return { inicio, fim, empresas, grupos: parseGrupos(sp), usuario };
 }
 
 /**
@@ -100,7 +89,9 @@ async function escopoEmpresas(f: DpFiltros): Promise<number[] | "todas"> {
 async function baseParams(
   f: DpFiltros
 ): Promise<{ params: unknown[]; condEmpresa: string; usuarioIdx: number | null }> {
-  const scope = await escopoEmpresas(f);
+  // O funil do Fiscal: grupo vira empresas e a sessão recorta. Lista vazia não
+  // casa nada (usuário sem empresa não vê nada).
+  const scope = await escopoEfetivo(f);
   const params: unknown[] = [f.inicio, f.fim];
   let condEmpresa = "";
   if (scope !== "todas") {

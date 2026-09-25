@@ -58,14 +58,7 @@ export function parseFilters(searchParams: URLSearchParams): FiscalFilters {
       return n;
     });
 
-  const grupos = (searchParams.get("grupos") ?? "")
-    .split(",")
-    .filter(Boolean)
-    .map((v) => {
-      const n = Number(v);
-      if (!Number.isInteger(n) || n <= 0) throw new FilterError(`Grupo inválido: ${v}`);
-      return n;
-    });
+  const grupos = parseGrupos(searchParams);
 
   const especies = (searchParams.get("especies") ?? "")
     .split(",")
@@ -76,12 +69,31 @@ export function parseFilters(searchParams: URLSearchParams): FiscalFilters {
 }
 
 /**
+ * Grupos de empresa pedidos na querystring. Exportado porque os parsers do DP
+ * (produtividade, rescisões) têm filtro próprio e precisam do mesmo grupo: sem
+ * ele, escolher um grupo no topo mostrava o escritório inteiro.
+ */
+export function parseGrupos(searchParams: URLSearchParams): number[] {
+  return (searchParams.get("grupos") ?? "")
+    .split(",")
+    .filter(Boolean)
+    .map((v) => {
+      const n = Number(v);
+      if (!Number.isInteger(n) || n <= 0) throw new FilterError(`Grupo inválido: ${v}`);
+      return n;
+    });
+}
+
+/** O que o funil precisa do pedido: as empresas marcadas e os grupos. */
+export type PedidoEscopo = Pick<FiscalFilters, "empresas" | "grupos">;
+
+/**
  * Empresas que o CLIENTE pediu: a união do que ele marcou à mão com o que os
  * grupos escolhidos contêm. "todas" só quando não pediu nada — e note que um
  * grupo vazio devolve lista vazia, que restringe a nada (pedir um grupo sem
  * empresa não pode virar "o escritório inteiro").
  */
-async function escopoPedido(f: FiscalFilters): Promise<number[] | "todas"> {
+async function escopoPedido(f: PedidoEscopo): Promise<number[] | "todas"> {
   if (f.grupos.length === 0) return f.empresas.length ? f.empresas : "todas";
   const doGrupo = await empresasDeGrupos(f.grupos);
   return [...new Set([...f.empresas, ...doGrupo])];
@@ -90,9 +102,10 @@ async function escopoPedido(f: FiscalFilters): Promise<number[] | "todas"> {
 /**
  * O FUNIL: o pedido do cliente cruzado com o que a sessão alcança. É por aqui
  * que toda consulta fiscal/contábil passa — `buildWhere` e o `condEscopo` das
- * abas de produtividade —, para nenhuma esquecer o clamp de permissão.
+ * abas de produtividade —, para nenhuma esquecer o clamp de permissão. O DP
+ * (produtividade e rescisões) passa por aqui também, com o filtro dele.
  */
-export async function escopoEfetivo(f: FiscalFilters): Promise<number[] | "todas"> {
+export async function escopoEfetivo(f: PedidoEscopo): Promise<number[] | "todas"> {
   const pedido = await escopoPedido(f);
   const sessao = await getSessaoOpcional();
   const permitido: number[] | "todas" = sessao ? empresasPermitidas(sessao) : [];
