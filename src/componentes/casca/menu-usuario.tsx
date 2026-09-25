@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { sair } from "@/app/login/actions";
 import { Avatar } from "@/componentes/primitivos/avatar";
 import { Icone } from "@/componentes/primitivos/icone";
@@ -12,13 +13,15 @@ export interface UsuarioCasca {
   nome: string;
   email: string;
   admin: boolean;
-  temFoto: boolean;
+  /** Momento da foto (vai na URL para a troca aparecer sem esperar o cache). Null = sem foto. */
+  fotoVersao: number | null;
 }
 
 /** Quem está logado, o tema e a saída. */
 export function MenuUsuario({ usuario, compacto }: { usuario: UsuarioCasca; compacto?: boolean }) {
   const tema = usePreferenciaTema();
-  const foto = usuario.temFoto ? `/api/avatar/${usuario.id}` : null;
+  const router = useRouter();
+  const foto = usuario.fotoVersao != null ? `/api/avatar/${usuario.id}?v=${usuario.fotoVersao}` : null;
   const marca = (t: typeof tema) => (tema === t ? "certo" : undefined);
   return (
     <Menu
@@ -41,6 +44,7 @@ export function MenuUsuario({ usuario, compacto }: { usuario: UsuarioCasca; comp
           aoEscolher: () => definirTema("sistema"),
         },
         { tipo: "separador" },
+        { rotulo: "Meu perfil", icone: "usuario", aoEscolher: () => router.push("/perfil") },
         { rotulo: "Catálogo de componentes", icone: "grade", aoEscolher: () => window.open("/sistema", "_blank") },
         { tipo: "separador" },
         { rotulo: "Sair", icone: "sair", perigo: true, aoEscolher: () => void sair() },

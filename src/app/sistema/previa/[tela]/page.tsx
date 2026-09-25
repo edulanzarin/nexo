@@ -172,7 +172,7 @@ export default function Previa({ params }: { params: Promise<{ tela: string }> }
     <Semeador>
       <ProvedorCasca
         dados={{
-          usuario: { id: "previa", nome: "Eduardo Lanzarin", email: "eduardo.lanzarin@navecon.net.br", admin: true, temFoto: false },
+          usuario: { id: "previa", nome: "Eduardo Lanzarin", email: "eduardo.lanzarin@navecon.net.br", admin: true, fotoVersao: null },
           acessos: { contabil: secoesDoModulo("contabil").map((s) => s.id), fiscal: ["painel"], folha: ["painel"], rh: ["painel"] },
         }}
       >

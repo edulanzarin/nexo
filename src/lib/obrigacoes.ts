@@ -672,6 +672,12 @@ function condSetor(setores: number[] | undefined, params: unknown[]): string {
 export interface FiltrosFila {
   /** Uma empresa (CNPJ do Acessórias). */
   cnpj?: string;
+  /**
+   * Empresas do Questor pedidas no contexto do topo (a empresa ou o grupo), já
+   * cruzadas com o escopo da sessão pelo `escopoEfetivo`. Lista vazia restringe
+   * a nada: pedir um grupo sem empresa não pode virar o escritório inteiro.
+   */
+  codigos?: number[];
   /** Um responsável pelo prazo (id do Acessórias). */
   respId?: number;
   /** Janela de PRAZO — a data que define atraso, e por isso a que se filtra. */
@@ -697,6 +703,7 @@ function condFiltros(f: FiltrosFila | undefined, params: unknown[]): string {
   };
 
   if (f.cnpj) add(" and cnpj = $?", f.cnpj);
+  if (f.codigos) add(" and codigoempresa = any($?::int[])", f.codigos);
   if (f.respId != null) add(" and resp_id = $?", f.respId);
   if (f.prazoDe) add(" and prazo >= $?::date", f.prazoDe);
   if (f.prazoAte) add(" and prazo <= $?::date", f.prazoAte);

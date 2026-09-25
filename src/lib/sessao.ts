@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { appQuery } from "./app-db";
 import { COOKIE } from "./auth";
 import { empresasDosGrupos } from "./grupo-membros";
-import { MODULOS, secoesDoModulo, type ModuloId } from "./modulos";
+import { getModulo, MODULOS, secoesDoModulo, type ModuloId } from "./modulos";
 
 /**
  * Seam de permissão do Hub, no servidor.
@@ -25,7 +25,14 @@ import { MODULOS, secoesDoModulo, type ModuloId } from "./modulos";
  */
 
 export interface Sessao {
-  usuario: { id: string; nome: string; email: string; admin: boolean; temAvatar: boolean };
+  usuario: {
+    id: string;
+    nome: string;
+    email: string;
+    admin: boolean;
+    /** Momento da foto em ms (renova o cache da imagem quando ela troca). Null = sem foto. */
+    avatarVersao: number | null;
+  };
   /** Seções acessíveis. Chave "modulo/secao". Ausente = sem acesso. */
   secoes: Set<string>;
   /**
@@ -49,10 +56,10 @@ export const getSessaoOpcional = cache(async (): Promise<Sessao | null> => {
     id: string;
     nome: string;
     email: string;
-    tem_avatar: boolean;
+    avatar_versao: string | null;
   }>(
     `select u.id, u.nome, u.email,
-            exists (select 1 from usuario_avatar a where a.usuario_id = u.id) as tem_avatar
+            (select extract(epoch from a.atualizado_em) * 1000 from usuario_avatar a where a.usuario_id = u.id) as avatar_versao
        from sessao s
        join usuario u on u.id = s.usuario_id
       where s.token = $1 and s.expira_em > now() and u.ativo`,
@@ -99,7 +106,13 @@ export const getSessaoOpcional = cache(async (): Promise<Sessao | null> => {
   }
 
   return {
-    usuario: { id: u.id, nome: u.nome, email: u.email, admin, temAvatar: u.tem_avatar },
+    usuario: {
+      id: u.id,
+      nome: u.nome,
+      email: u.email,
+      admin,
+      avatarVersao: u.avatar_versao != null ? Math.round(Number(u.avatar_versao)) : null,
+    },
     secoes,
     empresas: { todas: todasEmpresas, permitidas },
   };
@@ -115,6 +128,10 @@ export async function getSessao(): Promise<Sessao> {
 /** A sessão pode acessar esta seção? Admin acessa tudo. */
 export function podeSecao(sessao: Sessao, modulo: string, secao: string): boolean {
   if (sessao.usuario.admin) return true;
+  // A Administração não se concede por seção: uma linha em `cargo_secao`
+  // apontando para ela (gravada à mão ou herdada) não pode abrir o cadastro de
+  // usuários para quem não é administrador.
+  if (getModulo(modulo)?.soAdmin) return false;
   return sessao.secoes.has(chaveSecao(modulo, secao));
 }
 

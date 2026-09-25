@@ -16,7 +16,7 @@ export function dadosCasca(sessao: Sessao): DadosCasca {
       nome: sessao.usuario.nome,
       email: sessao.usuario.email,
       admin: sessao.usuario.admin,
-      temFoto: sessao.usuario.temAvatar,
+      fotoVersao: sessao.usuario.avatarVersao,
     },
     acessos,
   };

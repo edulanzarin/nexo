@@ -2,7 +2,8 @@ import { SECOES_CONTABIL } from "./secoes/contabil";
 import { SECOES_FISCAL } from "./secoes/fiscal";
 import { SECOES_FOLHA } from "./secoes/folha";
 import { SECOES_CONFIG } from "./secoes/config";
-import { SECOES_OBRIGACOES } from "./secoes/outros";
+import { SECOES_ADMIN } from "./secoes/admin";
+import { SECOES_OBRIGACOES } from "./secoes/obrigacoes";
 import { SECOES_RH } from "./secoes/rh";
 import { SECOES_SOCIETARIO } from "./secoes/societario";
 import type { Aba, Secao } from "./secoes/tipos";
@@ -14,7 +15,8 @@ export type ModuloId =
   | "societario"
   | "rh"
   | "obrigacoes"
-  | "config";
+  | "config"
+  | "admin";
 
 /**
  * Catálogo dos módulos. É a fonte única da navegação: dirige o início, a barra
@@ -33,6 +35,12 @@ export interface Modulo {
   imagem: string;
   /** O módulo já foi refeito no NaveX. Os outros aparecem como "a caminho". */
   pronto: boolean;
+  /**
+   * Só administrador entra, e nenhum cargo concede as seções dele: a
+   * Administração. Fica fora da matriz de permissões, e uma `cargo_secao`
+   * gravada à mão para ela não abre nada (ver `podeSecao`).
+   */
+  soAdmin?: boolean;
 }
 
 export const MODULOS: Modulo[] = [
@@ -69,7 +77,7 @@ export const MODULOS: Modulo[] = [
     titulo: "Obrigações",
     descricao: "Fila de entregas do Acessórias, por setor e responsável",
     imagem: "/modulos/obrigacoes.png",
-    pronto: false,
+    pronto: true,
   },
   {
     id: "societario",
@@ -85,7 +93,18 @@ export const MODULOS: Modulo[] = [
     imagem: "/modulos/config.png",
     pronto: true,
   },
+  {
+    id: "admin",
+    titulo: "Administração",
+    descricao: "Usuários, cargos, grupos de permissão e a trilha de auditoria",
+    imagem: "/modulos/admin.png",
+    pronto: true,
+    soAdmin: true,
+  },
 ];
+
+/** Os módulos que um cargo pode conceder: todos menos a Administração. */
+export const MODULOS_CONCEDIVEIS: Modulo[] = MODULOS.filter((m) => !m.soAdmin);
 
 const SECOES: Record<ModuloId, Secao[]> = {
   contabil: SECOES_CONTABIL,
@@ -95,6 +114,7 @@ const SECOES: Record<ModuloId, Secao[]> = {
   obrigacoes: SECOES_OBRIGACOES,
   societario: SECOES_SOCIETARIO,
   config: SECOES_CONFIG,
+  admin: SECOES_ADMIN,
 };
 
 export function getModulo(id: string): Modulo | undefined {

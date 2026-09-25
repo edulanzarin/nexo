@@ -218,6 +218,9 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     "grupos-empresa": ["grupos-empresa"],
     empresas: ["grupos-empresa"],
   },
+  // Sem mapa por seção: a Administração inteira é só de administrador, e o
+  // `apiRoute` barra `/api/admin/` antes de chegar aqui.
+  admin: {},
 };
 
 /**

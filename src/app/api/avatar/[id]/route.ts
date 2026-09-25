@@ -12,6 +12,8 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
   const { id } = await ctx.params;
+  // Id fora do formato viraria erro de banco (a coluna é uuid) e um 500.
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return new NextResponse(null, { status: 404 });
   const [row] = await appQuery<{ mime: string; bytes: Buffer }>(
     `select mime, bytes from usuario_avatar where usuario_id = $1`,
     [id]
@@ -24,6 +26,8 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
       // Privado e curto: a foto pode mudar; o cache-buster (?v=) no <img> cuida
       // da atualização imediata quando troca.
       "Cache-Control": "private, max-age=300",
+      // O tipo é o que o arquivo declarou no envio: o navegador não adivinha outro.
+      "X-Content-Type-Options": "nosniff",
     },
   });
 }
