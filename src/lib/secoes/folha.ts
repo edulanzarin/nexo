@@ -141,7 +141,8 @@ export const SECOES_FOLHA: Secao[] = [
     path: "/folha/produtividade",
     descricao: "Movimentação, férias, folha e eSocial por colaborador",
     // Uma aba por família de trabalho, e não por trabalho: doze abas seriam uma
-    // lista, não uma navegação. O trabalho vira escolha dentro da família.
+    // lista, não uma navegação. O trabalho vira escolha dentro da família. As
+    // seis leem o mesmo resumo, então executar numa executa todas.
     abas: [
       {
         id: "geral",
@@ -149,6 +150,7 @@ export const SECOES_FOLHA: Secao[] = [
         path: "/folha/produtividade",
         descricao: "O que o DP fez no período, por família de trabalho e por pessoa",
         empresa: "opcional",
+        execucaoCompartilhada: "/folha/produtividade",
       },
       ...DP_FAMILIAS.map((f) => ({
         id: f.id,
@@ -156,6 +158,7 @@ export const SECOES_FOLHA: Secao[] = [
         path: `/folha/produtividade/${f.id}`,
         descricao: f.descricao,
         empresa: "opcional" as const,
+        execucaoCompartilhada: "/folha/produtividade",
       })),
     ],
   },

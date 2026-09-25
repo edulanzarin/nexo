@@ -30,7 +30,7 @@ export function useExecucao() {
   const qsAtual = qsDaAba(contexto, aba);
   const falta = faltaEmpresa(contexto, aba);
   const [executado, setExecutado] = useEstadoModulo<string | null>(
-    `${aba?.path ?? pathname}\u0000executado`,
+    `${aba?.execucaoCompartilhada ?? aba?.path ?? pathname}\u0000executado`,
     null
   );
   const qc = useQueryClient();

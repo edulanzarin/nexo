@@ -144,7 +144,7 @@ export const DP_TIPOS: DpTipoInfo[] = [
   {
     id: "folha",
     rotulo: "Folha calculada",
-    descricao: "Cálculo da folha de um funcionário num período — o trabalho central do mês",
+    descricao: "Cálculo da folha de um funcionário num período",
     familia: "folha",
     tabela: "funcpercalculo",
     porContrato: true,
@@ -211,7 +211,7 @@ export const DP_TIPOS: DpTipoInfo[] = [
   {
     id: "esocial",
     rotulo: "eSocial transmitido",
-    descricao: "Evento enviado ao eSocial — parte é rotina automática, parte é gente",
+    descricao: "Evento enviado ao eSocial",
     familia: "esocial",
     tabela: "esocialtransacao",
     porContrato: false,

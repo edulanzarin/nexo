@@ -37,6 +37,13 @@ export interface Aba {
    * - null: sem botão, a tela tem gatilho próprio (o envio do extrato).
    */
   execucao?: string | null;
+  /**
+   * Abas com a mesma chave dividem a execução: executar numa vale para as
+   * outras. É para abas que leem o mesmo recorte e só mudam o ângulo (as
+   * famílias da Produtividade do DP saem do mesmo resumo); sem a chave, cada
+   * aba pediria Executar de novo para o mesmo dado.
+   */
+  execucaoCompartilhada?: string;
 }
 
 export interface Secao {
