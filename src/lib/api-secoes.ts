@@ -171,6 +171,9 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     // Formulários (builder) e campanhas de envio
     formularios: ["formularios"],
     envios: ["formularios"],
+    // Sem entrada aqui, o endpoint caía no gate do módulo: qualquer seção do RH
+    // criava e apagava envio recorrente (furo herdado do nexo2).
+    "envio-regras": ["formularios"],
     // Canal de denúncia (fila + tratativa + dashboard). Sub-rotas casam pelo 1º segmento.
     denuncias: ["denuncias"],
     // Clima (avaliação anônima): rodadas + dashboard.
@@ -220,4 +223,28 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
 export function secoesDoEndpoint(modulo: ModuloId, segmentos: string): string[] | undefined {
   const primeiro = segmentos.split("/")[0];
   return MAPA[modulo]?.[primeiro];
+}
+
+/**
+ * Seções que só LEEM um endpoint de outra seção: o cadastro que a tela delas
+ * usa como lista de escolha. No RH, a Nova Avaliação de Desempenho escolhe
+ * formulário, colaborador e setor; o envio de formulário escolhe gestores; a
+ * ficha aberta na Rotatividade escolhe setor. Sem isto, quem tinha só a seção
+ * que escolhe recebia 403 na lista (furo herdado do nexo2), e dar a seção
+ * dona inteira seria dar também a escrita dela.
+ *
+ * Vale só para GET: criar, editar e apagar continuam exigindo a seção dona.
+ */
+const LEITURA: Partial<Record<ModuloId, Record<string, string[]>>> = {
+  rh: {
+    funcionarios: ["desempenho", "formularios", "gestores"],
+    setores: ["desempenho", "formularios", "rotatividade"],
+    gestores: ["desempenho", "formularios"],
+    formularios: ["desempenho", "clima"],
+  },
+};
+
+export function secoesDeLeitura(modulo: ModuloId, segmentos: string): string[] {
+  const primeiro = segmentos.split("/")[0];
+  return LEITURA[modulo]?.[primeiro] ?? [];
 }

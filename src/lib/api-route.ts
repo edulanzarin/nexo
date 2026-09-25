@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { FilterError } from "./fiscal-filters";
 import { AppDbError } from "./app-db";
 import { getSessaoOpcional, podeSecao, podeAcessarModuloSync, podeVerEmpresa } from "./sessao";
-import { secoesDoEndpoint } from "./api-secoes";
+import { secoesDeLeitura, secoesDoEndpoint } from "./api-secoes";
 import type { ModuloId } from "./modulos";
 
 /** Contexto do route handler do Next (o 2º argumento). `params` é uma Promise
@@ -59,7 +59,9 @@ export function apiRoute(handler: Handler) {
       const modulo = moduloDaRota(pathname);
       if (modulo) {
         const resto = pathname.slice(`/api/${modulo}/`.length);
-        const secoes = secoesDoEndpoint(modulo, resto);
+        const donas = secoesDoEndpoint(modulo, resto);
+        // Leitura de cadastro por quem só escolhe dele (ver `secoesDeLeitura`).
+        const secoes = donas && req.method === "GET" ? [...donas, ...secoesDeLeitura(modulo, resto)] : donas;
         const ok = secoes
           ? secoes.some((s) => podeSecao(sessao, modulo, s))
           : podeAcessarModuloSync(sessao, modulo);
