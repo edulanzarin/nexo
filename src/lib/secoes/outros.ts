@@ -14,18 +14,6 @@ function secao(modulo: string, id: string, rotulo: string, icone: string, grupo:
   return { id, rotulo, icone, grupo, path, descricao, abas: [] };
 }
 
-export const SECOES_FOLHA: Secao[] = [
-  secao("folha", "painel-gestao", "Painel da Equipe", "painel", "Visão", "Pendências e atividade do DP no mês"),
-  secao("folha", "painel", "Meu Painel", "grade", "Visão", "Rescisões a pagar, férias vencidas e eSocial"),
-  secao("folha", "rotatividade", "Rotatividade", "rotatividade", "Análise", "Admissões e desligamentos sobre o efetivo"),
-  secao("folha", "produtividade", "Produtividade", "velocimetro", "Equipe", "Movimentação, férias, folha e eSocial por colaborador"),
-  secao("folha", "custo", "Custo de Folha", "moedas", "Análise", "Proventos por rubrica, tipo e setor"),
-  secao("folha", "esocial", "eSocial", "escudo", "Rotina", "Eventos aceitos, pendentes e rejeitados"),
-  secao("folha", "ferias", "Férias", "calendario", "Rotina", "Férias vencidas e a vencer"),
-  secao("folha", "rescisoes", "Rescisões a Pagar", "recibo", "Rotina", "Prazo de pagamento e avisos por e-mail"),
-  ...secoesPostMortem("folha", "Equipe"),
-];
-
 export const SECOES_RH: Secao[] = [
   secao("rh", "painel", "Painel", "painel", "Visão", "Pendências e panorama do mês"),
   secao("rh", "diretorio", "Diretório", "pessoas", "Pessoas", "Funcionários, com filtro e ficha"),

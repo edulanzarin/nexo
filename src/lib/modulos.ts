@@ -1,8 +1,8 @@
 import { SECOES_CONTABIL } from "./secoes/contabil";
 import { SECOES_FISCAL } from "./secoes/fiscal";
+import { SECOES_FOLHA } from "./secoes/folha";
 import {
   SECOES_CONFIG,
-  SECOES_FOLHA,
   SECOES_OBRIGACOES,
   SECOES_RH,
   SECOES_SOCIETARIO,
@@ -61,7 +61,7 @@ export const MODULOS: Modulo[] = [
     descricao: "Rotatividade, custo de folha, férias, rescisões e eSocial",
     icone: "setor-dp",
     cor: "azul",
-    pronto: false,
+    pronto: true,
   },
   {
     id: "rh",
