@@ -5,7 +5,7 @@ import { FilterError } from "@/lib/fiscal-filters";
 import { idUsuarioDaRota } from "@/lib/admin-sessao";
 
 /** A foto de um usuário, trocada pelo administrador. Vai em multipart, campo `avatar`. */
-export const PUT = apiRoute(async (req, ctx) => {
+export const POST = apiRoute(async (req, ctx) => {
   const id = await idUsuarioDaRota(ctx);
   const form = await req.formData().catch(() => {
     throw new FilterError("Envie a foto como arquivo");

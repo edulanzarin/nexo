@@ -4,7 +4,7 @@ import { FilterError } from "@/lib/fiscal-filters";
 import { getSessao } from "@/lib/sessao";
 
 /** A própria foto. Vai em multipart, campo `avatar`. */
-export const PUT = apiRoute(async (req) => {
+export const POST = apiRoute(async (req) => {
   const { usuario } = await getSessao();
   const form = await req.formData().catch(() => {
     throw new FilterError("Envie a foto como arquivo");
