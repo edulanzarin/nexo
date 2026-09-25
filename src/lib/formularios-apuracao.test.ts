@@ -125,6 +125,12 @@ describe("pontuação", () => {
     expect(a.fatias.map((f) => f.rotulo)).toEqual(["0 a 2", "2 a 4", "4 a 6", "6 a 8", "8 a 10"]);
     expect(a.fatias.map((f) => f.n)).toEqual([1, 0, 0, 1, 2]);
   });
+
+  it("faixa de largura quebrada sai com vírgula, como se lê em pt-BR", () => {
+    const c = campo("pontuacao", { min: 0, max: 7 }, { id: 41 });
+    const a = apurarFormulario([c], [{ "41": 1 }, { "41": 6 }])[0] as ApuracaoNumero;
+    expect(a.fatias.map((f) => f.rotulo)).toEqual(["0 a 1,4", "1,4 a 2,8", "2,8 a 4,2", "4,2 a 5,6", "5,6 a 7"]);
+  });
 });
 
 describe("texto", () => {

@@ -14,6 +14,7 @@
  * testar a conta sem banco.
  */
 
+import { decimal } from "./format";
 import {
   escalaDoCampo,
   valorPreenchido,
@@ -199,7 +200,8 @@ function apurarNumero(campo: FormularioCampo, respostas: RespostaValores[]): Apu
   const rotuloFaixa = (i: number) => {
     const de = min + i * largura;
     const ate = i === nFaixas - 1 ? max : de + largura;
-    const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
+    // `toFixed` escrevia "2.5 a 5": ponto em pt-BR é milhar.
+    const fmt = (n: number) => decimal(n);
     return `${fmt(de)} a ${fmt(ate)}`;
   };
 
