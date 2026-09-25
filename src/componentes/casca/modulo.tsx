@@ -1,35 +1,36 @@
-import { Icone } from "@/componentes/primitivos/icone";
 import { cn } from "@/lib/cn";
 import type { Modulo } from "@/lib/modulos";
 
 /**
- * A marca do módulo: o ícone na cor de identidade dele (a paleta é do
- * Eduardo). Identidade não se drena por disponibilidade: módulo "a caminho"
- * continua com a sua cor; só "sem acesso" apagaria, e esse nem aparece.
+ * O ícone do módulo: o cubo com a sigla e a cor dele, o mesmo do nexo2. O
+ * Eduardo preferiu manter a identidade que o time já reconhece aos ícones
+ * desenhados para o NaveX, que ficaram genéricos. O cubo já traz a cor, então
+ * vai sem moldura nem fundo tingido; o PNG tem fundo transparente e serve os
+ * dois temas.
+ *
+ * `<img>` e não `next/image`: são sete arquivos de 7 a 12 KB, já recortados
+ * no tamanho, e o otimizador só acrescentaria uma rota no caminho.
  */
-export function CorModulo({
+export function IconeModulo({
   modulo,
   tamanho = 28,
   className,
 }: {
-  modulo: Pick<Modulo, "cor" | "icone" | "titulo">;
+  modulo: Pick<Modulo, "imagem">;
   tamanho?: number;
   className?: string;
 }) {
-  const cor = `var(--id-${modulo.cor})`;
   return (
-    <span
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={modulo.imagem}
+      alt=""
       aria-hidden
-      className={cn("grid shrink-0 place-items-center rounded-[9px] ring-1 ring-inset", className)}
-      style={{
-        width: tamanho,
-        height: tamanho,
-        color: cor,
-        background: `color-mix(in srgb, ${cor} 15%, transparent)`,
-        ["--tw-ring-color" as string]: `color-mix(in srgb, ${cor} 28%, transparent)`,
-      }}
-    >
-      <Icone nome={modulo.icone} tamanho={Math.round(tamanho * 0.56)} />
-    </span>
+      width={tamanho}
+      height={tamanho}
+      draggable={false}
+      className={cn("shrink-0 select-none", className)}
+      style={{ width: tamanho, height: tamanho }}
+    />
   );
 }

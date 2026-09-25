@@ -12,7 +12,7 @@ import { MODULOS, secoesDoModulo, type Modulo, type ModuloId } from "@/lib/modul
 import type { Secao } from "@/lib/secoes/tipos";
 import { usePreferencia } from "@/hooks/use-preferencia";
 import { AssinaturaNavex } from "./marca";
-import { CorModulo } from "./modulo";
+import { IconeModulo } from "./modulo";
 import { MenuUsuario, type UsuarioCasca } from "./menu-usuario";
 
 /**
@@ -143,7 +143,7 @@ function TrocaModulo({ modulo, outros, recolhida }: { modulo: Modulo; outros: Mo
         { rotulo: "Início", icone: "inicio", aoEscolher: () => (window.location.href = "/") },
         ...outros.map((m) => ({
           rotulo: m.titulo,
-          icone: m.icone as never,
+          marca: <IconeModulo modulo={m} tamanho={18} />,
           detalhe: m.pronto ? undefined : "a caminho",
           desabilitado: !m.pronto,
           aoEscolher: () => (window.location.href = `/${m.id}`),
@@ -159,7 +159,7 @@ function TrocaModulo({ modulo, outros, recolhida }: { modulo: Modulo; outros: Mo
             recolhida ? "justify-center p-1" : "p-1.5"
           )}
         >
-          <CorModulo modulo={modulo} />
+          <IconeModulo modulo={modulo} />
           {!recolhida && (
             <>
               <span className="min-w-0 flex-1">

@@ -67,14 +67,6 @@
   --serie-6: #6b9e1f;
   --serie-outras: #8a94a8;
 
-  --id-vermelho: #d8323c;
-  --id-amarelo: #e0a100;
-  --id-azul: #2f6bff;
-  --id-rosa: #e0508f;
-  --id-laranja: #f26a1b;
-  --id-cinza: #7a8599;
-  --id-verde: #1a9a6c;
-
   --sombra-painel: 0 1px 2px rgb(22 36 72 / 0.05), 0 10px 28px -16px rgb(22 36 72 / 0.22);
   --sombra-flutua: 0 24px 60px -18px rgb(14 22 40 / 0.35), 0 8px 20px -12px rgb(14 22 40 / 0.2);
   --veu: rgb(14 22 40 / 0.32);
@@ -130,14 +122,6 @@
   --serie-6: #a9d85c;
   --serie-outras: #76819a;
 
-  --id-vermelho: #ff5a62;
-  --id-amarelo: #f5c02a;
-  --id-azul: #6f9dff;
-  --id-rosa: #ff78b0;
-  --id-laranja: #ff8a45;
-  --id-cinza: #8f9ab0;
-  --id-verde: #3fcf98;
-
   --sombra-painel: 0 1px 2px rgb(0 0 0 / 0.35), 0 14px 32px -18px rgb(0 0 0 / 0.7);
   --sombra-flutua: 0 30px 70px -20px rgb(0 0 0 / 0.8), 0 10px 24px -14px rgb(0 0 0 / 0.6);
   --veu: rgb(4 8 18 / 0.6);
@@ -192,13 +176,6 @@
   --color-serie-5: var(--serie-5);
   --color-serie-6: var(--serie-6);
   --color-serie-outras: var(--serie-outras);
-  --color-id-vermelho: var(--id-vermelho);
-  --color-id-amarelo: var(--id-amarelo);
-  --color-id-azul: var(--id-azul);
-  --color-id-rosa: var(--id-rosa);
-  --color-id-laranja: var(--id-laranja);
-  --color-id-cinza: var(--id-cinza);
-  --color-id-verde: var(--id-verde);
 
   --font-sans: var(--fonte-ui), "Segoe UI", system-ui, sans-serif;
 

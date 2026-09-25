@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { MarcaNavex, AssinaturaNavex } from "@/componentes/casca/marca";
-import { CorModulo } from "@/componentes/casca/modulo";
+import { IconeModulo } from "@/componentes/casca/modulo";
 import { Campo } from "@/componentes/primitivos/campo";
 import { Icone, ICONES } from "@/componentes/primitivos/icone";
 import { normalizar } from "@/componentes/primitivos/combo";
@@ -97,12 +97,12 @@ export function BlocosFundamentos() {
 
       <Bloco
         titulo="Identidade dos módulos"
-        porque="O ícone de cada setor é desenhado para o NaveX, no idioma do logo (peças sólidas, cortes a 45°, um canto arredondado): ícone de biblioteca é o mesmo de mil sistemas, e o do setor é identidade. Contábil é o razonete, Fiscal o % do tributo, DP a pessoa, RH o coração, Obrigações o calendário com o visto, Societário o quadro societário, Configurações os ajustes. A paleta é do Eduardo e pinta só a marca do módulo, nunca cabeçalho nem estado."
+        porque="Cada módulo é o cubo com a sigla e a cor dele, os mesmos do nexo2: é a identidade que o time já reconhece de relance, e os ícones desenhados para o NaveX ficaram genéricos ao lado dela. O cubo vai sem moldura nem fundo, porque já traz a cor, e a cor dele só aparece nele: nunca pinta cabeçalho nem estado. Os PNGs têm fundo transparente e servem os dois temas; na barra lateral ficam com 28 px e continuam legíveis."
       >
         <div className="flex flex-wrap gap-5">
           {MODULOS.map((m) => (
             <div key={m.id} className="flex items-center gap-2">
-              <CorModulo modulo={m} tamanho={36} />
+              <IconeModulo modulo={m} tamanho={40} />
               <span className="text-corpo text-tinta-2">{m.titulo}</span>
             </div>
           ))}

@@ -23,13 +23,12 @@ export interface Modulo {
   id: ModuloId;
   titulo: string;
   descricao: string;
-  /** Nome no registro de ícones. */
-  icone: string;
   /**
-   * Cor de identidade do módulo (a paleta é do Eduardo). Só pinta a marca do
-   * módulo; nunca estado, nunca acento de interface.
+   * O cubo do módulo, com a sigla e a cor dele: a identidade que o time já
+   * conhece do nexo2 (o Eduardo pediu para manter). Recortado e reduzido em
+   * `public/modulos/`, a partir dos originais de 1254 px do nexo2.
    */
-  cor: "amarelo" | "vermelho" | "azul" | "rosa" | "laranja" | "cinza" | "verde";
+  imagem: string;
   /** O módulo já foi refeito no NaveX. Os outros aparecem como "a caminho". */
   pronto: boolean;
 }
@@ -39,56 +38,49 @@ export const MODULOS: Modulo[] = [
     id: "contabil",
     titulo: "Contábil",
     descricao: "Conciliação, conferência, balancetes e a produtividade do time",
-    icone: "setor-contabil",
-    cor: "vermelho",
+    imagem: "/modulos/contabil.png",
     pronto: true,
   },
   {
     id: "fiscal",
     titulo: "Fiscal",
     descricao: "Painéis, análises e tributos sobre as notas",
-    icone: "setor-fiscal",
-    cor: "amarelo",
+    imagem: "/modulos/fiscal.png",
     pronto: true,
   },
   {
     id: "folha",
     titulo: "DP",
     descricao: "Rotatividade, custo de folha, férias, rescisões e eSocial",
-    icone: "setor-dp",
-    cor: "azul",
+    imagem: "/modulos/folha.png",
     pronto: true,
   },
   {
     id: "rh",
     titulo: "RH",
     descricao: "Pessoal da Navecon: diretório, experiência e canais",
-    icone: "setor-rh",
-    cor: "rosa",
+    imagem: "/modulos/rh.png",
     pronto: true,
   },
   {
     id: "obrigacoes",
     titulo: "Obrigações",
     descricao: "Fila de entregas do Acessórias, por setor e responsável",
-    icone: "setor-obrigacoes",
-    cor: "laranja",
+    imagem: "/modulos/obrigacoes.png",
     pronto: false,
   },
   {
     id: "societario",
     titulo: "Societário",
     descricao: "Contratos, alterações, aberturas e baixas",
-    icone: "setor-societario",
-    cor: "verde",
+    imagem: "/modulos/societario.png",
     pronto: false,
   },
   {
     id: "config",
     titulo: "Configurações",
     descricao: "Cadastros do sistema, como grupos de empresa",
-    icone: "setor-config",
-    cor: "cinza",
+    imagem: "/modulos/config.png",
     pronto: false,
   },
 ];

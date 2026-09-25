@@ -11,6 +11,11 @@ export type ItemMenu =
       tipo?: "acao";
       rotulo: string;
       icone?: NomeIcone;
+      /**
+       * Imagem no lugar do ícone, quando a identidade não é um ícone do
+       * registro (o cubo de cada módulo na troca de módulo).
+       */
+      marca?: ReactNode;
       detalhe?: string;
       /** Segunda linha, menor: o que a ação faz quando o rótulo não basta. */
       descricao?: string;
@@ -118,7 +123,7 @@ export function ListaMenu({
               it.desabilitado && "opacity-45"
             )}
           >
-            {it.icone && <Icone nome={it.icone} tamanho={15} className={it.perigo ? "" : "text-apagado"} />}
+            {it.marca ?? (it.icone && <Icone nome={it.icone} tamanho={15} className={it.perigo ? "" : "text-apagado"} />)}
             <span className="min-w-0 flex-1">
               <span className="block truncate">{it.rotulo}</span>
               {it.descricao && <span className="block truncate text-micro text-apagado">{it.descricao}</span>}

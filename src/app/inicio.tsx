@@ -6,7 +6,7 @@ import { useCasca } from "@/componentes/casca/casca-cliente";
 import { AssinaturaNavex } from "@/componentes/casca/marca";
 import { MenuUsuario } from "@/componentes/casca/menu-usuario";
 import { abrirPaleta, Paleta } from "@/componentes/casca/paleta";
-import { CorModulo } from "@/componentes/casca/modulo";
+import { IconeModulo } from "@/componentes/casca/modulo";
 import { PortaModulo } from "@/componentes/casca/porta-modulo";
 import { Icone } from "@/componentes/primitivos/icone";
 import { Tecla } from "@/componentes/primitivos/selo";
@@ -126,7 +126,7 @@ export function Inicio() {
                         key={m.id}
                         className="flex h-10 items-center gap-2 rounded-controle border border-dashed border-linha-forte pr-3 pl-1.5 text-corpo text-tinta-2"
                       >
-                        <CorModulo modulo={m} tamanho={26} />
+                        <IconeModulo modulo={m} tamanho={26} />
                         {m.titulo}
                       </li>
                     ))}

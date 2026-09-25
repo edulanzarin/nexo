@@ -104,17 +104,8 @@ import {
 } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
 import { cn } from "@/lib/cn";
-import {
-  SetorConfig,
-  SetorContabil,
-  SetorDp,
-  SetorFiscal,
-  SetorObrigacoes,
-  SetorRh,
-  SetorSocietario,
-} from "./icones-setor";
 
-/** O que o registro aceita: os ícones da biblioteca e os desenhados para o sistema. */
+/** O que o registro aceita: os ícones da biblioteca e SVG próprio com a mesma assinatura. */
 type ComponenteIcone = LucideIcon | ComponentType<SVGProps<SVGSVGElement> & { strokeWidth?: number | string }>;
 
 /**
@@ -124,15 +115,6 @@ type ComponenteIcone = LucideIcon | ComponentType<SVGProps<SVGSVGElement> & { st
  * é mudar uma linha, e nenhuma tela fica sabendo.
  */
 export const ICONES = {
-  // setores: desenhados para o NaveX, no idioma do logo (ver icones-setor)
-  "setor-contabil": SetorContabil,
-  "setor-fiscal": SetorFiscal,
-  "setor-dp": SetorDp,
-  "setor-rh": SetorRh,
-  "setor-obrigacoes": SetorObrigacoes,
-  "setor-societario": SetorSocietario,
-  "setor-config": SetorConfig,
-
   // navegação e seções
   inicio: Home,
   painel: LayoutDashboard,

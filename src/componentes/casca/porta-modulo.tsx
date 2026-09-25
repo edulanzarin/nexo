@@ -2,9 +2,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Icone } from "@/componentes/primitivos/icone";
 import type { Modulo } from "@/lib/modulos";
-import { CorModulo } from "./modulo";
+import { IconeModulo } from "./modulo";
 
-type ModuloPorta = Pick<Modulo, "cor" | "icone" | "titulo" | "descricao">;
+type ModuloPorta = Pick<Modulo, "imagem" | "titulo" | "descricao">;
 
 /**
  * A porta de um módulo no início: quem ele é e, numa linha, a relação da pessoa
@@ -27,7 +27,7 @@ export function PortaModulo({
   const conteudo = (
     <>
       <div className="flex items-start justify-between gap-3">
-        <CorModulo modulo={modulo} tamanho={40} />
+        <IconeModulo modulo={modulo} tamanho={40} />
         <Icone
           nome="seta-direita"
           tamanho={16}
