@@ -116,6 +116,11 @@ export function LancamentoModal({
           <Par rotulo="Situação">
             <Selo tom={situacao.tom}>{situacao.rotulo}</Selo>
           </Par>
+          {l.complemento && (
+            <Par rotulo="Complemento no extrato" className="col-span-2 sm:col-span-4">
+              {l.complemento}
+            </Par>
+          )}
           <Par rotulo="Histórico no arquivo" className="col-span-2 sm:col-span-4">
             {l.historico}
           </Par>

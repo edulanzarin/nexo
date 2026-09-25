@@ -11,7 +11,7 @@ import { Nota } from "@/componentes/primitivos/estados";
 import { Modal, PainelModal } from "@/componentes/primitivos/modal";
 import { SeletorConta } from "@/componentes/produto/seletor-conta";
 import { num } from "@/lib/format";
-import { normalizar, type TipoRegra } from "@/lib/regras-extrato";
+import { alvoDaLinha, normalizar, ondeCasa, type TipoRegra } from "@/lib/regras-extrato";
 import type { RegraExtratoDTO } from "@/lib/types";
 import { mutar } from "@/hooks/mutar";
 
@@ -34,6 +34,20 @@ export function termoDaDescricao(descricao: string): string {
   return descricao.replace(/\s+\d{2}\/\d{2}(\/\d{4})?\s*$/, "").trim() || descricao;
 }
 
+/**
+ * O termo que sai do complemento: sem o rótulo do banco ("FAV.:", "REM.:"),
+ * que se repete em toda transferência e não diz quem é.
+ */
+export function termoDoComplemento(complemento: string): string {
+  return complemento.replace(/^(FAV|REM|FAVORECIDO|REMETENTE)\.?\s*:\s*/i, "").trim() || complemento;
+}
+
+/** Uma linha do extrato: o histórico e, quando o banco imprime, o complemento. */
+export interface LinhaExtrato {
+  descricao: string;
+  complemento?: string;
+}
+
 interface PropsRegra {
   empresa: number;
   /** Conta do banco dona da regra: cada conta tem o próprio cadastro. */
@@ -43,8 +57,10 @@ interface PropsRegra {
   regra?: RegraExtratoDTO | null;
   /** Regra nova já preenchida (a linha do extrato que a originou). */
   inicial?: Partial<RascunhoRegra>;
-  /** Descrições do extrato lido: a janela conta quantas a regra casaria. */
-  amostra?: string[];
+  /** A linha que originou a regra: oferece o histórico e o complemento como termo. */
+  linha?: LinhaExtrato;
+  /** As linhas do extrato lido: a janela conta quantas a regra casaria. */
+  amostra?: LinhaExtrato[];
   onFechar: () => void;
   onSalvo?: (id: number) => void;
   onApagado?: () => void;
@@ -80,6 +96,7 @@ function FormularioRegra({
   descricaoConta,
   regra,
   inicial,
+  linha,
   amostra,
   onFechar,
   onSalvo,
@@ -105,14 +122,17 @@ function FormularioRegra({
     setErro(null);
   };
 
-  // A mesma normalização do casamento no servidor: sem acento, maiúsculas,
-  // espaço colapsado. Contar com outra régua mentiria sobre o que vai casar.
-  const normalizadas = useMemo(() => amostra?.map(normalizar), [amostra]);
+  // O mesmo casamento do servidor: sem acento, maiúsculas, espaço colapsado,
+  // lendo o complemento. Contar com outra régua mentiria sobre o que vai casar.
+  const alvos = useMemo(() => amostra?.map((l) => alvoDaLinha(l.descricao, l.complemento)), [amostra]);
   const casam = useMemo(() => {
-    const t = normalizar(r.termo);
-    if (!normalizadas || !t) return null;
-    return normalizadas.filter((d) => (r.tipo === "exato" ? d === t : d.includes(t))).length;
-  }, [normalizadas, r.termo, r.tipo]);
+    const termo = normalizar(r.termo);
+    if (!alvos || !termo) return null;
+    return alvos.filter((a) => ondeCasa({ termo, tipo: r.tipo }, a)).length;
+  }, [alvos, r.termo, r.tipo]);
+  const sugestoes = linha
+    ? [termoDaDescricao(linha.descricao), ...(linha.complemento ? [termoDoComplemento(linha.complemento)] : [])]
+    : [];
 
   async function salvar() {
     if (!r.termo.trim()) return setErro("Informe a descrição que o banco usa.");
@@ -200,6 +220,23 @@ function FormularioRegra({
           />
         </Rotulado>
       </div>
+      {sugestoes.length > 1 && (
+        <div className="-mt-2 flex min-w-0 flex-wrap items-center gap-1.5">
+          <span className="text-pequeno text-apagado">Do extrato</span>
+          {sugestoes.map((s) => (
+            <button
+              key={s}
+              type="button"
+              aria-pressed={normalizar(r.termo) === normalizar(s)}
+              onClick={() => mudar({ termo: s })}
+              title={s}
+              className="inline-flex h-6 max-w-full min-w-0 items-center rounded-chip border border-linha bg-poco px-2 text-pequeno text-tinta-2 transition-colors hover:border-linha-forte hover:text-tinta aria-pressed:border-rota aria-pressed:text-tinta"
+            >
+              <span className="truncate">{s}</span>
+            </button>
+          ))}
+        </div>
+      )}
       <div className="grid gap-3 sm:grid-cols-2">
         <Rotulado rotulo="Se for pagamento">
           <SeletorConta

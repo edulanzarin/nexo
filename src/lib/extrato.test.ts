@@ -103,6 +103,100 @@ describe("OFX", () => {
     const ofx = `<OFX><STMTTRN><DTPOSTED>20250203<TRNAMT>10,00<MEMO>X</STMTTRN></OFX>`;
     expect(lerOfx(ofx).transacoes.map((t) => t.valor)).toEqual([10]);
   });
+
+  it("NAME e MEMO diferentes: o MEMO é a descrição e o NAME vira complemento", () => {
+    const ofx = `<OFX><BANKTRANLIST>
+<STMTTRN><TRNTYPE>DEBIT<DTPOSTED>20260801<TRNAMT>-500.00<NAME>JOSE AUGUSTO MOREIRA<MEMO>Pix - Enviado</STMTTRN>
+<STMTTRN><TRNTYPE>DEBIT<DTPOSTED>20260802<TRNAMT>-9.90<NAME>TARIFA<MEMO>TARIFA PACOTE</STMTTRN>
+<STMTTRN><TRNTYPE>DEBIT<DTPOSTED>20260803<TRNAMT>-1.00<NAME>SO O NOME</STMTTRN>
+</BANKTRANLIST></OFX>`;
+    expect(lerOfx(ofx).transacoes).toEqual([
+      { data: "2026-08-01", descricao: "Pix - Enviado", complemento: "JOSE AUGUSTO MOREIRA", valor: -500 },
+      // O NAME já está dentro do MEMO: repetir seria ruído.
+      { data: "2026-08-02", descricao: "TARIFA PACOTE", valor: -9.9 },
+      { data: "2026-08-03", descricao: "SO O NOME", valor: -1 },
+    ]);
+  });
+});
+
+// ── PDF do Sicoob ───────────────────────────────────────────────────────────
+
+/**
+ * O `layout` do poppler (o do container) no extrato do internet banking do
+ * Sicoob: o favorecido vem na linha de baixo, mais recuado, e uma linha em
+ * branco fecha o lançamento. Nomes de mentira.
+ */
+const SICOOB_LAYOUT = `01/09/2026, 08:06                                                           Sicoob | Internet Banking
+
+                              SISTEMA DE COOPERATIVAS DE CRÉDITO DO BRASIL
+                              PLATAFORMA DE SERVIÇOS FINANCEIROS DO SICOOB - SISBR
+
+          EXTRATO DE CONTA CORRENTE                                                                         01/09/2026 - 08:10:21
+  Cooperativa:                                                                                3000-1 / SICOOB EXEMPLO
+  Conta:                                                              12.345-6 / EMPRESA EXEMPLO LTDA
+  Periodo:                                                                                            01/08/2026 - 31/08/2026
+
+          HISTÓRICO DE MOVIMENTAÇÃO
+
+   Data     Documento         Histórico                                                                                     Valor
+   31/08    10704975              DÉB.TRANSF.CONTAS DIF.TITULARIDADE                                               R$ 28.000,00D
+                              FAV.: JOSE AUGUSTO MOREIRA Distribuicao lucros socio Jose A.Moreira
+
+   31/08    10656601              CRÉD.TRANSF.CONTAS                                                               R$ 62.000,00C
+                              REM.: CLINICA SORRISO VIVO LTDA
+
+   31/08                          SALDO DO DIA                                                                     R$ 44.303,99C
+   24/08    10671823              DÉB.CONV.TRIBUTOS FEDERAIS - RFB                                                  R$ 2.063,77D
+   17/08    CELESC DIS            DÉB.CONV.EN.ELÉTRICA E GÁS                                                          R$ 156,79D
+   06/08    Pix                   PIX RECEBIDO - OUTRA IF                                                           R$ 3.347,32C
+                              Recebimento Pix IMOBILIARIA EXEMPLO LTDA 10.000.000 0001-00
+
+   03/08    127                   TRANSF.RECURSO (E/I)                                                                  R$ 1,50D
+
+
+https://ib.sicoob.com.br/sicoobnet/ib/#/home-extrato                                                                                1/2
+\f01/09/2026, 08:06                                        Sicoob | Internet Banking
+
+   Data     Documento         Histórico                                                      Valor
+   03/08                          SALDO DO DIA                                       R$ 35.484,75C
+   31/07                          SALDO ANTERIOR                                     R$ 35.486,25C
+
+
+          RESUMO
+   Saldo em conta:                                                                       44.303,99C
+  ENCARGOS VENCIDOS REMANESCENTES
+   Juros vencidos remanescentes:                                                             0,00D`;
+
+describe("PDF do Sicoob", () => {
+  it("o favorecido da linha de baixo vira o complemento", async () => {
+    const r = await lerPdf(async () => SICOOB_LAYOUT);
+    expect(r.banco).toBe("Sicoob");
+    expect(r.transacoes).toEqual([
+      {
+        data: "2026-08-31",
+        descricao: "10704975 DÉB.TRANSF.CONTAS DIF.TITULARIDADE",
+        complemento: "FAV.: JOSE AUGUSTO MOREIRA Distribuicao lucros socio Jose A.Moreira",
+        valor: -28000,
+      },
+      {
+        data: "2026-08-31",
+        descricao: "10656601 CRÉD.TRANSF.CONTAS",
+        complemento: "REM.: CLINICA SORRISO VIVO LTDA",
+        valor: 62000,
+      },
+      // Sem linha de baixo, sem complemento: o lançamento seguinte não gruda.
+      { data: "2026-08-24", descricao: "10671823 DÉB.CONV.TRIBUTOS FEDERAIS - RFB", valor: -2063.77 },
+      { data: "2026-08-17", descricao: "CELESC DIS DÉB.CONV.EN.ELÉTRICA E GÁS", valor: -156.79 },
+      {
+        data: "2026-08-06",
+        descricao: "Pix PIX RECEBIDO - OUTRA IF",
+        complemento: "Recebimento Pix IMOBILIARIA EXEMPLO LTDA 10.000.000 0001-00",
+        valor: 3347.32,
+      },
+      // O rodapé da página e o resumo do fim ficam de fora.
+      { data: "2026-08-03", descricao: "127 TRANSF.RECURSO (E/I)", valor: -1.5 },
+    ]);
+  });
 });
 
 // ── PDF do Ailos ────────────────────────────────────────────────────────────

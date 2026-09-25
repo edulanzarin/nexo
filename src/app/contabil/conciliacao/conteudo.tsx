@@ -16,7 +16,14 @@ import { TabelaDados, type Coluna } from "@/componentes/primitivos/tabela";
 import { baixarArquivo } from "@/componentes/produto/contabil/baixar-arquivo";
 import { ContaTexto } from "@/componentes/produto/contabil/conta-texto";
 import { EnvioArquivo, erroDeSenha } from "@/componentes/produto/contabil/envio-arquivo";
-import { RegraExtratoModal, termoDaDescricao, type RascunhoRegra } from "@/componentes/produto/contabil/regra-extrato";
+import { DescricaoExtrato } from "@/componentes/produto/contabil/descricao-extrato";
+import {
+  RegraExtratoModal,
+  termoDaDescricao,
+  termoDoComplemento,
+  type LinhaExtrato,
+  type RascunhoRegra,
+} from "@/componentes/produto/contabil/regra-extrato";
 import { RodapeGeracao } from "@/componentes/produto/contabil/rodape-geracao";
 import { SeloFolha } from "@/componentes/produto/contabil/selo-folha";
 import { MenuExportar } from "@/componentes/produto/menu-exportar";
@@ -25,7 +32,7 @@ import { cn } from "@/lib/cn";
 import { decimalBR } from "@/lib/csv";
 import { resumir, type Ajustes, type Previa } from "@/lib/extrato-previa";
 import { brl, dataBR, num, pct } from "@/lib/format";
-import { gerarLancamentos, type LancamentoGerado, type RegraExtrato } from "@/lib/regras-extrato";
+import { gerarLancamentos, textoDaLinha, type LancamentoGerado, type RegraExtrato } from "@/lib/regras-extrato";
 import type { ContaBanco, RegraExtratoDTO } from "@/lib/types";
 import { enviarArquivo, mutar } from "@/hooks/mutar";
 import { buscarJson, useConsulta, useFiliais } from "@/hooks/use-consulta";
@@ -45,6 +52,7 @@ interface Linha {
 interface JanelaRegra {
   regra?: RegraExtratoDTO;
   inicial?: Partial<RascunhoRegra>;
+  linha?: LinhaExtrato;
 }
 
 /** O clique no seletor da célula não pode abrir o detalhe da linha. */
@@ -103,7 +111,10 @@ export default function Conteudo() {
 
   const lancamentos = useMemo(() => previa?.lancamentos ?? [], [previa]);
   const resumo = useMemo(() => resumir(lancamentos, ajustes), [lancamentos, ajustes]);
-  const amostra = useMemo(() => lancamentos.map((l) => l.descricao), [lancamentos]);
+  const amostra = useMemo(
+    () => lancamentos.map((l) => ({ descricao: l.descricao, complemento: l.complemento })),
+    [lancamentos]
+  );
   const comPessoa = useMemo(() => lancamentos.filter((l) => l.pessoa).length, [lancamentos]);
   const pessoasEmDuvida = useMemo(
     () => lancamentos.filter((l) => l.pessoa && (l.pessoa.via === "parcial" || l.pessoa.homonimos > 0)).length,
@@ -141,7 +152,9 @@ export default function Conteudo() {
         if (filtro === "pendentes" && !pendenteDe(l, ajuste)) return false;
         if (!t) return true;
         const contra = contrapartida(l, ajuste);
-        return normalizar(l.descricao).includes(t) || (contra != null && String(contra) === t);
+        return (
+          normalizar(textoDaLinha(l.descricao, l.complemento)).includes(t) || (contra != null && String(contra) === t)
+        );
       });
   }, [lancamentos, ajustes, filtro, busca]);
 
@@ -215,6 +228,7 @@ export default function Conteudo() {
       const transacoes = previa.lancamentos.map((l) => ({
         data: l.data,
         descricao: l.descricao,
+        complemento: l.complemento,
         valor: l.sentido === "recebimento" ? l.valor : -l.valor,
       }));
       const novos = gerarLancamentos(transacoes, previa.contaBanco.conta, lidas).map((l, i) => ({
@@ -279,12 +293,16 @@ export default function Conteudo() {
     const ajuste = ajustes[i] ?? null;
     setDetalhe(null);
     setJanela({
+      // Com complemento, o termo nasce dele: pelo histórico, a regra levaria
+      // toda transferência do extrato para a conta desta linha, calada. Termo
+      // específico demais só deixa linha pendente, e isso aparece.
       inicial: {
-        termo: termoDaDescricao(l.descricao),
+        termo: l.complemento ? termoDoComplemento(l.complemento) : termoDaDescricao(l.descricao),
         tipo: "parcial",
         contaPagamento: l.sentido === "pagamento" ? ajuste : null,
         contaRecebimento: l.sentido === "recebimento" ? ajuste : null,
       },
+      linha: { descricao: l.descricao, complemento: l.complemento },
     });
   }
 
@@ -318,10 +336,7 @@ export default function Conteudo() {
         const ajuste = ajustes[i] ?? null;
         const s = situacaoLancamento(l, ajuste);
         return (
-          <span className="flex min-w-0 items-center gap-1.5">
-            <span className="min-w-0 truncate text-tinta" title={l.descricao}>
-              {l.descricao}
-            </span>
+          <DescricaoExtrato descricao={l.descricao} complemento={l.complemento}>
             {l.pendencia && <Selo tom={s.tom}>{s.rotulo}</Selo>}
             {l.ambiguo && (
               <Selo tom="atencao" title="Outra regra casa com a mesma força">
@@ -329,7 +344,7 @@ export default function Conteudo() {
               </Selo>
             )}
             {l.pessoa && <SeloFolha selo={l.pessoa} />}
-          </span>
+          </DescricaoExtrato>
         );
       },
     },
@@ -390,6 +405,7 @@ export default function Conteudo() {
                   cabecalhos: [
                     "Data",
                     "Descrição no extrato",
+                    "Complemento",
                     "Sentido",
                     "Débito",
                     "Crédito",
@@ -404,6 +420,7 @@ export default function Conteudo() {
                     return [
                       dataBR(l.data),
                       l.descricao,
+                      l.complemento ?? "",
                       l.sentido === "recebimento" ? "Recebimento" : "Pagamento",
                       p.debito,
                       p.credito,
@@ -672,6 +689,7 @@ export default function Conteudo() {
           descricaoConta={previa.contaBanco.descricao}
           regra={janela?.regra}
           inicial={janela?.inicial}
+          linha={janela?.linha}
           amostra={amostra}
           onFechar={() => setJanela(null)}
           // Regra nova ou mudada vale na hora para o extrato na tela: é para isso

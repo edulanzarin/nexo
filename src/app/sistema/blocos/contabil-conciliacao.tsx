@@ -8,7 +8,13 @@ import { Combo } from "@/componentes/primitivos/combo";
 import { CampoNumero } from "@/componentes/produto/contabil/campo-numero";
 import { ContaTexto } from "@/componentes/produto/contabil/conta-texto";
 import { EnvioArquivo, JanelaSenha } from "@/componentes/produto/contabil/envio-arquivo";
-import { RegraExtratoEstatica, termoDaDescricao } from "@/componentes/produto/contabil/regra-extrato";
+import { Selo } from "@/componentes/primitivos/selo";
+import { DescricaoExtrato } from "@/componentes/produto/contabil/descricao-extrato";
+import {
+  RegraExtratoEstatica,
+  termoDaDescricao,
+  type LinhaExtrato,
+} from "@/componentes/produto/contabil/regra-extrato";
 import { RodapeGeracao } from "@/componentes/produto/contabil/rodape-geracao";
 import { FichaFolha, SeloFolha } from "@/componentes/produto/contabil/selo-folha";
 import { SeletorHistorico } from "@/componentes/produto/contabil/seletor-historico";
@@ -80,14 +86,29 @@ const REGRA: RegraExtratoDTO = {
   ativo: true,
 };
 
-const AMOSTRA = [
-  "PIX ENVIADO MAGALHAES COM 12/08",
-  "PIX ENVIADO MAGALHAES COM 19/08",
-  "TED RECEBIDA MAGALHAES COMERCIO",
-  "PAGTO ENERGISA SC",
-  "TARIFA PACOTE SERVICOS",
-  "PIX RECEBIDO CLINICA SORRISO VIVO",
-  "PIX ENVIADO MAGALHAES COM 26/08",
+const AMOSTRA: LinhaExtrato[] = [
+  { descricao: "PIX ENVIADO MAGALHAES COM 12/08" },
+  { descricao: "PIX ENVIADO MAGALHAES COM 19/08" },
+  { descricao: "TED RECEBIDA MAGALHAES COMERCIO" },
+  { descricao: "PAGTO ENERGISA SC" },
+  { descricao: "TARIFA PACOTE SERVICOS" },
+  { descricao: "PIX RECEBIDO CLINICA SORRISO VIVO" },
+  { descricao: "PIX ENVIADO MAGALHAES COM 26/08" },
+];
+
+/** Extrato que imprime o complemento embaixo do histórico, como o Sicoob. */
+const COM_COMPLEMENTO: LinhaExtrato[] = [
+  {
+    descricao: "DÉB.TRANSF.CONTAS DIF.TITULARIDADE",
+    complemento: "FAV.: JOSE AUGUSTO MOREIRA Distribuicao lucros socio Jose A.Moreira",
+  },
+  { descricao: "DÉB.TRANSF.CONTAS DIF.TITULARIDADE", complemento: "FAV.: JOSE AUGUSTO MOREIRA" },
+  {
+    descricao: "DÉB.TRANSF.CONTAS DIF.TITULARIDADE",
+    complemento: "FAV.: MARTA ROSA MOREIRA Distribuicao lucros socia Marta R.Moreira",
+  },
+  { descricao: "CRÉD.TRANSF.CONTAS", complemento: "REM.: CLINICA SORRISO VIVO LTDA" },
+  { descricao: "DÉB.CONV.TRIBUTOS FEDERAIS - RFB" },
 ];
 
 const HISTORICOS = [
@@ -248,8 +269,32 @@ export function BlocosContabilConciliacao() {
       </Bloco>
 
       <Bloco
+        titulo="Descrição do extrato"
+        porque="O histórico em cima e o complemento embaixo, como o banco imprime. O histórico se repete no extrato inteiro (toda transferência a sócio é DÉB.TRANSF.CONTAS); quem separa a conta é o favorecido da linha de baixo, então ele fica à vista e não escondido numa dica. Os selos da linha vão ao lado do histórico."
+      >
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <Variante nome="Com complemento">
+            <div className="nx-vidro flex flex-col rounded-painel px-3 py-1">
+              {COM_COMPLEMENTO.slice(0, 4).map((l, i) => (
+                <DescricaoExtrato key={i} descricao={l.descricao} complemento={l.complemento}>
+                  {i === 2 && <Selo tom="atencao">Sem regra</Selo>}
+                </DescricaoExtrato>
+              ))}
+            </div>
+          </Variante>
+          <Variante nome="Banco que não imprime complemento: a linha não cresce">
+            <div className="nx-vidro flex flex-col rounded-painel px-3 py-1">
+              {AMOSTRA.slice(2, 6).map((l, i) => (
+                <DescricaoExtrato key={i} descricao={l.descricao} />
+              ))}
+            </div>
+          </Variante>
+        </div>
+      </Bloco>
+
+      <Bloco
         titulo="Regra do extrato"
-        porque="Janela e não linha editável: a regra tem seis campos, e uma linha com dois seletores de conta e um texto livre deixa de ser leitura. Serve a aba Regras e a Importação, onde nasce da linha que não casou: o termo já vem sem a data do fim (que muda todo mês) e a janela conta quantas linhas do extrato ele casaria, antes de salvar."
+        porque="Janela e não linha editável: a regra tem seis campos, e uma linha com dois seletores de conta e um texto livre deixa de ser leitura. Serve a aba Regras e a Importação, onde nasce da linha que não casou: o termo já vem sem a data do fim (que muda todo mês) e a janela conta quantas linhas do extrato ele casaria, antes de salvar. Quando a linha tem complemento, o termo nasce dele, sem o FAV.: do banco: pelo histórico, a regra levaria toda transferência do extrato para a mesma conta, calada. Os dois ficam oferecidos embaixo do campo."
       >
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <Variante nome="Nova, a partir da linha do extrato">
@@ -257,8 +302,19 @@ export function BlocosContabilConciliacao() {
               empresa={1200}
               conta={16}
               descricaoConta="BANCO VIACREDI C/C 12.345-6"
-              inicial={{ termo: termoDaDescricao(AMOSTRA[0]), contaPagamento: 212 }}
+              inicial={{ termo: termoDaDescricao(AMOSTRA[0].descricao), contaPagamento: 212 }}
               amostra={AMOSTRA}
+              onFechar={() => {}}
+            />
+          </Variante>
+          <Variante nome="Nova, de linha com complemento: o termo é o favorecido">
+            <RegraExtratoEstatica
+              empresa={1200}
+              conta={16}
+              descricaoConta="BANCO SICOOB C/C 37.123-4"
+              inicial={{ termo: "JOSE AUGUSTO MOREIRA", contaPagamento: 212 }}
+              linha={COM_COMPLEMENTO[0]}
+              amostra={COM_COMPLEMENTO}
               onFechar={() => {}}
             />
           </Variante>

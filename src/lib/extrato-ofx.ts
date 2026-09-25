@@ -1,4 +1,4 @@
-import type { Transacao } from "./regras-extrato";
+import { normalizar, type Transacao } from "./regras-extrato";
 
 /**
  * Leitor de OFX 1.x (SGML) e 2.x (XML).
@@ -25,6 +25,8 @@ function tag(bloco: string, nome: string): string | null {
   const v = m?.[1]?.trim();
   return v ? v : null;
 }
+
+const limpo = (v: string | null) => (v ?? "").replace(/\s+/g, " ").trim();
 
 /** OFX data: YYYYMMDD[HHMMSS][fuso] → YYYY-MM-DD. */
 function data(bruto: string | null): string | null {
@@ -71,9 +73,21 @@ export function lerOfx(conteudo: string): ExtratoLido {
     const valor = Number(valorTexto.replace(/\.(?=\d{3}\b)/g, "").replace(",", "."));
     if (!Number.isFinite(valor)) continue;
 
-    const memo = (tag(bloco, "MEMO") ?? tag(bloco, "NAME") ?? "").replace(/\s+/g, " ").trim();
-    if (RE_SALDO.test(memo)) continue;
-    lidas.push({ data: dt, descricao: memo, valor, tipo: tag(bloco, "TRNTYPE")?.toUpperCase() ?? null });
+    const memo = limpo(tag(bloco, "MEMO"));
+    const nome = limpo(tag(bloco, "NAME"));
+    const descricao = memo || nome;
+    if (RE_SALDO.test(descricao)) continue;
+    // Pela especificação o NAME é o favorecido e o MEMO o detalhe. A descrição
+    // continua sendo o MEMO; o NAME que diz outra coisa vira o complemento, em
+    // vez de sumir.
+    const complemento = memo && nome && !normalizar(memo).includes(normalizar(nome)) ? nome : null;
+    lidas.push({
+      data: dt,
+      descricao,
+      ...(complemento ? { complemento } : {}),
+      valor,
+      tipo: tag(bloco, "TRNTYPE")?.toUpperCase() ?? null,
+    });
   }
 
   // Pela especificação o sinal vem no TRNAMT, e o TRNTYPE só classifica. Mas há

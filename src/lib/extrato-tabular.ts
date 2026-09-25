@@ -49,6 +49,12 @@ export interface ConfigTabular {
    * sempre sobre o `layout`.
    */
   modo?: ModoTextoPdf;
+  /**
+   * O banco imprime o detalhe do lançamento (favorecido, remetente, a chave do
+   * Pix) nas linhas logo abaixo, sem data e sem valor. Ligado, essas linhas
+   * viram o `complemento` da transação em vez de serem descartadas.
+   */
+  complemento?: boolean;
 }
 
 interface Achado {
@@ -89,6 +95,26 @@ function saldoInicial(texto: string): number | null {
   return m[2] === "D" ? -Math.abs(n) : n;
 }
 
+const recuo = (linha: string) => linha.length - linha.trimStart().length;
+
+/** A transação recém-lida, à espera do complemento que vem embaixo dela. */
+interface Aberta {
+  t: Transacao;
+  recuo: number;
+}
+
+/**
+ * O complemento é o bloco colado embaixo da linha do lançamento e mais recuado
+ * que ela. Acaba na primeira linha em branco, com valor ou encostada na margem:
+ * rodapé, cabeçalho de página e o resumo do fim nunca grudam na descrição.
+ */
+function complementar(aberta: Aberta, linha: string): Aberta | null {
+  const texto = linha.replace(/\s+/g, " ").trim();
+  if (!texto || recuo(linha) <= aberta.recuo || dinheiros(linha).length) return null;
+  aberta.t.complemento = aberta.t.complemento ? `${aberta.t.complemento} ${texto}` : texto;
+  return aberta;
+}
+
 export interface ResultadoTabular extends ExtratoLido {
   /** Cadeia de saldos fechou do início ao fim (só no modo "saldo"). */
   saldoConfere: boolean | null;
@@ -106,8 +132,16 @@ export function lerTabular(texto: string, cfg: ConfigTabular): ResultadoTabular 
   // Data sem ano (Daycoval) precisa do ano do período.
   const periodo = texto.match(/(\d{2})\/(\d{2})\/(\d{4})\s*(?:à|a|-|até)\s*\d{2}\/\d{2}\/(\d{4})/i);
   if (periodo) anoPadrao = periodo[3];
+  let aberta: Aberta | null = null;
 
   for (const linha of texto.split("\n")) {
+    // Antes da data: complemento pode começar com uma ("02/01 10:15 FULANO"),
+    // e o que o separa de um lançamento novo é estar mais recuado e sem valor.
+    if (aberta && cfg.complemento) {
+      aberta = complementar(aberta, linha);
+      if (aberta) continue;
+    }
+    aberta = null;
     const mData = RE_DATA.exec(linha);
     if (!mData) continue;
     if (cfg.ignorar.test(linha)) continue;
@@ -157,7 +191,9 @@ export function lerTabular(texto: string, cfg: ConfigTabular): ResultadoTabular 
       .replace(/\s*-\s*$/, "")
       .trim();
 
-    transacoes.push({ data, descricao: descricao || "(sem descrição)", valor });
+    const t: Transacao = { data, descricao: descricao || "(sem descrição)", valor };
+    transacoes.push(t);
+    aberta = { t, recuo: recuo(linha) };
   }
 
   // A cadeia fecha? Soma dos lançamentos + saldo inicial = saldo final lido.
@@ -203,10 +239,14 @@ export const CONFIGS: ConfigTabular[] = [
     exigeSenha: true,
   },
   {
+    // O histórico é abreviado e se repete ("DÉB.TRANSF.CONTAS
+    // DIF.TITULARIDADE"); quem recebeu vem na linha de baixo ("FAV.: …",
+    // "REM.: …", "Recebimento Pix …").
     banco: "Sicoob",
     reconhece: (t) => /SISBR|SISTEMA DE COOPERATIVAS DE CR[ÉE]DITO/i.test(t),
     ignorar: SALDOS,
     sinal: "sufixoCD",
+    complemento: true,
   },
   {
     banco: "Daycoval",

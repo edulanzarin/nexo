@@ -32,13 +32,53 @@ export function normalizar(texto: string): string {
     .trim();
 }
 
+/** O texto de uma linha do extrato em que a regra procura, já normalizado. */
+export interface AlvoRegra {
+  /** Só o histórico, a linha de cima. */
+  historico: string;
+  /** Histórico e complemento juntos; igual ao histórico quando não há complemento. */
+  inteiro: string;
+}
+
+export function alvoDaLinha(descricao: string, complemento?: string | null): AlvoRegra {
+  const historico = normalizar(descricao);
+  return { historico, inteiro: complemento ? normalizar(`${descricao} ${complemento}`) : historico };
+}
+
+/** A linha inteira como texto: o histórico seguido do complemento. */
+export function textoDaLinha(descricao: string, complemento?: string | null): string {
+  return complemento ? `${descricao} ${complemento}` : descricao;
+}
+
+/**
+ * Onde a regra casa: só no histórico, ou só depois de ler o complemento. O
+ * termo já vem normalizado. O exato vale contra o histórico sozinho, como antes
+ * de o complemento existir (nenhuma regra antiga deixa de casar), ou contra a
+ * linha inteira.
+ */
+export function ondeCasa(
+  r: Pick<RegraExtrato, "termo" | "tipo">,
+  alvo: AlvoRegra
+): "historico" | "complemento" | null {
+  if (!r.termo) return null;
+  const bate = (texto: string) => (r.tipo === "exato" ? texto === r.termo : texto.includes(r.termo));
+  if (bate(alvo.historico)) return "historico";
+  if (alvo.inteiro !== alvo.historico && bate(alvo.inteiro)) return "complemento";
+  return null;
+}
+
 /**
  * Quão específica é a regra. Exato sempre ganha de parcial; entre parciais,
  * o termo mais longo ganha — assim cadastrar "MAGA" genérico e depois
  * "MAGALHAES COMERCIO" faz o segundo prevalecer sem gerenciar ordem.
+ *
+ * No meio, o complemento: a regra que só casa lendo o complemento ganha da que
+ * casa pelo histórico, mesmo com termo mais curto. O histórico diz o tipo do
+ * movimento e se repete no extrato inteiro; "VANIO" no favorecido é mais
+ * específico que "DEB.TRANSF.CONTAS DIF.TITULARIDADE", que casa com todo sócio.
  */
-export function especificidade(r: RegraExtrato): number {
-  return (r.tipo === "exato" ? 1_000_000 : 0) + r.termo.length;
+export function especificidade(r: RegraExtrato, onde: "historico" | "complemento" = "historico"): number {
+  return (r.tipo === "exato" ? 1_000_000 : 0) + (onde === "complemento" ? 10_000 : 0) + r.termo.length;
 }
 
 export interface Casamento {
@@ -57,36 +97,47 @@ export interface Casamento {
 export function casar(
   descricao: string,
   sentido: Sentido,
-  regras: RegraExtrato[]
+  regras: RegraExtrato[],
+  complemento?: string | null
 ): Casamento | null {
-  const alvo = normalizar(descricao);
-  if (!alvo) return null;
+  const alvo = alvoDaLinha(descricao, complemento);
+  if (!alvo.inteiro) return null;
 
-  const candidatas = regras.filter((r) => {
-    if (!r.ativo) return false;
-    return r.tipo === "exato" ? alvo === r.termo : alvo.includes(r.termo);
-  });
+  const candidatas: { r: RegraExtrato; forca: number }[] = [];
+  for (const r of regras) {
+    if (!r.ativo) continue;
+    const onde = ondeCasa(r, alvo);
+    if (onde) candidatas.push({ r, forca: especificidade(r, onde) });
+  }
   if (!candidatas.length) return null;
 
   let melhor = candidatas[0];
   let empate = false;
-  for (const r of candidatas.slice(1)) {
-    const d = especificidade(r) - especificidade(melhor);
+  for (const c of candidatas.slice(1)) {
+    const d = c.forca - melhor.forca;
     if (d > 0) {
-      melhor = r;
+      melhor = c;
       empate = false;
     } else if (d === 0) {
       empate = true;
     }
   }
 
-  const conta = sentido === "pagamento" ? melhor.contaPagamento : melhor.contaRecebimento;
-  return { regra: melhor, conta, ambiguo: empate };
+  const conta = sentido === "pagamento" ? melhor.r.contaPagamento : melhor.r.contaRecebimento;
+  return { regra: melhor.r, conta, ambiguo: empate };
 }
 
 export interface Transacao {
   data: string;
+  /** O histórico: a linha de cima, que diz o tipo do movimento. */
   descricao: string;
+  /**
+   * O detalhe que o banco imprime embaixo do histórico: favorecido, remetente,
+   * a chave do Pix. O histórico se repete no extrato inteiro ("DÉB.TRANSF.CONTAS
+   * DIF.TITULARIDADE"); o complemento diz com quem, e é ele que separa a conta
+   * de um sócio da do outro. Ausente quando o banco não imprime.
+   */
+  complemento?: string;
   /** Positivo = entrou na conta; negativo = saiu. */
   valor: number;
 }
@@ -94,6 +145,7 @@ export interface Transacao {
 export interface LancamentoGerado {
   data: string;
   descricao: string;
+  complemento?: string;
   valor: number;
   sentido: Sentido;
   contaDebito: number | null;
@@ -125,17 +177,20 @@ export function gerarLancamentos(
 ): LancamentoGerado[] {
   return transacoes.map((t) => {
     const sentido: Sentido = t.valor >= 0 ? "recebimento" : "pagamento";
-    const m = casar(t.descricao, sentido, regras);
+    const m = casar(t.descricao, sentido, regras, t.complemento);
     const contra = m?.conta ?? null;
 
     return {
       data: t.data,
       descricao: t.descricao,
+      ...(t.complemento ? { complemento: t.complemento } : {}),
       valor: Math.abs(t.valor),
       sentido,
       contaDebito: sentido === "recebimento" ? contaBanco : contra,
       contaCredito: sentido === "recebimento" ? contra : contaBanco,
-      historico: m?.regra.historico?.trim() || t.descricao,
+      // Sem histórico na regra, o lançamento leva a linha inteira: no Questor,
+      // "DÉB.TRANSF.CONTAS" sozinho não diz para quem foi.
+      historico: m?.regra.historico?.trim() || textoDaLinha(t.descricao, t.complemento),
       regraId: m?.regra.id ?? null,
       pendencia: !m ? "sem_regra" : contra == null ? "sem_conta" : null,
       ambiguo: m?.ambiguo ?? false,
