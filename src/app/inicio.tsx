@@ -87,7 +87,7 @@ export function Inicio() {
               className="nx-vidro flex h-11 w-full items-center gap-2.5 rounded-controle px-3.5 text-corpo text-apagado transition-colors hover:border-linha-forte hover:text-tinta-2 sm:w-[380px]"
             >
               <Icone nome="buscar" tamanho={16} />
-              <span className="flex-1 text-left">Buscar tela ou empresa</span>
+              <span className="flex-1 text-left">Buscar tela</span>
               <span className="hidden items-center gap-0.5 sm:flex">
                 <Tecla>Ctrl</Tecla>
                 <Tecla>K</Tecla>

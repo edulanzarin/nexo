@@ -17,15 +17,13 @@ const CONTABIL = getModulo("contabil") as Modulo;
 const FISCAL = getModulo("fiscal") as Modulo;
 
 const ITENS_PALETA: ItemPaleta[] = [
-  { id: "1", grupo: "Seções", rotulo: "Conferência Fiscal", detalhe: "Contábil", icone: "conferencia", busca: "", agir: () => {} },
-  { id: "2", grupo: "Seções", rotulo: "Conciliação Bancária", detalhe: "Contábil", icone: "banco", busca: "", agir: () => {} },
-  { id: "3", grupo: "Seções", rotulo: "Balancete Contábil", detalhe: "Contábil", icone: "planilha", busca: "", agir: () => {} },
-  { id: "4", grupo: "Empresas", rotulo: "MAGALHAES COMERCIO DE ALIMENTOS LTDA", detalhe: "1318", icone: "historico", busca: "", agir: () => {} },
-  { id: "5", grupo: "Empresas", rotulo: "NAVECON CONTABILIDADE LTDA", detalhe: "1200", icone: "historico", busca: "", agir: () => {} },
+  { id: "s:1", grupo: "Telas", rotulo: "Férias", detalhe: "DP", icone: "calendario", busca: "", agir: () => {} },
+  { id: "aba:2", grupo: "Telas", rotulo: "Férias", detalhe: "DP · Produtividade", icone: "velocimetro", busca: "", agir: () => {} },
 ];
 
 export function BlocosProduto() {
-  const [termoPaleta, setTermoPaleta] = useState("");
+  // Com termo, para a prova mostrar a seção e a aba do mesmo nome lado a lado.
+  const [termoPaleta, setTermoPaleta] = useState("férias");
   const [ativoPaleta, setAtivoPaleta] = useState(0);
   const [empresa, setEmpresa] = useState<number[]>([1200]);
   const [grupos, setGrupos] = useState<number[]>([]);
@@ -129,7 +127,7 @@ export function BlocosProduto() {
 
       <Bloco
         titulo="Paleta de comandos"
-        porque="Ctrl+K de qualquer tela: ir para uma seção ou trocar de empresa sem sair de onde está. Numa carteira de 1.500 empresas, digitar o código é mais rápido que qualquer lista. Sem termo, mostra as seções e as empresas recentes."
+        porque="Ctrl+K de qualquer lugar leva a qualquer tela, seção ou aba, com a empresa e o período em que a pessoa está. Não busca empresa: empresa sozinha não é destino, e trocar a da tela atual é trabalho do seletor do topo. Sem termo mostra as seções; digitando, entram as abas, com o módulo e a seção ao lado para distinguir Férias do DP de Férias da Produtividade."
       >
         <div className="flex justify-center rounded-painel border border-dashed border-linha-forte bg-poco p-6">
           <PainelPaleta

@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { sair } from "@/app/login/actions";
@@ -8,11 +8,8 @@ import { normalizar } from "@/componentes/primitivos/combo";
 import { Icone, type NomeIcone } from "@/componentes/primitivos/icone";
 import { Tecla } from "@/componentes/primitivos/selo";
 import { cn } from "@/lib/cn";
-import { gravarContexto, lerContexto, qsSoContexto } from "@/lib/contexto";
+import { lerContexto, qsSoContexto } from "@/lib/contexto";
 import { MODULOS, secoesDoModulo } from "@/lib/modulos";
-import { useEmpresas } from "@/hooks/use-consulta";
-import { useEmpresasRecentes } from "@/hooks/use-contexto";
-import { gravarPreferencia } from "@/hooks/use-preferencia";
 import { useCasca } from "./casca-cliente";
 import { definirTema } from "./tema";
 
@@ -24,7 +21,7 @@ export function abrirPaleta() {
 
 export interface ItemPaleta {
   id: string;
-  grupo: "Seções" | "Empresas" | "Ações";
+  grupo: "Telas" | "Ações";
   rotulo: string;
   detalhe?: string;
   icone: NomeIcone | string;
@@ -33,20 +30,18 @@ export interface ItemPaleta {
 }
 
 /**
- * Paleta de comandos (Ctrl+K): ir para qualquer seção, trocar de empresa sem
- * sair da tela e as ações da pessoa. Numa carteira de 1.500 empresas, digitar
- * o código é mais rápido que qualquer lista.
+ * Paleta de comandos (Ctrl+K): ir para qualquer tela, seção ou aba, e as ações
+ * da pessoa. Não busca empresa: empresa sozinha não é destino (no início, ia
+ * para qual tela?), e trocar a empresa da tela em que se está é trabalho do
+ * seletor do topo, que já traz as recentes e aceita o código.
  */
 export function Paleta() {
   const [aberta, setAberta] = useState(false);
   const [termo, setTermo] = useState("");
   const [ativo, setAtivo] = useState(0);
   const router = useRouter();
-  const pathname = usePathname();
   const sp = useSearchParams();
   const { acessos } = useCasca();
-  const empresas = useEmpresas();
-  const recentes = useEmpresasRecentes();
   const entrada = useRef<HTMLInputElement>(null);
   const lista = useRef<HTMLDivElement>(null);
 
@@ -78,47 +73,40 @@ export function Paleta() {
   }, []);
 
   const itens = useMemo<ItemPaleta[]>(() => {
-    const ctx = lerContexto(sp);
-    const qs = qsSoContexto(ctx);
-    const secoes: ItemPaleta[] = MODULOS.filter((m) => m.pronto && acessos[m.id]?.length).flatMap((m) =>
+    // A tela leva junto o contexto em que a pessoa está (empresa, período).
+    const qs = qsSoContexto(lerContexto(sp));
+    const ir = (path: string) => () => router.push(`${path}${qs ? `?${qs}` : ""}`);
+    const modulos = MODULOS.filter((m) => m.pronto && acessos[m.id]?.length);
+    const secoes = modulos.flatMap((m) =>
       secoesDoModulo(m.id)
         .filter((s) => acessos[m.id]!.includes(s.id))
-        .map((s) => ({
-          id: `s:${s.path}`,
-          grupo: "Seções" as const,
-          rotulo: s.rotulo,
-          detalhe: m.titulo,
+        .map((s) => ({ m, s }))
+    );
+    const telas: ItemPaleta[] = secoes.map(({ m, s }) => ({
+      id: `s:${s.path}`,
+      grupo: "Telas",
+      rotulo: s.rotulo,
+      detalhe: m.titulo,
+      icone: s.icone,
+      busca: normalizar(`${s.rotulo} ${m.titulo} ${s.descricao}`),
+      agir: ir(s.path),
+    }));
+    // A aba que tem caminho próprio também é tela: "Envios" leva à aba Envios
+    // de Formulários, e não à primeira aba da seção. A primeira aba divide o
+    // caminho com a seção, e a seção já a representa.
+    const abas: ItemPaleta[] = secoes.flatMap(({ m, s }) =>
+      s.abas
+        .filter((a) => a.path !== s.path)
+        .map((a) => ({
+          id: `aba:${a.path}`,
+          grupo: "Telas" as const,
+          rotulo: a.rotulo,
+          detalhe: `${m.titulo} · ${s.rotulo}`,
           icone: s.icone,
-          busca: normalizar(`${s.rotulo} ${m.titulo} ${s.descricao} ${s.abas.map((a) => a.rotulo).join(" ")}`),
-          agir: () => router.push(`${s.path}${qs ? `?${qs}` : ""}`),
+          busca: normalizar(`${a.rotulo} ${s.rotulo} ${m.titulo} ${a.descricao}`),
+          agir: ir(a.path),
         }))
     );
-    const trocarEmpresa = (codigo: number) => {
-      const novo = { ...ctx, empresas: [codigo], grupos: [], estabs: [] };
-      const p = gravarContexto(sp as unknown as URLSearchParams, novo);
-      gravarPreferencia("empresas-recentes", [codigo, ...recentes.filter((c) => c !== codigo)].slice(0, 6));
-      router.push(`${pathname === "/" ? "/contabil" : pathname}?${p.toString()}`);
-    };
-    const porCodigo = new Map((empresas.data ?? []).map((e) => [e.codigo, e]));
-    const ordem = [...recentes.map((c) => porCodigo.get(c)).filter(Boolean), ...(empresas.data ?? [])] as {
-      codigo: number;
-      nome: string;
-    }[];
-    const vistas = new Set<number>();
-    const listaEmpresas: ItemPaleta[] = [];
-    for (const e of ordem) {
-      if (vistas.has(e.codigo)) continue;
-      vistas.add(e.codigo);
-      listaEmpresas.push({
-        id: `e:${e.codigo}`,
-        grupo: "Empresas",
-        rotulo: e.nome,
-        detalhe: String(e.codigo),
-        icone: recentes.includes(e.codigo) ? "historico" : "empresa",
-        busca: normalizar(`${e.nome} ${e.codigo}`),
-        agir: () => trocarEmpresa(e.codigo),
-      });
-    }
     const acoes: ItemPaleta[] = [
       { id: "a:noite", grupo: "Ações", rotulo: "Tema noite", icone: "noite", busca: "tema noite escuro", agir: () => definirTema("noite") },
       { id: "a:dia", grupo: "Ações", rotulo: "Tema dia", icone: "dia", busca: "tema dia claro", agir: () => definirTema("dia") },
@@ -126,24 +114,26 @@ export function Paleta() {
       { id: "a:sistema", grupo: "Ações", rotulo: "Catálogo de componentes", icone: "grade", busca: "catalogo sistema componentes", agir: () => window.open("/sistema", "_blank") },
       { id: "a:sair", grupo: "Ações", rotulo: "Sair", icone: "sair", busca: "sair logout", agir: () => void sair() },
     ];
-    return [...secoes, ...listaEmpresas, ...acoes];
-  }, [sp, acessos, empresas.data, recentes, router, pathname]);
+    return [...telas, ...abas, ...acoes];
+  }, [sp, acessos, router]);
 
   const filtrados = useMemo(() => {
     const t = normalizar(termo.trim());
     const partes = t.split(/\s+/).filter(Boolean);
     const casa = (i: ItemPaleta) => partes.every((p) => i.busca.includes(p));
-    // Sem termo: as seções e as empresas recentes. Com termo: tudo que casa,
-    // com teto por grupo para a lista não virar a carteira inteira.
-    if (!partes.length)
-      return [
-        ...itens.filter((i) => i.grupo === "Seções"),
-        ...itens.filter((i) => i.grupo === "Empresas" && recentes.includes(Number(i.detalhe))),
-      ];
-    const grupos: Record<ItemPaleta["grupo"], ItemPaleta[]> = { Seções: [], Empresas: [], Ações: [] };
-    for (const i of itens) if (casa(i)) grupos[i.grupo].push(i);
-    return [...grupos["Seções"].slice(0, 12), ...grupos["Empresas"].slice(0, 30), ...grupos["Ações"]];
-  }, [itens, termo, recentes]);
+    // Sem termo: as seções, que são o mapa. As abas entram quando se digita,
+    // depois das seções que casam, para a lista vazia não virar um índice.
+    if (!partes.length) return itens.filter((i) => i.grupo === "Telas" && i.id.startsWith("s:"));
+    // Casar no nome vem antes de casar só na descrição: "férias" põe as telas
+    // chamadas Férias na frente do painel que menciona férias vencidas.
+    const peso = (i: ItemPaleta) => {
+      const nome = normalizar(i.rotulo);
+      if (partes.every((p) => nome.includes(p))) return nome.startsWith(partes[0]) ? 0 : 1;
+      return 2;
+    };
+    const casam = itens.filter(casa).sort((a, b) => peso(a) - peso(b));
+    return [...casam.filter((i) => i.grupo === "Telas").slice(0, 14), ...casam.filter((i) => i.grupo === "Ações")];
+  }, [itens, termo]);
 
   useEffect(() => {
     lista.current?.querySelector(`[data-i="${ativo}"]`)?.scrollIntoView({ block: "nearest" });
@@ -241,14 +231,14 @@ export function PainelPaleta({
           autoFocus={!estatico}
           value={termo}
           onChange={(e) => onTermo(e.target.value)}
-          placeholder="Seção, empresa ou código"
+          placeholder="Buscar tela"
           className="h-12 min-w-0 flex-1 bg-transparent text-medio text-tinta placeholder:text-apagado focus:outline-none"
         />
         <Tecla>Esc</Tecla>
       </div>
       <div ref={listaRef} className="min-h-0 flex-1 overflow-y-auto p-1.5">
         {itens.length === 0 && (
-          <p className="px-3 py-6 text-center text-corpo text-apagado italic">Nada com esse nome. Tente o código da empresa.</p>
+          <p className="px-3 py-6 text-center text-corpo text-apagado italic">Nenhuma tela com esse nome.</p>
         )}
         {itens.map((i, n) => {
           const cabeca = abreGrupo[n];
@@ -256,7 +246,7 @@ export function PainelPaleta({
             <div key={i.id}>
               {cabeca && (
                 <p className="px-2.5 pt-2 pb-1 text-micro font-[600] text-apagado">
-                  {i.grupo === "Empresas" && !termo ? "Empresas recentes" : i.grupo}
+                  {i.grupo}
                 </p>
               )}
               <button
