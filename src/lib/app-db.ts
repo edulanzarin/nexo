@@ -19,7 +19,17 @@ declare global {
  * Sem `APP_DB_URL` o pool nasce sem endereço e a primeira consulta falha dizendo
  * isso. Um endereço padrão embutido trocaria esse erro exato por uma senha
  * adivinhada recusada, que manda investigar a credencial errada.
+ *
+ * A sessão abre no fuso do escritório. O Postgres do container nasce em UTC, e
+ * o app formata hora com `to_char` (sem fuso), tira a hora com `extract(hour)` e
+ * corta o mês com `criado_em >= '2026-09-01'`: em UTC, tudo isso saía 3 horas
+ * adiantado, e o que acontecia depois das 21h caía no dia seguinte (furo
+ * herdado do nexo2). O Questor não passa por aqui.
  */
+const FUSO_APP = /^[A-Za-z_]+(\/[A-Za-z_]+)*$/.test(process.env.APP_DB_TIMEZONE ?? "")
+  ? process.env.APP_DB_TIMEZONE
+  : "America/Sao_Paulo";
+
 export const appPool =
   global._appPool ??
   new Pool({
@@ -27,7 +37,7 @@ export const appPool =
     max: envInt("DB_POOL_MAX", 10),
     idleTimeoutMillis: envInt("DB_POOL_IDLE_MS", 30_000),
     connectionTimeoutMillis: envInt("DB_POOL_CONN_MS", 10_000),
-    options: `-c statement_timeout=${envInt("APP_DB_STATEMENT_TIMEOUT_MS", 30_000)}`,
+    options: `-c statement_timeout=${envInt("APP_DB_STATEMENT_TIMEOUT_MS", 30_000)} -c timezone=${FUSO_APP}`,
   });
 
 if (process.env.NODE_ENV !== "production") global._appPool = appPool;
