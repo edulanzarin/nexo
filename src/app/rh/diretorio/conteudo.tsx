@@ -228,6 +228,13 @@ export default function Conteudo() {
             {
               id: "diretorio",
               rotulo: "Diretório",
+              descricao: [
+                rotuloRecorte,
+                situacao !== "todas" ? SITUACOES.find((s) => s.valor === situacao)?.rotulo : null,
+                busca.trim() ? `Busca "${busca.trim()}"` : null,
+              ]
+                .filter(Boolean)
+                .join(" · "),
               nome: `diretorio-${nomeEmpresa?.toLowerCase() ?? "navecon"}-${hojeISO()}`,
               montar: () => ({
                 cabecalhos: ["Empresa", "Contrato", "Nome", "Cargo", "Setor", "Admissão", "Tempo de casa", "E-mail", "Origem"],

@@ -101,7 +101,7 @@ export function BlocosSobreposicoes() {
         <div className="flex flex-wrap items-start gap-6">
           <Variante nome="Aberto">
             <div className="nx-flutua w-64 rounded-painel">
-              <ListaMenu itens={ITENS} fechar={() => {}} />
+              <ListaMenu itens={ITENS} fechar={() => {}} autoFoco={false} />
             </div>
           </Variante>
           <Variante nome="No botão">

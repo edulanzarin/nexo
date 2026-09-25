@@ -41,6 +41,7 @@ import {
   FileCheck2,
   FileSpreadsheet,
   FileText,
+  FileType,
   FileUp,
   Filter,
   Gauge,
@@ -126,6 +127,9 @@ export const ICONES = {
   nota: FileText,
   balanca: Scale,
   planilha: FileSpreadsheet,
+  // formatos de arquivo exportado (a planilha é o Excel)
+  documento: FileText,
+  texto: FileType,
   lupa: ScanSearch,
   pessoas: Users,
   importar: Import,

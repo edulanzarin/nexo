@@ -55,10 +55,16 @@ export function ListaMenu({
   itens,
   fechar,
   cabecalho,
+  autoFoco = true,
 }: {
   itens: ItemMenu[];
   fechar: () => void;
   cabecalho?: ReactNode;
+  /**
+   * Aberto pelo botão, o menu pega o foco para a seta funcionar. Parado no
+   * catálogo, pegar o foco rolaria a página até ele.
+   */
+  autoFoco?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const acoes = itens
@@ -67,8 +73,8 @@ export function ListaMenu({
   const [ativo, setAtivo] = useState(-1);
 
   useEffect(() => {
-    ref.current?.focus();
-  }, []);
+    if (autoFoco) ref.current?.focus();
+  }, [autoFoco]);
 
   const aoTeclar = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {

@@ -1,10 +1,12 @@
 import { baixarCSV } from "./csv";
 import type { ModuloId } from "./modulos";
+import type { CapaPdf } from "./relatorio-pdf";
+import type { Tabela } from "./tabela-exportar";
 
 /**
- * Exportação padronizada do cliente: CSV e impressão (o "PDF" via diálogo do
- * navegador, mesmo caminho do laudo contábil). Toda exportação é REGISTRADA na
- * trilha de auditoria — "quem exportou" num sistema com dado fiscal e PII.
+ * Exportação padronizada do cliente: Excel, PDF, CSV e a impressão da tela.
+ * Toda exportação é REGISTRADA na trilha de auditoria — "quem exportou" num
+ * sistema com dado fiscal e PII.
  *
  * O beacon é best-effort e não bloqueia o download: se a auditoria falhar, o
  * arquivo baixa do mesmo jeito.
@@ -45,7 +47,38 @@ export function exportarCSV(
   linhas: (string | number | null | undefined)[][]
 ): void {
   baixarCSV(nome, cabecalhos, linhas);
-  auditarExport(modulo, nome);
+  auditarExport(modulo, `${nome}.csv`);
+}
+
+function baixar(nome: string, bytes: Uint8Array<ArrayBuffer>, tipo: string): void {
+  const url = URL.createObjectURL(new Blob([bytes], { type: tipo }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nome;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  // O download começa no clique, mas o navegador ainda lê o blob depois dele.
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
+/**
+ * Baixa a tabela em Excel. O montador só carrega no clique: as telas que têm o
+ * botão não pagam por ele ao abrir.
+ */
+export async function exportarXlsx(modulo: ModuloId, nome: string, aba: string, tabela: Tabela): Promise<void> {
+  const { montarXlsx } = await import("./planilha-xlsx");
+  const bytes = montarXlsx(tabela, aba) as Uint8Array<ArrayBuffer>;
+  baixar(`${nome}.xlsx`, bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  auditarExport(modulo, `${nome}.xlsx`);
+}
+
+/** Baixa a tabela como relatório em PDF (jsPDF, carregado no clique). */
+export async function exportarPdf(modulo: ModuloId, nome: string, capa: CapaPdf, tabela: Tabela): Promise<void> {
+  const { montarPdf } = await import("./relatorio-pdf");
+  const bytes = montarPdf(tabela, capa) as Uint8Array<ArrayBuffer>;
+  baixar(`${nome}.pdf`, bytes, "application/pdf");
+  auditarExport(modulo, `${nome}.pdf`);
 }
 
 /**

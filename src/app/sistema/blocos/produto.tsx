@@ -3,8 +3,16 @@
 import { useState } from "react";
 import { PainelPaleta, type ItemPaleta } from "@/componentes/casca/paleta";
 import { PortaModulo } from "@/componentes/casca/porta-modulo";
+import { Botao } from "@/componentes/primitivos/botao";
+import { ListaMenu } from "@/componentes/primitivos/menu";
 import { CabecalhoPapel } from "@/componentes/produto/cabecalho-papel";
-import { MenuExportar } from "@/componentes/produto/menu-exportar";
+import {
+  itensExportar,
+  MenuExportar,
+  SeletorFormato,
+  type CorteExportar,
+  type FormatoExportar,
+} from "@/componentes/produto/menu-exportar";
 import { AguardandoExecucao, BotaoExecutar, CabecalhoPagina, EscolhaEmpresa } from "@/componentes/produto/pagina";
 import { SeletorConta } from "@/componentes/produto/seletor-conta";
 import { SeletorEmpresa } from "@/componentes/produto/seletor-empresa";
@@ -21,7 +29,31 @@ const ITENS_PALETA: ItemPaleta[] = [
   { id: "aba:2", grupo: "Telas", rotulo: "Férias", detalhe: "DP · Produtividade", icone: "velocimetro", busca: "", agir: () => {} },
 ];
 
+// Dados de mentira, nos formatos que as telas escrevem: valor em decimalBR e
+// data em dataBR, para o arquivo baixado no catálogo mostrar o reconhecimento.
+const AMOSTRA_EXPORTAR: CorteExportar = {
+  id: "amostra",
+  rotulo: "Diretório",
+  descricao: "Amostra do catálogo",
+  nome: "amostra-do-catalogo",
+  montar: () => ({
+    cabecalhos: ["Empresa", "Contrato", "Nome", "Cargo", "Admissão", "Valor"],
+    linhas: [
+      ["NAVECON", 101, "ANA PAULA SOUZA", "Analista Fiscal", "19/03/2025", "4850,00"],
+      ["FOUR", 102, "BRUNO CARVALHO LIMA", "Assistente Contábil", "02/03/2026", "3120,50"],
+      ["FINAVE", "", "CAMILA ROCHA", "Controller", "09/01/2023", "12400,00"],
+    ],
+  }),
+};
+
+const VARIOS_EXPORTAR: CorteExportar[] = [
+  { ...AMOSTRA_EXPORTAR, id: "pessoas", rotulo: "Ranking de pessoas", descricao: "Uma linha por pessoa" },
+  { ...AMOSTRA_EXPORTAR, id: "origens", rotulo: "Origens do time", descricao: undefined },
+  { ...AMOSTRA_EXPORTAR, id: "serie", rotulo: "Série diária", descricao: "Lançamentos por dia do período" },
+];
+
 export function BlocosProduto() {
+  const [formatoExportar, setFormatoExportar] = useState<FormatoExportar>("xlsx");
   // Com termo, para a prova mostrar a seção e a aba do mesmo nome lado a lado.
   const [termoPaleta, setTermoPaleta] = useState("férias");
   const [ativoPaleta, setAtivoPaleta] = useState(0);
@@ -93,6 +125,40 @@ export function BlocosProduto() {
             descricao="Saldo anterior, movimento do mês e saldo atual, conta a conta"
             acoes={<BotaoExecutar rotulo="Gerar" onExecutar={() => {}} desatualizado />}
           />
+        </div>
+      </Bloco>
+
+      <Bloco
+        titulo="Exportar"
+        porque="A tela entrega a tabela pensada para o CSV e o exportador cuida do formato. No Excel, valor em decimalBR e data em dataBR viram número e data de verdade, e a coluna soma e ordena sem conversão; texto que só parece número (código com zero à esquerda, competência) continua texto. No PDF, a mesma tabela sai paginada com título, recorte, quem gerou e quando, até 5.000 linhas. Com vários recortes o formato sobe para o alto do menu e fica lembrado, senão o menu teria um item por recorte e formato. Os montadores só carregam no clique, e toda exportação vai para a trilha."
+      >
+        <div className="flex flex-wrap items-start gap-6">
+          <Variante nome="Um recorte, aberto">
+            <div className="nx-flutua w-72 rounded-painel">
+              <ListaMenu itens={itensExportar([AMOSTRA_EXPORTAR], "xlsx", () => {})} fechar={() => {}} autoFoco={false} />
+            </div>
+          </Variante>
+          <Variante nome="Vários recortes e a tela impressa">
+            <div className="nx-flutua w-72 rounded-painel">
+              <ListaMenu
+                cabecalho={<SeletorFormato valor={formatoExportar} onMudar={setFormatoExportar} />}
+                itens={itensExportar(VARIOS_EXPORTAR, formatoExportar, () => {}, () => {})}
+                fechar={() => {}}
+                autoFoco={false}
+              />
+            </div>
+          </Variante>
+          <Variante nome="No botão (baixa a amostra)">
+            <MenuExportar modulo="rh" cortes={[AMOSTRA_EXPORTAR]} />
+          </Variante>
+          <Variante nome="Gerando o arquivo">
+            <Botao variante="secundario" icone="baixar" carregando>
+              Exportar
+            </Botao>
+          </Variante>
+          <Variante nome="Sem dados ainda">
+            <MenuExportar modulo="rh" cortes={[AMOSTRA_EXPORTAR]} desabilitado />
+          </Variante>
         </div>
       </Bloco>
 

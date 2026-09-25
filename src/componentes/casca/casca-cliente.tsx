@@ -21,6 +21,11 @@ export function ProvedorCasca({ dados, children }: { dados: DadosCasca; children
   return <Contexto.Provider value={dados}>{children}</Contexto.Provider>;
 }
 
+/** A casca quando existe: o catálogo monta peças fora da moldura. */
+export function useCascaOpcional(): DadosCasca | null {
+  return useContext(Contexto);
+}
+
 export function useCasca(): DadosCasca {
   const d = useContext(Contexto);
   if (!d) throw new Error("useCasca fora do ProvedorCasca");
