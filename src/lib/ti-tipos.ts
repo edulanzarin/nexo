@@ -73,7 +73,12 @@ export function ehTipoEquipamento(id: unknown): id is string {
 
 // ── Com quem está ─────────────────────────────────────────────────────────────
 
-export type Destino = "pessoa" | "local" | "estoque" | "manutencao" | "baixa";
+/**
+ * Para onde o equipamento vai. `pessoa` é alguém do Diretório do RH; `externo`
+ * é alguém de fora dele (o terceirizado, o estagiário que ainda não está na
+ * folha), do cadastro próprio da TI.
+ */
+export type Destino = "pessoa" | "externo" | "local" | "estoque" | "manutencao" | "baixa";
 
 export type MotivoBaixa = "descarte" | "venda" | "doacao" | "perda" | "roubo";
 
@@ -90,16 +95,22 @@ export const rotuloMotivo = (m: MotivoBaixa) => MOTIVOS_BAIXA.find((x) => x.valo
 /** Onde o equipamento está depois de uma movimentação. */
 export type Posse =
   | { destino: "pessoa"; empresa: number; contrato: number; nome: string; setor: string | null }
+  | { destino: "externo"; id: number; nome: string; vinculo: string | null }
   | { destino: "local"; local: string }
   | { destino: "estoque" }
   | { destino: "manutencao"; local: string | null }
   | { destino: "baixa"; motivo: MotivoBaixa };
 
-/** A situação que a lista filtra. Pessoa e local são os dois jeitos de estar em uso. */
+/** Com alguém, do Diretório ou de fora dele. */
+export type PossePessoa = Extract<Posse, { destino: "pessoa" | "externo" }>;
+
+export const comAlguem = (p: Posse | null): p is PossePessoa => p?.destino === "pessoa" || p?.destino === "externo";
+
+/** A situação que a lista filtra. Com alguém ou num local são os jeitos de estar em uso. */
 export type Situacao = "uso" | "estoque" | "manutencao" | "baixado";
 
 export function situacaoDaPosse(p: Posse): Situacao {
-  if (p.destino === "pessoa" || p.destino === "local") return "uso";
+  if (comAlguem(p) || p.destino === "local") return "uso";
   if (p.destino === "baixa") return "baixado";
   return p.destino;
 }
@@ -107,9 +118,32 @@ export function situacaoDaPosse(p: Posse): Situacao {
 /** Chave de uma pessoa do Diretório: a mesma do RH, empresa e contrato. */
 export const chavePessoa = (empresa: number, contrato: number) => `${empresa}:${contrato}`;
 
+/** A segunda linha de quem está com o equipamento: o setor, ou a empresa de quem é de fora. */
+export const setorOuVinculo = (p: Posse): string =>
+  p.destino === "pessoa" ? (p.setor ?? "") : p.destino === "externo" ? (p.vinculo ?? "") : "";
+
+/** Chave de alguém de fora do Diretório. O prefixo não colide com "empresa:contrato". */
+export const chaveExterno = (id: number) => `externo:${id}`;
+
+/** A chave de quem está com o equipamento, nos dois cadastros. */
+export const chaveDaPosse = (p: PossePessoa) =>
+  p.destino === "pessoa" ? chavePessoa(p.empresa, p.contrato) : chaveExterno(p.id);
+
+/** O que a chave escolhida na tela aponta: o Diretório ou o cadastro de fora. */
+export function lerChaveRecebedor(
+  chave: string
+): { destino: "pessoa"; empresa: number; contrato: number } | { destino: "externo"; id: number } | null {
+  const ext = /^externo:(\d+)$/.exec(chave);
+  if (ext) return { destino: "externo", id: Number(ext[1]) };
+  const dir = /^(\d+):(\d+)$/.exec(chave);
+  if (dir) return { destino: "pessoa", empresa: Number(dir[1]), contrato: Number(dir[2]) };
+  return null;
+}
+
 export function mesmaPosse(a: Posse, b: Posse): boolean {
   if (a.destino !== b.destino) return false;
   if (a.destino === "pessoa" && b.destino === "pessoa") return a.empresa === b.empresa && a.contrato === b.contrato;
+  if (a.destino === "externo" && b.destino === "externo") return a.id === b.id;
   if (a.destino === "local" && b.destino === "local") return a.local.trim().toLowerCase() === b.local.trim().toLowerCase();
   // Estoque é um lugar só; manutenção e baixa repetidas não mudam nada.
   return true;
@@ -119,6 +153,7 @@ export function mesmaPosse(a: Posse, b: Posse): boolean {
 export function textoPosse(p: Posse): string {
   switch (p.destino) {
     case "pessoa":
+    case "externo":
       return p.nome;
     case "local":
       return p.local;
@@ -194,11 +229,30 @@ export interface PessoaTi {
   cargo: string | null;
 }
 
+/**
+ * Alguém de fora do Diretório: o terceirizado, o estagiário que ainda não está
+ * na folha. Cadastro da TI; `ativo` falso é o vínculo encerrado.
+ */
+export interface DadosPessoaExterna {
+  nome: string;
+  /** A empresa terceirizada, ou o vínculo quando não há empresa ("Estagiário"). */
+  vinculo: string | null;
+  documento: string | null;
+  contato: string | null;
+  observacao: string | null;
+}
+
+export interface PessoaExterna extends DadosPessoaExterna {
+  id: number;
+  ativo: boolean;
+}
+
 /** O pedido de movimentação: um ou mais equipamentos para o mesmo destino. */
 export interface PedidoMovimentacao {
   equipamentos: number[];
   destino: Destino;
   pessoa?: { empresa: number; contrato: number } | null;
+  externo?: { id: number } | null;
   local?: string | null;
   motivo?: MotivoBaixa | null;
   data: string;
@@ -213,19 +267,38 @@ export function nomeEquipamento(e: Pick<DadosEquipamento, "tipo" | "marca" | "mo
   return partes.join(" ");
 }
 
+/** Onde o equipamento estava, pronto para "Estava ...": com alguém, num lugar ou numa situação. */
+function ondeEstava(a: Posse): string {
+  switch (a.destino) {
+    case "pessoa":
+    case "externo":
+      return `com ${a.nome}`;
+    case "local":
+      return `em ${a.local}`;
+    case "estoque":
+      return "no estoque";
+    case "manutencao":
+      return a.local ? `em manutenção, em ${a.local}` : "em manutenção";
+    case "baixa":
+      return "baixado";
+  }
+}
+
 /**
- * A frase de uma linha do histórico: o que aconteceu e de onde o equipamento
- * veio. O verbo depende do par (anterior, atual): pessoa para pessoa é
- * "passou", estoque para pessoa é "entregue", a primeira linha é o cadastro.
+ * A frase de uma linha do histórico: o que aconteceu e onde o equipamento
+ * estava antes. O verbo depende do par (anterior, atual): de alguém para
+ * alguém é "passou", do estoque para alguém é "entregue", a primeira linha é o
+ * cadastro. `de` completa "Estava ...": "com ANA", "no estoque".
  */
 export function frasePosse(m: Pick<Movimentacao, "posse" | "anterior">): { titulo: string; de: string | null } {
   const p = m.posse;
   const a = m.anterior;
-  const de = a ? textoPosse(a) : null;
+  const de = a ? ondeEstava(a) : null;
   switch (p.destino) {
     case "pessoa":
+    case "externo":
       return {
-        titulo: !a ? `Cadastrado com ${p.nome}` : a.destino === "pessoa" ? `Passou para ${p.nome}` : `Entregue a ${p.nome}`,
+        titulo: !a ? `Cadastrado com ${p.nome}` : comAlguem(a) ? `Passou para ${p.nome}` : `Entregue a ${p.nome}`,
         de,
       };
     case "local":

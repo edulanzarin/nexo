@@ -40,8 +40,10 @@ function acoesDaPosse(p: Posse): { principais: Acao[]; menu: Acao[] } {
     case "estoque":
       return { principais: [entregar], menu: [local, manutencao, baixa] };
     case "pessoa":
+    case "externo":
+      return { principais: [transferir, devolver], menu: [local, manutencao, baixa] };
     case "local":
-      return { principais: [transferir, devolver], menu: [p.destino === "pessoa" ? local : entregar, manutencao, baixa] };
+      return { principais: [transferir, devolver], menu: [entregar, manutencao, baixa] };
     case "manutencao":
       return { principais: [{ ...devolver, rotulo: "Voltou da manutenção" }, entregar], menu: [baixa] };
     case "baixa":

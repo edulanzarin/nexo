@@ -7,17 +7,24 @@ import {
   type EquipamentoDetalhe,
   type EquipamentoLista,
   type MovimentacaoLista,
+  type PessoaExterna,
   type PessoaTi,
 } from "@/lib/ti-tipos";
 import { useConsulta } from "./use-consulta";
 
-/** As chaves do cache da TI. Quem grava invalida as três de uma vez. */
+/** As chaves do cache da TI. Quem grava invalida todas de uma vez, menos o Diretório. */
 export const CHAVES_TI = {
   lista: "ti-equipamentos",
   detalhe: "ti-equipamento",
   movimentacoes: "ti-movimentacoes",
   pessoas: "ti-pessoas",
+  externos: "ti-externos",
 } as const;
+
+/** Quem é de fora do Diretório: o cadastro da TI, ativos e encerrados. */
+export function useExternosTi() {
+  return useConsulta<PessoaExterna[]>(CHAVES_TI.externos, "/api/ti/externos", { staleTime: 60_000 });
+}
 
 export function useEquipamentos() {
   return useConsulta<EquipamentoLista[]>(CHAVES_TI.lista, "/api/ti/equipamentos", { staleTime: 30_000 });
@@ -57,7 +64,8 @@ export function useRecarregarTi() {
         predicate: (q) =>
           q.queryKey[0] === CHAVES_TI.lista ||
           q.queryKey[0] === CHAVES_TI.detalhe ||
-          q.queryKey[0] === CHAVES_TI.movimentacoes,
+          q.queryKey[0] === CHAVES_TI.movimentacoes ||
+          q.queryKey[0] === CHAVES_TI.externos,
       }),
     [qc]
   );

@@ -12,7 +12,7 @@ import { mutar } from "@/hooks/mutar";
 import { cn } from "@/lib/cn";
 import { hojeISO, num } from "@/lib/format";
 import {
-  chavePessoa,
+  lerChaveRecebedor,
   MOTIVOS_BAIXA,
   nomeEquipamento,
   textoPosse,
@@ -20,21 +20,29 @@ import {
   type EquipamentoLista,
   type MotivoBaixa,
   type PedidoMovimentacao,
+  type PessoaExterna,
   type PessoaTi,
 } from "@/lib/ti-tipos";
 import { CelulaPosse, IconeTipo, Patrimonio } from "./equipamento";
+import { CampoRecebedor, nomeRecebedor } from "./recebedor";
 
 /** Como a janela abre: de onde veio o clique decide os itens e o destino já marcados. */
 export interface InicialMovimentar {
   ids: number[];
   destino: Destino;
-  /** Chave da pessoa (`empresa:contrato`) já escolhida, quando a janela abre de uma pessoa. */
+  /** Chave de quem recebe (`empresa:contrato` ou `externo:id`), quando a janela abre de uma pessoa. */
   pessoa?: string | null;
   /** Os itens vêm fixos (abriu de um equipamento ou de uma pessoa): a janela mostra, não oferece escolha. */
   travado?: boolean;
 }
 
-const DESTINOS: OpcaoSegmento<Destino>[] = [
+/**
+ * O destino como a tela oferece: "Pessoa" cobre o Diretório e quem é de fora,
+ * e qual dos dois é sai da pessoa escolhida.
+ */
+type DestinoTela = Exclude<Destino, "externo">;
+
+const DESTINOS: OpcaoSegmento<DestinoTela>[] = [
   { valor: "pessoa", rotulo: "Pessoa", icone: "usuario" },
   { valor: "local", rotulo: "Local", icone: "local" },
   { valor: "estoque", rotulo: "Estoque", icone: "estoque" },
@@ -42,7 +50,7 @@ const DESTINOS: OpcaoSegmento<Destino>[] = [
   { valor: "baixa", rotulo: "Baixa", icone: "bloqueado" },
 ];
 
-const VERBO: Record<Destino, string> = {
+const VERBO: Record<DestinoTela, string> = {
   pessoa: "Entregar",
   local: "Registrar o local",
   estoque: "Devolver ao estoque",
@@ -53,10 +61,16 @@ const VERBO: Record<Destino, string> = {
 interface PropsMovimentar {
   equipamentos: EquipamentoLista[] | undefined;
   pessoas: PessoaTi[] | undefined;
+  /** Quem é de fora do Diretório, do cadastro da TI. */
+  externos: PessoaExterna[] | undefined;
   inicial: InicialMovimentar;
   onFechar: () => void;
   /** Depois de gravar: a tela recarrega a lista e a ficha. */
   onFeito?: () => void;
+  /** Cadastrou alguém de fora no meio da entrega: a tela recarrega o cadastro. */
+  onExternoCriado?: () => void;
+  /** O catálogo mostra o cadastro rápido de alguém de fora aberto. */
+  novoExternoAberto?: boolean;
 }
 
 /**
@@ -80,14 +94,17 @@ export function MovimentarEstatico(props: PropsMovimentar) {
 function FormMovimentar({
   equipamentos,
   pessoas,
+  externos,
   inicial,
   onFechar,
   onFeito,
+  onExternoCriado,
+  novoExternoAberto,
   estatico,
 }: PropsMovimentar & { estatico?: boolean }) {
   const id = useId();
   const [ids, setIds] = useState<string[]>(inicial.ids.map(String));
-  const [destino, setDestino] = useState<Destino>(inicial.destino);
+  const [destino, setDestino] = useState<DestinoTela>(inicial.destino === "externo" ? "pessoa" : inicial.destino);
   const [pessoa, setPessoa] = useState<string | null>(inicial.pessoa ?? null);
   const [local, setLocal] = useState("");
   const [motivo, setMotivo] = useState<MotivoBaixa | null>(null);
@@ -109,27 +126,18 @@ function FormMovimentar({
       })),
     [equipamentos]
   );
-  const opcoesPessoas = useMemo<Opcao[]>(
-    () =>
-      (pessoas ?? []).map((p) => ({
-        valor: chavePessoa(p.empresa, p.contrato),
-        rotulo: p.nome,
-        detalhe: p.setor ?? undefined,
-      })),
-    [pessoas]
-  );
-
   async function registrar() {
     if (!escolhidos.length) return setErro("Escolha ao menos um equipamento.");
-    if (destino === "pessoa" && !pessoa) return setErro("Escolha quem recebe.");
+    const recebedor = destino === "pessoa" && pessoa ? lerChaveRecebedor(pessoa) : null;
+    if (destino === "pessoa" && !recebedor) return setErro("Escolha quem recebe.");
     if (destino === "local" && !local.trim()) return setErro("Diga onde o equipamento fica.");
     if (destino === "baixa" && !motivo) return setErro("Diga o motivo da baixa.");
     if (!data) return setErro("Informe a data.");
-    const [empresa, contrato] = (pessoa ?? "").split(":").map(Number);
     const corpo: PedidoMovimentacao = {
       equipamentos: escolhidos.map((e) => e.id),
-      destino,
-      pessoa: destino === "pessoa" ? { empresa, contrato } : null,
+      destino: recebedor?.destino ?? (destino as Destino),
+      pessoa: recebedor?.destino === "pessoa" ? { empresa: recebedor.empresa, contrato: recebedor.contrato } : null,
+      externo: recebedor?.destino === "externo" ? { id: recebedor.id } : null,
       local: destino === "local" || destino === "manutencao" ? local.trim() || null : null,
       motivo: destino === "baixa" ? motivo : null,
       data,
@@ -140,7 +148,7 @@ function FormMovimentar({
       const r = await mutar<{ movidos: number }>("/api/ti/movimentacoes", "POST", corpo);
       const para =
         destino === "pessoa"
-          ? (pessoas?.find((p) => chavePessoa(p.empresa, p.contrato) === pessoa)?.nome ?? "")
+          ? nomeRecebedor(pessoa, pessoas, externos)
           : textoPosse(
               destino === "local"
                 ? { destino, local: local.trim() }
@@ -209,7 +217,7 @@ function FormMovimentar({
       )}
 
       <Rotulado rotulo="Para onde vai">
-        <Segmentado<Destino>
+        <Segmentado<DestinoTela>
           rotulo="Para onde vai"
           opcoes={DESTINOS}
           valor={destino}
@@ -223,24 +231,22 @@ function FormMovimentar({
 
       <div
         className={cn(
-          "grid gap-3",
+          "grid items-start gap-3",
           destino === "estoque" ? "sm:grid-cols-[170px]" : "sm:grid-cols-[minmax(0,1fr)_170px]"
         )}
       >
         {destino === "pessoa" && (
           <Rotulado rotulo="Quem recebe">
-            <Combo
-              opcoes={opcoesPessoas}
+            <CampoRecebedor
+              pessoas={pessoas}
+              externos={externos}
               valor={pessoa}
               onMudar={(v) => {
                 setPessoa(v);
                 mudou();
               }}
-              placeholder={pessoas ? "Escolher no Diretório" : "Carregando o Diretório"}
-              busca
-              icone="usuario"
-              rotuloAcessivel="Quem recebe"
-              desabilitado={!pessoas}
+              onCadastrado={onExternoCriado}
+              novoAberto={novoExternoAberto}
             />
           </Rotulado>
         )}

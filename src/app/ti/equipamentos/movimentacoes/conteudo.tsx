@@ -16,7 +16,10 @@ import { useMovimentacoesTi } from "@/hooks/use-ti";
 import { dataBR, dataHoraBR, num } from "@/lib/format";
 import { frasePosse, nomeEquipamento, type Destino, type MovimentacaoLista } from "@/lib/ti-tipos";
 
-type Filtro = "todas" | Destino;
+/** Entrega a quem é do Diretório e a quem é de fora é o mesmo filtro: as duas são entregas. */
+type Filtro = "todas" | Exclude<Destino, "externo">;
+
+const filtroDe = (d: Destino): Filtro => (d === "externo" ? "pessoa" : d);
 
 const ROTULO: Record<Filtro, string> = {
   todas: "Todas",
@@ -47,7 +50,7 @@ export default function Conteudo() {
   const linhas = useMemo(() => {
     const partes = termo ? termo.split(/\s+/) : [];
     return (d ?? []).filter((m) => {
-      if (filtro !== "todas" && m.posse.destino !== filtro) return false;
+      if (filtro !== "todas" && filtroDe(m.posse.destino) !== filtro) return false;
       if (!partes.length) return true;
       const f = frasePosse(m);
       const alvo = normalizar(
@@ -63,7 +66,7 @@ export default function Conteudo() {
     const c: Record<Filtro, number> = { todas: 0, pessoa: 0, estoque: 0, local: 0, manutencao: 0, baixa: 0 };
     for (const m of d ?? []) {
       c.todas++;
-      c[m.posse.destino]++;
+      c[filtroDe(m.posse.destino)]++;
     }
     return c;
   }, [d]);
@@ -104,7 +107,7 @@ export default function Conteudo() {
         return (
           <span className="flex min-w-0 flex-col py-1">
             <span className="truncate text-tinta">{f.titulo}</span>
-            {f.de && <span className="truncate text-pequeno text-apagado">Estava em {f.de}</span>}
+            {f.de && <span className="truncate text-pequeno text-apagado">Estava {f.de}</span>}
           </span>
         );
       },
@@ -173,7 +176,7 @@ export default function Conteudo() {
               descricao: [ROTULO[filtro], busca && `busca "${busca}"`].filter(Boolean).join(" · "),
               nome: "movimentacoes-ti",
               montar: () => ({
-                cabecalhos: ["Data", "Patrimônio", "Equipamento", "O que aconteceu", "Estava em", "Observação", "Registrado por", "Registrado em"],
+                cabecalhos: ["Data", "Patrimônio", "Equipamento", "O que aconteceu", "Antes", "Observação", "Registrado por", "Registrado em"],
                 linhas: linhas.map((m) => {
                   const f = frasePosse(m);
                   return [

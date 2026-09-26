@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
-import { useAtivosTi, useEquipamentos, usePessoasTi, useRecarregarTi } from "@/hooks/use-ti";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { CHAVES_TI, useAtivosTi, useEquipamentos, useExternosTi, usePessoasTi, useRecarregarTi } from "@/hooks/use-ti";
 import { chavePessoa, type EquipamentoLista, type Posse } from "@/lib/ti-tipos";
 import { ModalFichaEquipamento } from "./ficha-equipamento";
 import { ModalEquipamento } from "./formulario-equipamento";
@@ -16,18 +17,35 @@ import { ModalMovimentar, type InicialMovimentar } from "./movimentar";
 export function useJanelasTi() {
   const lista = useEquipamentos();
   const pessoas = usePessoasTi();
+  const externos = useExternosTi();
   const ativos = useAtivosTi();
   const recarregar = useRecarregarTi();
+  const qc = useQueryClient();
   const [ficha, setFicha] = useState<number | null>(null);
   const [form, setForm] = useState<{ alvo: EquipamentoLista | null; voltar?: number } | null>(null);
   const [mov, setMov] = useState<(InicialMovimentar & { voltar?: number }) | null>(null);
   // O cadastro novo abre a ficha dele ao fechar a janela.
   const depois = useRef<number | null>(null);
 
-  /** Está com alguém que não aparece mais no Diretório. Sem o Diretório carregado, ninguém está. */
+  const encerrados = useMemo(
+    () => new Set((externos.data ?? []).filter((x) => !x.ativo).map((x) => x.id)),
+    [externos.data]
+  );
+
+  /**
+   * Está com quem precisa devolver: saiu do Diretório, ou é de fora e teve o
+   * cadastro encerrado. Sem o Diretório carregado, ninguém do Diretório está.
+   */
   const fora = useCallback(
-    (p: Posse) => p.destino === "pessoa" && ativos != null && !ativos.has(chavePessoa(p.empresa, p.contrato)),
-    [ativos]
+    (p: Posse) =>
+      (p.destino === "pessoa" && ativos != null && !ativos.has(chavePessoa(p.empresa, p.contrato))) ||
+      (p.destino === "externo" && encerrados.has(p.id)),
+    [ativos, encerrados]
+  );
+
+  const recarregarExternos = useCallback(
+    () => qc.invalidateQueries({ queryKey: [CHAVES_TI.externos] }),
+    [qc]
   );
 
   const elemento = (
@@ -50,6 +68,8 @@ export function useJanelasTi() {
         aberto={form != null}
         equipamento={form?.alvo}
         pessoas={pessoas.data}
+        externos={externos.data}
+        onExternoCriado={recarregarExternos}
         onSalvo={(id) => {
           depois.current = id;
           recarregar();
@@ -65,8 +85,10 @@ export function useJanelasTi() {
         aberto={mov != null}
         equipamentos={lista.data}
         pessoas={pessoas.data}
+        externos={externos.data}
         inicial={mov ?? { ids: [], destino: "pessoa" }}
         onFeito={recarregar}
+        onExternoCriado={recarregarExternos}
         onFechar={() => {
           const volta = mov?.voltar ?? null;
           setMov(null);
@@ -79,7 +101,9 @@ export function useJanelasTi() {
   return {
     lista,
     pessoas,
+    externos,
     fora,
+    recarregar,
     fichaAberta: ficha,
     abrirFicha: setFicha,
     novo: () => setForm({ alvo: null }),

@@ -8,34 +8,45 @@ import { Combo, normalizar } from "@/componentes/primitivos/combo";
 import { EsqueletoTabela, Nota, PainelErro, Vazio } from "@/componentes/primitivos/estados";
 import { FaixaIndicadores, Indicador } from "@/componentes/primitivos/indicador";
 import { Painel } from "@/componentes/primitivos/painel";
-import { Selo } from "@/componentes/primitivos/selo";
 import { TabelaDados, type Coluna } from "@/componentes/primitivos/tabela";
 import { MenuExportar } from "@/componentes/produto/menu-exportar";
 import { useJanelasTi } from "@/componentes/produto/ti/janelas";
 import {
   ChipsEquipamentos,
   ModalPessoaTi,
+  SeloPessoa,
   type PessoaComEquipamentos,
 } from "@/componentes/produto/ti/pessoa-equipamentos";
+import { ModalExterno } from "@/componentes/produto/ti/recebedor";
 import { useEstadoTela } from "@/hooks/use-estado-modulo";
 import { useMovimentacoesTi } from "@/hooks/use-ti";
 import { num } from "@/lib/format";
-import { chavePessoa, nomeEquipamento } from "@/lib/ti-tipos";
+import {
+  chaveDaPosse,
+  chaveExterno,
+  chavePessoa,
+  comAlguem,
+  nomeEquipamento,
+  setorOuVinculo,
+  type PessoaExterna,
+} from "@/lib/ti-tipos";
 
-type Filtro = "com" | "sem" | "fora" | "todas";
+type Filtro = "com" | "sem" | "externos" | "fora" | "todas";
 
 const ROTULO: Record<Filtro, string> = {
   com: "Com equipamento",
   sem: "Sem equipamento",
-  fora: "Fora do Diretório",
+  externos: "De fora do Diretório",
+  fora: "A recolher",
   todas: "Todas as pessoas",
 };
 
 /**
- * Por Pessoa: o inventário lido pelo lado de quem tem. Junta o Diretório do RH
- * com o que cada um tem em mãos, então mostra também quem está SEM equipamento
- * (a pessoa que chegou e ainda não recebeu) e quem saiu do Diretório levando
- * algo, que é o que a TI precisa recolher.
+ * Por Pessoa: o inventário lido pelo lado de quem tem. Junta o Diretório do RH,
+ * quem é de fora dele (o cadastro da TI) e o que cada um tem em mãos. Mostra
+ * também quem está SEM equipamento (a pessoa que chegou e ainda não recebeu) e
+ * quem precisa devolver: saiu do Diretório, ou é de fora e teve o cadastro
+ * encerrado.
  */
 export default function Conteudo() {
   const j = useJanelasTi();
@@ -43,39 +54,57 @@ export default function Conteudo() {
   const [filtro, setFiltro] = useEstadoTela<Filtro>("filtro", "com");
   const [busca, setBusca] = useEstadoTela("busca", "");
   const [aberta, setAberta] = useState<string | null>(null);
+  const [externo, setExterno] = useState<PessoaExterna | "novo" | null>(null);
   const { fora } = j;
 
   const equipamentos = j.lista.data;
   const diretorio = j.pessoas.data;
+  const externos = j.externos.data;
 
   const pessoas = useMemo<PessoaComEquipamentos[] | null>(() => {
     if (!equipamentos) return null;
     const m = new Map<string, PessoaComEquipamentos>();
     for (const p of diretorio ?? []) {
       const chave = chavePessoa(p.empresa, p.contrato);
-      m.set(chave, { chave, nome: p.nome, setor: p.setor, cargo: p.cargo, fora: false, itens: [] });
+      m.set(chave, { chave, nome: p.nome, setor: p.setor, cargo: p.cargo, fora: false, externo: null, itens: [] });
+    }
+    for (const x of externos ?? []) {
+      const chave = chaveExterno(x.id);
+      m.set(chave, { chave, nome: x.nome, setor: x.vinculo, cargo: null, fora: !x.ativo, externo: x, itens: [] });
     }
     for (const e of equipamentos) {
-      if (e.posse.destino !== "pessoa") continue;
-      const chave = chavePessoa(e.posse.empresa, e.posse.contrato);
+      if (!comAlguem(e.posse)) continue;
+      const chave = chaveDaPosse(e.posse);
       let p = m.get(chave);
       if (!p) {
-        // Não está no Diretório: o nome e o setor são os da entrega.
-        p = { chave, nome: e.posse.nome, setor: e.posse.setor, cargo: null, fora: fora(e.posse), itens: [] };
+        // Não está em nenhum dos cadastros de hoje: o nome e o setor são os da entrega.
+        p = {
+          chave,
+          nome: e.posse.nome,
+          setor: setorOuVinculo(e.posse) || null,
+          cargo: null,
+          fora: fora(e.posse),
+          externo: null,
+          itens: [],
+        };
         m.set(chave, p);
       }
       p.itens.push(e);
     }
     return [...m.values()].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
-  }, [equipamentos, diretorio, fora]);
+  }, [equipamentos, diretorio, externos, fora]);
+
+  /** Precisa devolver e ainda tem o que devolver. */
+  const aRecolher = (p: PessoaComEquipamentos) => p.fora && p.itens.length > 0;
 
   const contagem = useMemo(() => {
-    const c = { com: 0, sem: 0, fora: 0, todas: 0, itens: 0 };
+    const c = { com: 0, sem: 0, externos: 0, fora: 0, todas: 0, itens: 0 };
     for (const p of pessoas ?? []) {
       c.todas++;
       if (p.itens.length) c.com++;
-      else if (!p.fora) c.sem++;
-      if (p.fora) c.fora++;
+      else if (!p.fora && !p.externo) c.sem++;
+      if (p.externo) c.externos++;
+      if (aRecolher(p)) c.fora++;
       c.itens += p.itens.length;
     }
     return c;
@@ -86,8 +115,11 @@ export default function Conteudo() {
     const partes = termo ? termo.split(/\s+/) : [];
     return (pessoas ?? []).filter((p) => {
       if (filtro === "com" && !p.itens.length) return false;
-      if (filtro === "sem" && (p.itens.length || p.fora)) return false;
-      if (filtro === "fora" && !p.fora) return false;
+      // Sem equipamento é gente da casa que ainda não recebeu; quem é de fora
+      // sem nada é só um cadastro.
+      if (filtro === "sem" && (p.itens.length || p.fora || p.externo)) return false;
+      if (filtro === "externos" && !p.externo) return false;
+      if (filtro === "fora" && !aRecolher(p)) return false;
       if (!partes.length) return true;
       const alvo = normalizar(
         `${p.nome} ${p.setor ?? ""} ${p.cargo ?? ""} ${p.itens.map((e) => `${e.patrimonio ?? ""} ${nomeEquipamento(e)}`).join(" ")}`
@@ -108,10 +140,10 @@ export default function Conteudo() {
         <span className="flex min-w-0 flex-col py-1">
           <span className="flex min-w-0 items-center gap-1.5">
             <span className="truncate text-tinta">{p.nome}</span>
-            {p.fora && <Selo tom="atencao">Fora do Diretório</Selo>}
+            <SeloPessoa pessoa={p} />
           </span>
           <span className="truncate text-pequeno text-apagado">
-            {[p.setor, p.cargo].filter(Boolean).join(" · ") || "Sem setor"}
+            {[p.setor, p.cargo].filter(Boolean).join(" · ") || (p.externo ? "De fora do Diretório" : "Sem setor")}
           </span>
         </span>
       ),
@@ -151,7 +183,7 @@ export default function Conteudo() {
       <Vazio
         compacto
         icone="filtrar"
-        titulo={filtro === "fora" && !termo ? "Ninguém fora do Diretório com equipamento" : "Ninguém neste filtro"}
+        titulo={filtro === "fora" && !termo ? "Nada a recolher" : "Ninguém neste filtro"}
         acao={
           <Botao
             onClick={() => {
@@ -169,7 +201,7 @@ export default function Conteudo() {
       <Vazio
         icone="pessoas"
         titulo="Ninguém com equipamento ainda"
-        descricao="Quando um equipamento for entregue a alguém do Diretório, a pessoa aparece aqui com o que tem em mãos."
+        descricao="Quando um equipamento for entregue a alguém, do Diretório ou de fora dele, a pessoa aparece aqui com o que tem em mãos."
       />
     );
 
@@ -186,12 +218,18 @@ export default function Conteudo() {
               descricao: ROTULO[filtro],
               nome: "equipamentos-por-pessoa",
               montar: () => ({
-                cabecalhos: ["Pessoa", "Setor", "Cargo", "Situação", "Equipamentos", "Qtd."],
+                cabecalhos: ["Pessoa", "Setor ou vínculo", "Cargo", "Situação", "Equipamentos", "Qtd."],
                 linhas: linhas.map((p) => [
                   p.nome,
                   p.setor ?? "",
                   p.cargo ?? "",
-                  p.fora ? "Fora do Diretório" : "No Diretório",
+                  p.externo
+                    ? p.fora
+                      ? "De fora, cadastro encerrado"
+                      : "De fora do Diretório"
+                    : p.fora
+                      ? "Fora do Diretório"
+                      : "No Diretório",
                   p.itens.map((e) => (e.patrimonio ? `${e.patrimonio} ${nomeEquipamento(e)}` : nomeEquipamento(e))).join("; "),
                   p.itens.length,
                 ]),
@@ -199,6 +237,9 @@ export default function Conteudo() {
             },
           ]}
         />
+        <Botao icone="mais" onClick={() => setExterno("novo")}>
+          Pessoa de fora
+        </Botao>
       </AcoesPagina>
 
       {j.pessoas.isError && (
@@ -225,13 +266,21 @@ export default function Conteudo() {
           onClick={() => setFiltro("sem")}
         />
         <Indicador
-          rotulo="Fora do Diretório"
+          rotulo="De fora do Diretório"
+          icone="usuario"
+          carregando={!pessoas || !externos}
+          valor={num(contagem.externos)}
+          detalhe="terceirizados e outros"
+          onClick={() => setFiltro("externos")}
+        />
+        <Indicador
+          rotulo="A recolher"
           icone="alerta"
           carregando={!pessoas || !diretorio}
           valor={num(contagem.fora)}
           tom={contagem.fora ? "atencao" : "neutro"}
           valorNoTom={contagem.fora > 0}
-          detalhe={contagem.fora ? "saíram com equipamento" : "nada a recolher"}
+          detalhe={contagem.fora ? "com quem saiu ou foi encerrado" : "nada a recolher"}
           onClick={() => setFiltro("fora")}
         />
       </FaixaIndicadores>
@@ -295,7 +344,19 @@ export default function Conteudo() {
           setAberta(null);
           if (p) j.movimentar({ ids: p.itens.map((e) => e.id), destino: "estoque", travado: true });
         }}
+        onEditarExterno={() => {
+          const x = aPessoa?.externo;
+          setAberta(null);
+          if (x) setExterno(x);
+        }}
         onFechar={() => setAberta(null)}
+      />
+
+      <ModalExterno
+        aberto={externo != null}
+        externo={externo === "novo" ? null : externo}
+        onSalvo={j.recarregar}
+        onFechar={() => setExterno(null)}
       />
 
       {j.elemento}

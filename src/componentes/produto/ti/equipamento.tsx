@@ -55,6 +55,7 @@ export function Patrimonio({ codigo }: { codigo: string | null }) {
 
 const ICONE_POSSE: Record<Posse["destino"], string> = {
   pessoa: "usuario",
+  externo: "usuario",
   local: "local",
   estoque: "estoque",
   manutencao: "manutencao",
@@ -62,25 +63,50 @@ const ICONE_POSSE: Record<Posse["destino"], string> = {
 };
 
 /**
- * Com quem o equipamento está. Pessoa leva o setor embaixo; quem não está mais
- * no Diretório ganha o selo, porque é o equipamento que a TI precisa recolher.
- * Estoque e baixa ficam apagados: não pedem ação de ninguém.
+ * O selo de quem está com o equipamento. Quem é de fora do Diretório sempre
+ * leva o seu, para ninguém confundir o terceirizado com alguém da casa; quem
+ * precisa devolver (saiu do Diretório, ou teve o cadastro encerrado) leva o de
+ * atenção.
+ */
+export function SeloRecebedor({ posse, fora }: { posse: Posse; fora?: boolean }) {
+  if (posse.destino === "pessoa")
+    return fora ? (
+      <Selo tom="atencao" title="Não aparece mais no Diretório do RH: pode ter saído da empresa">
+        Fora do Diretório
+      </Selo>
+    ) : null;
+  if (posse.destino === "externo")
+    return fora ? (
+      <Selo tom="atencao" title="O cadastro de fora do Diretório foi encerrado: o equipamento precisa voltar">
+        Encerrado
+      </Selo>
+    ) : (
+      <Selo tom="rota" title="Não é do Diretório do RH: cadastro da TI">
+        De fora
+      </Selo>
+    );
+  return null;
+}
+
+/**
+ * Com quem o equipamento está. Pessoa leva o setor embaixo, e quem é de fora do
+ * Diretório leva a empresa ou o vínculo. Quem precisa devolver ganha o selo,
+ * porque é o equipamento que a TI precisa recolher. Estoque e baixa ficam
+ * apagados: não pedem ação de ninguém.
  */
 export function CelulaPosse({ posse, fora }: { posse: Posse; fora?: boolean }) {
-  if (posse.destino === "pessoa")
+  if (posse.destino === "pessoa" || posse.destino === "externo") {
+    const embaixo = posse.destino === "pessoa" ? posse.setor : posse.vinculo;
     return (
       <span className="flex min-w-0 flex-col py-1">
         <span className="flex min-w-0 items-center gap-1.5">
           <span className="truncate text-tinta">{posse.nome}</span>
-          {fora && (
-            <Selo tom="atencao" title="Não aparece mais no Diretório do RH: pode ter saído da empresa">
-              Fora do Diretório
-            </Selo>
-          )}
+          <SeloRecebedor posse={posse} fora={fora} />
         </span>
-        {posse.setor && <span className="truncate text-pequeno text-apagado">{posse.setor}</span>}
+        {embaixo && <span className="truncate text-pequeno text-apagado">{embaixo}</span>}
       </span>
     );
+  }
   const tom =
     posse.destino === "manutencao" ? "text-atencao" : posse.destino === "local" ? "text-tinta" : "text-apagado";
   return (
@@ -93,6 +119,7 @@ export function CelulaPosse({ posse, fora }: { posse: Posse; fora?: boolean }) {
 
 const TOM_MARCA: Record<Posse["destino"], string> = {
   pessoa: "bg-rota-suave text-rota",
+  externo: "bg-rota-suave text-rota",
   local: "bg-rota-suave text-rota",
   estoque: "bg-poco-forte text-tinta-2",
   manutencao: "bg-atencao-suave text-atencao",
@@ -122,7 +149,7 @@ export function HistoricoPosse({ historico }: { historico: Movimentacao[] }) {
                 <span className="num text-pequeno text-apagado">{dataBR(m.data)}</span>
               </p>
               <p className="text-pequeno text-apagado">
-                {f.de && <>Estava em {f.de} · </>}
+                {f.de && <>Estava {f.de} · </>}
                 {m.registradoPor ? `Registrado por ${m.registradoPor}` : "Registrado"} em {dataHoraBR(m.registradoEm)}
               </p>
               {m.observacao && <p className="mt-1 text-pequeno whitespace-pre-line text-tinta-2">{m.observacao}</p>}

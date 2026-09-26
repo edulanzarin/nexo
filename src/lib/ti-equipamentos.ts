@@ -16,11 +16,13 @@ import {
   nomeEquipamento,
   textoPosse,
   type DadosEquipamento,
+  type DadosPessoaExterna,
   type EquipamentoDetalhe,
   type EquipamentoLista,
   type Movimentacao,
   type MovimentacaoLista,
   type PedidoMovimentacao,
+  type PessoaExterna,
   type PessoaTi,
   type Posse,
 } from "./ti-tipos";
@@ -39,6 +41,8 @@ interface LinhaPosse {
   pessoa_contrato: number | null;
   pessoa_nome: string | null;
   pessoa_setor: string | null;
+  externo_id: number | null;
+  externo_vinculo: string | null;
   local: string | null;
   motivo: string | null;
 }
@@ -53,6 +57,8 @@ function posseDe(l: LinhaPosse): Posse {
         nome: l.pessoa_nome!,
         setor: l.pessoa_setor,
       };
+    case "externo":
+      return { destino: "externo", id: l.externo_id!, nome: l.pessoa_nome!, vinculo: l.externo_vinculo };
     case "local":
       return { destino: "local", local: l.local! };
     case "estoque":
@@ -73,6 +79,8 @@ function anteriorDe(l: Record<string, unknown>): Posse | null {
     pessoa_contrato: l.ant_pessoa_contrato as number | null,
     pessoa_nome: l.ant_pessoa_nome as string | null,
     pessoa_setor: l.ant_pessoa_setor as string | null,
+    externo_id: l.ant_externo_id as number | null,
+    externo_vinculo: l.ant_externo_vinculo as string | null,
     local: l.ant_local as string | null,
     motivo: l.ant_motivo as string | null,
   });
@@ -87,7 +95,7 @@ const COLUNAS_EQUIPAMENTO = `
 const JUNCAO_POSSE = `
   join lateral (
     select m.destino, m.pessoa_empresa, m.pessoa_contrato, m.pessoa_nome, m.pessoa_setor,
-           m.local, m.motivo, to_char(m.data, 'YYYY-MM-DD') as desde
+           m.externo_id, m.externo_vinculo, m.local, m.motivo, to_char(m.data, 'YYYY-MM-DD') as desde
       from ti_movimentacao m
      where m.equipamento_id = e.id
      order by m.data desc, m.id desc
@@ -136,13 +144,16 @@ function equipamentoDe(l: LinhaEquipamento): EquipamentoLista {
 
 const COLUNAS_MOVIMENTACAO = `
   m.id, m.equipamento_id, m.destino, m.pessoa_empresa, m.pessoa_contrato, m.pessoa_nome,
-  m.pessoa_setor, m.local, m.motivo, to_char(m.data, 'YYYY-MM-DD') as data, m.observacao,
+  m.pessoa_setor, m.externo_id, m.externo_vinculo, m.local, m.motivo,
+  to_char(m.data, 'YYYY-MM-DD') as data, m.observacao,
   m.registrado_por_nome, to_char(m.registrado_em, 'YYYY-MM-DD"T"HH24:MI:SS') as registrado_em,
   lag(m.destino) over w as ant_destino,
   lag(m.pessoa_empresa) over w as ant_pessoa_empresa,
   lag(m.pessoa_contrato) over w as ant_pessoa_contrato,
   lag(m.pessoa_nome) over w as ant_pessoa_nome,
   lag(m.pessoa_setor) over w as ant_pessoa_setor,
+  lag(m.externo_id) over w as ant_externo_id,
+  lag(m.externo_vinculo) over w as ant_externo_vinculo,
   lag(m.local) over w as ant_local,
   lag(m.motivo) over w as ant_motivo`;
 
@@ -303,21 +314,37 @@ async function pessoaDoPedido(pedido: Omit<PedidoMovimentacao, "equipamentos">):
   return (await pessoasTi()).find((p) => chavePessoa(p.empresa, p.contrato) === alvo) ?? null;
 }
 
+/** Quem é de fora, no cadastro da TI. */
+async function externoDoPedido(pedido: Omit<PedidoMovimentacao, "equipamentos">): Promise<PessoaExterna | null> {
+  if (pedido.destino !== "externo" || !pedido.externo) return null;
+  const [x] = await appQuery<PessoaExterna>(`${SELECT_EXTERNO} where id = $1`, [pedido.externo.id]);
+  return x ?? null;
+}
+
+/** Para onde o pedido leva, com a pessoa procurada no cadastro dela. */
+async function posseDoPedidoNoCadastro(pedido: Omit<PedidoMovimentacao, "equipamentos">): Promise<Posse> {
+  const [pessoa, externo] = await Promise.all([pessoaDoPedido(pedido), externoDoPedido(pedido)]);
+  return conferido(() => posseDoPedido({ ...pedido, equipamentos: [] }, pessoa, externo));
+}
+
 async function inserirMovimentacao(c: PoolClient, equipamentoId: number, posse: Posse, data: string, observacao: string | null) {
   const sessao = await getSessaoOpcional();
   const p = posse.destino === "pessoa" ? posse : null;
+  const x = posse.destino === "externo" ? posse : null;
   await c.query(
     `insert into ti_movimentacao
        (equipamento_id, destino, pessoa_empresa, pessoa_contrato, pessoa_nome, pessoa_setor,
-        local, motivo, data, observacao, registrado_por, registrado_por_nome)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+        externo_id, externo_vinculo, local, motivo, data, observacao, registrado_por, registrado_por_nome)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
     [
       equipamentoId,
       posse.destino,
       p?.empresa ?? null,
       p?.contrato ?? null,
-      p?.nome ?? null,
+      p?.nome ?? x?.nome ?? null,
       p?.setor ?? null,
+      x?.id ?? null,
+      x?.vinculo ?? null,
       posse.destino === "local" || posse.destino === "manutencao" ? posse.local : null,
       posse.destino === "baixa" ? posse.motivo : null,
       data,
@@ -337,11 +364,10 @@ export async function criarEquipamento(
   dados: DadosEquipamento,
   inicio: Omit<PedidoMovimentacao, "equipamentos">
 ): Promise<number> {
-  const pessoa = await pessoaDoPedido(inicio);
+  const posse = await posseDoPedidoNoCadastro(inicio);
   const hoje = hojeEscritorio();
   try {
     const id = await comTransacao(async (c) => {
-      const posse = posseDoPedido({ ...inicio, equipamentos: [] }, pessoa);
       if (posse.destino === "baixa") throw new RecusaTi("Equipamento novo não nasce baixado");
       if (inicio.data > hoje) throw new RecusaTi("A data não pode ser depois de hoje");
       const sessao = await getSessaoOpcional();
@@ -418,15 +444,7 @@ export async function excluirEquipamento(id: number): Promise<void> {
  * movimentações.
  */
 export async function movimentar(pedido: PedidoMovimentacao): Promise<{ movidos: number }> {
-  const pessoa = await pessoaDoPedido(pedido);
-  const destino = (() => {
-    try {
-      return posseDoPedido(pedido, pessoa);
-    } catch (err) {
-      if (err instanceof RecusaTi) throw new FilterError(err.message);
-      throw err;
-    }
-  })();
+  const destino = await posseDoPedidoNoCadastro(pedido);
 
   const nomes = await comTransacao(async (c) => {
     await c.query(`select id from ti_equipamento where id = any($1::int[]) for update`, [pedido.equipamentos]);
@@ -449,4 +467,62 @@ export async function movimentar(pedido: PedidoMovimentacao): Promise<{ movidos:
     detalhe: nomes.length > 1 ? { equipamentos: nomes } : undefined,
   });
   return { movidos: nomes.length };
+}
+
+// ── De fora do Diretório ─────────────────────────────────────────────────────
+
+const SELECT_EXTERNO = `select id, nome, vinculo, documento, contato, observacao, ativo from ti_pessoa_externa`;
+
+/** Todo o cadastro de fora do Diretório, os ativos primeiro. */
+export async function listarExternos(): Promise<PessoaExterna[]> {
+  return appQuery<PessoaExterna>(`${SELECT_EXTERNO} order by ativo desc, nome`);
+}
+
+export async function criarExterno(dados: DadosPessoaExterna): Promise<PessoaExterna> {
+  const sessao = await getSessaoOpcional();
+  const [x] = await appQuery<PessoaExterna>(
+    `insert into ti_pessoa_externa (nome, vinculo, documento, contato, observacao, criado_por)
+     values ($1, $2, $3, $4, $5, $6)
+     returning id, nome, vinculo, documento, contato, observacao, ativo`,
+    [dados.nome, dados.vinculo, dados.documento, dados.contato, dados.observacao, sessao?.usuario.id ?? null]
+  );
+  await registrarAuditoria({ acao: "ti.externo.criar", modulo: "ti", alvo: rotuloExterno(dados) });
+  return x;
+}
+
+const rotuloExterno = (d: Pick<DadosPessoaExterna, "nome" | "vinculo">) => (d.vinculo ? `${d.nome} · ${d.vinculo}` : d.nome);
+
+/**
+ * Corrige o cadastro ou encerra o vínculo. Encerrar não mexe no que está com a
+ * pessoa: o equipamento continua com ela até alguém registrar a devolução, e
+ * aparece como a recolher.
+ */
+export async function salvarExterno(id: number, dados: DadosPessoaExterna, ativo: boolean): Promise<void> {
+  const r = await appQuery<{ id: number }>(
+    `update ti_pessoa_externa
+        set nome = $2, vinculo = $3, documento = $4, contato = $5, observacao = $6, ativo = $7, atualizado_em = now()
+      where id = $1
+      returning id`,
+    [id, dados.nome, dados.vinculo, dados.documento, dados.contato, dados.observacao, ativo]
+  );
+  if (!r.length) throw new FilterError("Esse cadastro não existe mais");
+  await registrarAuditoria({
+    acao: ativo ? "ti.externo.salvar" : "ti.externo.encerrar",
+    modulo: "ti",
+    alvo: rotuloExterno(dados),
+  });
+}
+
+/** Apaga o cadastro que nunca recebeu nada. Depois de receber, ele fica no histórico e se encerra. */
+export async function excluirExterno(id: number): Promise<void> {
+  const [uso] = await appQuery<{ n: number; nome: string | null; vinculo: string | null }>(
+    `select (select count(*)::int from ti_movimentacao where externo_id = $1) as n, x.nome, x.vinculo
+       from ti_pessoa_externa x where x.id = $1`,
+    [id]
+  );
+  if (!uso) throw new FilterError("Esse cadastro não existe mais");
+  if (uso.n > 0)
+    throw new FilterError("Essa pessoa já recebeu equipamento e fica no histórico. Para tirá-la da lista, encerre o cadastro.");
+  await appQuery(`delete from ti_pessoa_externa where id = $1`, [id]);
+  await registrarAuditoria({ acao: "ti.externo.excluir", modulo: "ti", alvo: rotuloExterno({ nome: uso.nome ?? "", vinculo: uso.vinculo }) });
 }

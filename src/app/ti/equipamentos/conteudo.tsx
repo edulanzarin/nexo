@@ -16,7 +16,9 @@ import { useEstadoTela } from "@/hooks/use-estado-modulo";
 import { decimalBR } from "@/lib/csv";
 import { dataBR, num } from "@/lib/format";
 import {
-  chavePessoa,
+  chaveDaPosse,
+  comAlguem,
+  setorOuVinculo,
   nomeEquipamento,
   resumoSpecs,
   situacaoDaPosse,
@@ -27,7 +29,7 @@ import {
   type Situacao,
 } from "@/lib/ti-tipos";
 
-type Filtro = "ativos" | Situacao | "fora";
+type Filtro = "ativos" | Situacao | "externos" | "fora";
 
 const ROTULO_FILTRO: Record<Filtro, string> = {
   ativos: "Todos os ativos",
@@ -35,7 +37,8 @@ const ROTULO_FILTRO: Record<Filtro, string> = {
   estoque: "No estoque",
   manutencao: "Em manutenção",
   baixado: "Baixados",
-  fora: "Com quem saiu do Diretório",
+  externos: "Com gente de fora",
+  fora: "A recolher",
 };
 
 const TODOS = "*";
@@ -60,12 +63,13 @@ export default function Conteudo() {
   const todos = useMemo(() => d ?? [], [d]);
 
   const resumo = useMemo(() => {
-    const r = { ativos: 0, uso: 0, estoque: 0, manutencao: 0, baixado: 0, fora: 0, pessoas: new Set<string>() };
+    const r = { ativos: 0, uso: 0, estoque: 0, manutencao: 0, baixado: 0, externos: 0, fora: 0, pessoas: new Set<string>() };
     for (const e of todos) {
       const s = situacaoDaPosse(e.posse);
       r[s]++;
       if (s !== "baixado") r.ativos++;
-      if (e.posse.destino === "pessoa") r.pessoas.add(chavePessoa(e.posse.empresa, e.posse.contrato));
+      if (comAlguem(e.posse)) r.pessoas.add(chaveDaPosse(e.posse));
+      if (e.posse.destino === "externo") r.externos++;
       if (fora(e.posse)) r.fora++;
     }
     return r;
@@ -92,10 +96,11 @@ export default function Conteudo() {
       const s = situacaoDaPosse(e.posse);
       if (filtro === "ativos" && s === "baixado") return false;
       if (filtro === "fora" && !fora(e.posse)) return false;
-      if (filtro !== "ativos" && filtro !== "fora" && s !== filtro) return false;
+      if (filtro === "externos" && e.posse.destino !== "externo") return false;
+      if (filtro !== "ativos" && filtro !== "fora" && filtro !== "externos" && s !== filtro) return false;
       if (tipo !== TODOS && e.tipo !== tipo) return false;
       if (!partes.length) return true;
-      const setor = e.posse.destino === "pessoa" ? (e.posse.setor ?? "") : "";
+      const setor = setorOuVinculo(e.posse);
       const alvo = normalizar(
         `${e.patrimonio ?? ""} ${nomeEquipamento(e)} ${e.numeroSerie ?? ""} ${textoPosse(e.posse)} ${setor} ${Object.values(
           e.especificacoes
@@ -212,7 +217,7 @@ export default function Conteudo() {
                   "Número de série",
                   "Especificações",
                   "Com quem está",
-                  "Setor",
+                  "Setor ou vínculo",
                   "Desde",
                   "Data da compra",
                   "Valor",
@@ -226,7 +231,7 @@ export default function Conteudo() {
                   e.numeroSerie ?? "",
                   resumoSpecs(e, 6),
                   textoPosse(e.posse),
-                  e.posse.destino === "pessoa" ? (e.posse.setor ?? "") : "",
+                  setorOuVinculo(e.posse),
                   dataBR(e.desde),
                   e.dataCompra ? dataBR(e.dataCompra) : "",
                   e.valorCompra != null ? decimalBR(e.valorCompra) : "",
@@ -288,12 +293,12 @@ export default function Conteudo() {
         />
         {resumo.fora > 0 && (
           <Indicador
-            rotulo="Fora do Diretório"
+            rotulo="A recolher"
             icone="alerta"
             valor={num(resumo.fora)}
             tom="atencao"
             valorNoTom
-            detalhe="com quem saiu: recolher"
+            detalhe="com quem saiu ou foi encerrado"
             onClick={() => setFiltro("fora")}
           />
         )}

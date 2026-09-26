@@ -9,10 +9,12 @@ import {
 import { EquipamentoEstatico } from "@/componentes/produto/ti/formulario-equipamento";
 import { MovimentarEstatico } from "@/componentes/produto/ti/movimentar";
 import { ChipsEquipamentos, PessoaTiEstatica } from "@/componentes/produto/ti/pessoa-equipamentos";
+import { CampoRecebedor, ExternoEstatico } from "@/componentes/produto/ti/recebedor";
 import type {
   EquipamentoDetalhe,
   EquipamentoLista,
   MovimentacaoLista,
+  PessoaExterna,
   PessoaTi,
   Posse,
 } from "@/lib/ti-tipos";
@@ -27,6 +29,13 @@ const ANA: Posse = { destino: "pessoa", empresa: 1, contrato: 184, nome: "ANA PA
 const JOAO: Posse = { destino: "pessoa", empresa: 1, contrato: 97, nome: "JOAO PEDRO ALVES", setor: "Fiscal" };
 const BRUNO: Posse = { destino: "pessoa", empresa: 888, contrato: 42, nome: "BRUNO SCHULZ", setor: "DP" };
 const ESTOQUE: Posse = { destino: "estoque" };
+const CARLOS: Posse = { destino: "externo", id: 3, nome: "CARLOS MENDES", vinculo: "Limpa Tudo Terceirizada" };
+
+const EXTERNOS: PessoaExterna[] = [
+  { id: 3, nome: "CARLOS MENDES", vinculo: "Limpa Tudo Terceirizada", documento: null, contato: "(47) 99999-1234", observacao: null, ativo: true },
+  { id: 4, nome: "LUCAS PEREIRA", vinculo: "Estagiário", documento: null, contato: null, observacao: null, ativo: true },
+  { id: 5, nome: "PAULO SOUZA", vinculo: "Vigia Sul Segurança", documento: null, contato: null, observacao: "Contrato encerrado em agosto", ativo: false },
+];
 
 const PESSOAS: PessoaTi[] = [
   { empresa: 1, contrato: 184, nome: "ANA PAULA RIBEIRO", setor: "Contábil", cargo: "Analista contábil" },
@@ -125,11 +134,13 @@ export function BlocosTi() {
 
       <Bloco
         titulo="Com quem está"
-        porque="Pessoa leva o setor embaixo. Quem saiu do Diretório do RH ganha o selo, porque é o equipamento que a TI precisa recolher e nenhuma outra tela avisa. Manutenção fica no tom de atenção (está parado); estoque e baixa ficam apagados, porque não pedem nada de ninguém."
+        porque="Pessoa leva o setor embaixo; quem é de fora do Diretório leva a empresa ou o vínculo, e sempre o selo, para o terceirizado não se confundir com alguém da casa. Quem precisa devolver (saiu do Diretório, ou é de fora e teve o cadastro encerrado) ganha o selo de atenção, porque é o equipamento que a TI precisa recolher e nenhuma outra tela avisa. Manutenção fica no tom de atenção (está parado); estoque e baixa ficam apagados, porque não pedem nada de ninguém."
       >
         <Painel corpo="grid gap-x-8 gap-y-2 sm:grid-cols-2" className="max-w-3xl">
           <CelulaPosse posse={ANA} />
           <CelulaPosse posse={BRUNO} fora />
+          <CelulaPosse posse={CARLOS} />
+          <CelulaPosse posse={{ destino: "externo", id: 5, nome: "PAULO SOUZA", vinculo: "Vigia Sul Segurança" }} fora />
           <CelulaPosse posse={{ destino: "local", local: "Recepção" }} />
           <CelulaPosse posse={ESTOQUE} />
           <CelulaPosse posse={{ destino: "manutencao", local: "Dell Suporte" }} />
@@ -176,12 +187,13 @@ export function BlocosTi() {
           <Variante nome="Novo, já com a pessoa">
             <EquipamentoEstatico
               pessoas={PESSOAS}
+              externos={EXTERNOS}
               inicial={{ tipo: "notebook", marca: "Dell", modelo: "Latitude 3420", onde: "pessoa", pessoa: "1:184" }}
               onFechar={nada}
             />
           </Variante>
           <Variante nome="Editando um monitor: outras especificações">
-            <EquipamentoEstatico equipamento={EQUIPAMENTOS[1]} pessoas={PESSOAS} onFechar={nada} />
+            <EquipamentoEstatico equipamento={EQUIPAMENTOS[1]} pessoas={PESSOAS} externos={EXTERNOS} onFechar={nada} />
           </Variante>
         </div>
       </Bloco>
@@ -195,6 +207,7 @@ export function BlocosTi() {
             <MovimentarEstatico
               equipamentos={EQUIPAMENTOS}
               pessoas={PESSOAS}
+              externos={EXTERNOS}
               inicial={{ ids: [15, 40], destino: "pessoa", pessoa: "1:211" }}
               onFechar={nada}
             />
@@ -203,7 +216,18 @@ export function BlocosTi() {
             <MovimentarEstatico
               equipamentos={EQUIPAMENTOS}
               pessoas={PESSOAS}
+              externos={EXTERNOS}
               inicial={{ ids: [12, 31, 40, 41], destino: "estoque", travado: true }}
+              onFechar={nada}
+            />
+          </Variante>
+          <Variante nome="Entrega a alguém de fora, cadastrando na hora">
+            <MovimentarEstatico
+              equipamentos={EQUIPAMENTOS}
+              pessoas={PESSOAS}
+              externos={EXTERNOS}
+              inicial={{ ids: [41], destino: "pessoa", travado: true }}
+              novoExternoAberto
               onFechar={nada}
             />
           </Variante>
@@ -211,6 +235,7 @@ export function BlocosTi() {
             <MovimentarEstatico
               equipamentos={EQUIPAMENTOS}
               pessoas={PESSOAS}
+              externos={EXTERNOS}
               inicial={{ ids: [18], destino: "baixa", travado: true }}
               onFechar={nada}
             />
@@ -239,6 +264,7 @@ export function BlocosTi() {
                   setor: "Contábil",
                   cargo: "Analista contábil",
                   fora: false,
+                  externo: null,
                   itens: EQUIPAMENTOS.slice(0, 4),
                 }}
                 movimentacoes={MOVS_ANA}
@@ -246,11 +272,49 @@ export function BlocosTi() {
             </Variante>
             <Variante nome="Fora do Diretório: devolver vira a ação principal">
               <PessoaTiEstatica
-                pessoa={{ chave: "888:42", nome: "BRUNO SCHULZ", setor: "DP", cargo: null, fora: true, itens: [EQUIPAMENTOS[5]] }}
+                pessoa={{ chave: "888:42", nome: "BRUNO SCHULZ", setor: "DP", cargo: null, fora: true, externo: null, itens: [EQUIPAMENTOS[5]] }}
+                movimentacoes={[]}
+              />
+            </Variante>
+            <Variante nome="De fora do Diretório: o cadastro é da TI">
+              <PessoaTiEstatica
+                pessoa={{
+                  chave: "externo:3",
+                  nome: "CARLOS MENDES",
+                  setor: "Limpa Tudo Terceirizada",
+                  cargo: null,
+                  fora: false,
+                  externo: EXTERNOS[0],
+                  itens: [{ ...EQUIPAMENTOS[3], posse: CARLOS }],
+                }}
                 movimentacoes={[]}
               />
             </Variante>
           </div>
+        </div>
+      </Bloco>
+
+      <Bloco
+        titulo="Quem recebe"
+        porque="Uma busca só no Diretório do RH e em quem é de fora dele. O terceirizado que não está em lugar nenhum se cadastra ali mesmo, sem sair da entrega, e já sai escolhido. Cadastro e não texto livre: a mesma pessoa recebe mais de uma coisa, e o nome digitado de três jeitos viraria três pessoas no Por Pessoa. Também não entra no Diretório como PJ: o PJ é prestador da Navecon, com experiência e avaliação; o terceirizado é de outra empresa."
+      >
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <Variante nome="Escolhendo">
+            <Painel className="max-w-md">
+              <CampoRecebedor pessoas={PESSOAS} externos={EXTERNOS} valor="externo:3" onMudar={nada} />
+            </Painel>
+          </Variante>
+          <Variante nome="Cadastrando alguém de fora">
+            <Painel className="max-w-md">
+              <CampoRecebedor pessoas={PESSOAS} externos={EXTERNOS} valor={null} onMudar={nada} novoAberto />
+            </Painel>
+          </Variante>
+          <Variante nome="Cadastro de fora: encerrar é o fim do vínculo">
+            <ExternoEstatico externo={EXTERNOS[0]} onFechar={nada} />
+          </Variante>
+          <Variante nome="Encerrado: não recebe até reativar">
+            <ExternoEstatico externo={EXTERNOS[2]} onFechar={nada} />
+          </Variante>
         </div>
       </Bloco>
     </>

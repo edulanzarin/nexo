@@ -3,14 +3,26 @@ import {
   conferirMovimentacao,
   hojeEscritorio,
   lerDadosEquipamento,
+  lerDadosExterno,
   lerPedido,
   posseDoPedido,
   RecusaTi,
 } from "./ti-regras";
-import { frasePosse, nomeEquipamento, resumoSpecs, textoPosse, type PessoaTi, type Posse } from "./ti-tipos";
+import {
+  chaveExterno,
+  frasePosse,
+  lerChaveRecebedor,
+  nomeEquipamento,
+  resumoSpecs,
+  textoPosse,
+  type PessoaExterna,
+  type PessoaTi,
+  type Posse,
+} from "./ti-tipos";
 
 const ANA: PessoaTi = { empresa: 1, contrato: 184, nome: "ANA PAULA RIBEIRO", setor: "Contábil", cargo: "Analista" };
 const comAna: Posse = { destino: "pessoa", empresa: 1, contrato: 184, nome: "ANA PAULA RIBEIRO", setor: "Contábil" };
+const joao: Posse = { destino: "externo", id: 3, nome: "JOAO DA SILVA", vinculo: "Limpa Tudo Terceirizada" };
 
 const notebook = (posse: Posse, desde = "2026-09-01") => ({
   id: 12,
@@ -147,17 +159,70 @@ describe("frase do histórico", () => {
     expect(frasePosse({ posse: estoque, anterior: null })).toEqual({ titulo: "Cadastrado no estoque", de: null });
     expect(frasePosse({ posse: comAna, anterior: estoque })).toEqual({
       titulo: "Entregue a ANA PAULA RIBEIRO",
-      de: "Estoque da TI",
+      de: "no estoque",
     });
     expect(frasePosse({ posse: bruno, anterior: comAna }).titulo).toBe("Passou para BRUNO SCHULZ");
     expect(frasePosse({ posse: estoque, anterior: comAna })).toEqual({
       titulo: "Devolvido ao estoque",
-      de: "ANA PAULA RIBEIRO",
+      de: "com ANA PAULA RIBEIRO",
+    });
+    // Alguém de fora conta como alguém: de uma pessoa para ele é passagem.
+    expect(frasePosse({ posse: joao, anterior: comAna })).toEqual({
+      titulo: "Passou para JOAO DA SILVA",
+      de: "com ANA PAULA RIBEIRO",
     });
     expect(frasePosse({ posse: estoque, anterior: { destino: "manutencao", local: null } }).titulo).toBe(
       "Voltou da manutenção"
     );
     expect(frasePosse({ posse: { destino: "baixa", motivo: "doacao" }, anterior: estoque }).titulo).toBe("Baixa por doação");
+  });
+});
+
+describe("de fora do Diretório", () => {
+  const externo = (ativo = true): PessoaExterna => ({
+    id: 3,
+    nome: "JOAO DA SILVA",
+    vinculo: "Limpa Tudo Terceirizada",
+    documento: null,
+    contato: null,
+    observacao: null,
+    ativo,
+  });
+  const pedidoExterno = () =>
+    lerPedido({ equipamentos: [12], destino: "externo", externo: { id: 3 }, data: "2026-09-10" });
+
+  it("recebe pelo cadastro da TI, com o vínculo gravado", () => {
+    expect(posseDoPedido(pedidoExterno(), null, externo())).toEqual(joao);
+  });
+
+  it("cadastro encerrado não recebe", () => {
+    expect(recusa(() => posseDoPedido(pedidoExterno(), null, externo(false)))).toBe(
+      "JOAO DA SILVA está com o cadastro encerrado e não recebe equipamento"
+    );
+  });
+
+  it("não vai para quem já está com ele, e passa para alguém do Diretório", () => {
+    expect(recusa(() => conferirMovimentacao(pedidoExterno(), joao, [notebook(joao)], "2026-09-25"))).toMatch(
+      /já está em JOAO DA SILVA/
+    );
+    expect(() => conferirMovimentacao(pedido(), comAna, [notebook(joao)], "2026-09-25")).not.toThrow();
+  });
+
+  it("a chave escolhida na tela aponta o cadastro certo", () => {
+    expect(lerChaveRecebedor(chaveExterno(3))).toEqual({ destino: "externo", id: 3 });
+    expect(lerChaveRecebedor("1:184")).toEqual({ destino: "pessoa", empresa: 1, contrato: 184 });
+    expect(lerChaveRecebedor("qualquer")).toBeNull();
+  });
+
+  it("o cadastro pede só o nome", () => {
+    expect(recusa(() => lerDadosExterno({ vinculo: "Limpa Tudo" }))).toBe("Informe o nome");
+    expect(lerDadosExterno({ nome: " Joao  da Silva ", vinculo: "" })).toEqual({
+      nome: "Joao da Silva",
+      vinculo: null,
+      documento: null,
+      contato: null,
+      observacao: null,
+    });
   });
 });
 

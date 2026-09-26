@@ -6,12 +6,14 @@ import { Modal, PainelModal } from "@/componentes/primitivos/modal";
 import { Selo } from "@/componentes/primitivos/selo";
 import { dataBR, num } from "@/lib/format";
 import {
-  chavePessoa,
+  chaveDaPosse,
+  comAlguem,
   frasePosse,
   nomeEquipamento,
   tipoEquipamento,
   type EquipamentoLista,
   type MovimentacaoLista,
+  type PessoaExterna,
   type Posse,
 } from "@/lib/ti-tipos";
 import { IconeTipo, Patrimonio } from "./equipamento";
@@ -20,11 +22,36 @@ import { IconeTipo, Patrimonio } from "./equipamento";
 export interface PessoaComEquipamentos {
   chave: string;
   nome: string;
+  /** O setor; para quem é de fora, a empresa ou o vínculo. */
   setor: string | null;
   cargo: string | null;
-  /** Está com equipamento e não aparece mais no Diretório. */
+  /**
+   * Precisa devolver: saiu do Diretório, ou é de fora e teve o cadastro
+   * encerrado.
+   */
   fora: boolean;
+  /** O cadastro de fora do Diretório; `null` para quem é do Diretório. */
+  externo: PessoaExterna | null;
   itens: EquipamentoLista[];
+}
+
+/** O selo da pessoa na lista e na janela: de onde ela é e se precisa devolver. */
+export function SeloPessoa({ pessoa }: { pessoa: PessoaComEquipamentos }) {
+  if (pessoa.externo)
+    return pessoa.fora ? (
+      <Selo tom="atencao" title="O cadastro de fora do Diretório foi encerrado">
+        Encerrado
+      </Selo>
+    ) : (
+      <Selo tom="rota" title="Não é do Diretório do RH: cadastro da TI">
+        De fora
+      </Selo>
+    );
+  return pessoa.fora ? (
+    <Selo tom="atencao" title="Não aparece mais no Diretório do RH: pode ter saído da empresa">
+      Fora do Diretório
+    </Selo>
+  ) : null;
 }
 
 /**
@@ -54,8 +81,7 @@ export function ChipsEquipamentos({ itens, max = 5 }: { itens: EquipamentoLista[
 
 const minuscula = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
 
-const ehDela = (p: Posse | null, chave: string) =>
-  p?.destino === "pessoa" && chavePessoa(p.empresa, p.contrato) === chave;
+const ehDela = (p: Posse | null, chave: string) => comAlguem(p) && chaveDaPosse(p) === chave;
 
 interface PropsPessoa {
   pessoa: PessoaComEquipamentos;
@@ -64,6 +90,8 @@ interface PropsPessoa {
   onAbrirEquipamento: (id: number) => void;
   onEntregar: () => void;
   onDevolverTudo: () => void;
+  /** Só para quem é de fora: o cadastro dela é da TI. */
+  onEditarExterno?: () => void;
   onFechar: () => void;
 }
 
@@ -141,11 +169,23 @@ function CorpoPessoa({ pessoa, movimentacoes, onAbrirEquipamento }: Omit<PropsPe
   );
 }
 
-function Janela({ pessoa, onEntregar, onDevolverTudo, onFechar, estatico, children }: PropsPessoa & { estatico?: boolean; children: React.ReactNode }) {
+function Janela({
+  pessoa,
+  onEntregar,
+  onDevolverTudo,
+  onEditarExterno,
+  onFechar,
+  estatico,
+  children,
+}: PropsPessoa & { estatico?: boolean; children: React.ReactNode }) {
+  const x = pessoa.externo;
+  const linha = x
+    ? [x.vinculo ?? "De fora do Diretório", x.contato].filter(Boolean).join(" · ")
+    : [pessoa.setor, pessoa.cargo].filter(Boolean).join(" · ") || "Sem setor";
   const descricao = (
     <span className="inline-flex flex-wrap items-center gap-1.5">
-      {[pessoa.setor, pessoa.cargo].filter(Boolean).join(" · ") || "Sem setor"}
-      {pessoa.fora && <Selo tom="atencao">Fora do Diretório</Selo>}
+      {linha}
+      <SeloPessoa pessoa={pessoa} />
     </span>
   );
   const rodape = (
@@ -153,6 +193,11 @@ function Janela({ pessoa, onEntregar, onDevolverTudo, onFechar, estatico, childr
       <Botao variante="fantasma" onClick={onFechar} className="mr-auto">
         Fechar
       </Botao>
+      {x && onEditarExterno && (
+        <Botao variante="fantasma" icone="editar" onClick={onEditarExterno}>
+          Editar cadastro
+        </Botao>
+      )}
       {pessoa.itens.length > 0 && (
         <Botao variante={pessoa.fora ? "primario" : "secundario"} icone="estoque" onClick={onDevolverTudo}>
           {pessoa.itens.length === 1 ? "Devolver ao estoque" : "Devolver tudo ao estoque"}
@@ -191,7 +236,15 @@ export function ModalPessoaTi({ pessoa, ...props }: Omit<PropsPessoa, "pessoa"> 
 export function PessoaTiEstatica(props: Pick<PropsPessoa, "pessoa" | "movimentacoes">) {
   const nada = () => {};
   return (
-    <Janela {...props} estatico onAbrirEquipamento={nada} onEntregar={nada} onDevolverTudo={nada} onFechar={nada}>
+    <Janela
+      {...props}
+      estatico
+      onAbrirEquipamento={nada}
+      onEntregar={nada}
+      onDevolverTudo={nada}
+      onEditarExterno={nada}
+      onFechar={nada}
+    >
       <CorpoPessoa pessoa={props.pessoa} movimentacoes={props.movimentacoes} onAbrirEquipamento={nada} />
     </Janela>
   );

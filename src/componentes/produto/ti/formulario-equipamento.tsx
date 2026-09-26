@@ -9,15 +9,17 @@ import { Combo, type Opcao } from "@/componentes/primitivos/combo";
 import { Nota } from "@/componentes/primitivos/estados";
 import { Modal, PainelModal } from "@/componentes/primitivos/modal";
 import { numeroDigitado } from "@/componentes/produto/contabil/campo-numero";
+import { CampoRecebedor } from "./recebedor";
 import { mutar } from "@/hooks/mutar";
 import { hojeISO } from "@/lib/format";
 import {
   CAMPOS_SPEC,
-  chavePessoa,
+  lerChaveRecebedor,
   TIPOS_EQUIPAMENTO,
   tipoEquipamento,
   type DadosEquipamento,
   type EquipamentoLista,
+  type PessoaExterna,
   type PessoaTi,
 } from "@/lib/ti-tipos";
 
@@ -69,10 +71,13 @@ interface PropsEquipamento {
   /** Sem equipamento, é o cadastro de um novo. */
   equipamento?: EquipamentoLista | null;
   pessoas: PessoaTi[] | undefined;
+  /** Quem é de fora do Diretório, do cadastro da TI. */
+  externos: PessoaExterna[] | undefined;
   /** Rascunho de partida, para o catálogo mostrar a janela preenchida. */
   inicial?: Partial<RascunhoEquipamento>;
   onFechar: () => void;
   onSalvo?: (id: number) => void;
+  onExternoCriado?: () => void;
 }
 
 /**
@@ -97,9 +102,11 @@ export function EquipamentoEstatico(props: PropsEquipamento) {
 function FormEquipamento({
   equipamento,
   pessoas,
+  externos,
   inicial,
   onFechar,
   onSalvo,
+  onExternoCriado,
   estatico,
 }: PropsEquipamento & { estatico?: boolean }) {
   const id = useId();
@@ -117,20 +124,11 @@ function FormEquipamento({
     () => TIPOS_EQUIPAMENTO.map((t) => ({ valor: t.id, rotulo: t.rotulo, icone: t.icone as Opcao["icone"] })),
     []
   );
-  const opcoesPessoas = useMemo<Opcao[]>(
-    () =>
-      (pessoas ?? []).map((p) => ({
-        valor: chavePessoa(p.empresa, p.contrato),
-        rotulo: p.nome,
-        detalhe: p.setor ?? undefined,
-      })),
-    [pessoas]
-  );
-
   async function salvar() {
     const valor = r.valorCompra.trim() ? numeroDigitado(r.valorCompra) : null;
     if (r.valorCompra.trim() && valor == null) return setErro("O valor da compra não se lê como número.");
-    if (novo && r.onde === "pessoa" && !r.pessoa) return setErro("Escolha com quem o equipamento está.");
+    const recebedor = r.onde === "pessoa" && r.pessoa ? lerChaveRecebedor(r.pessoa) : null;
+    if (novo && r.onde === "pessoa" && !recebedor) return setErro("Escolha com quem o equipamento está.");
     if (novo && r.onde === "local" && !r.local.trim()) return setErro("Diga onde o equipamento fica.");
     const dados: DadosEquipamento = {
       tipo: r.tipo,
@@ -151,12 +149,13 @@ function FormEquipamento({
     try {
       let salvoId: number;
       if (novo) {
-        const [empresa, contrato] = (r.pessoa ?? "").split(":").map(Number);
         const res = await mutar<{ id: number }>("/api/ti/equipamentos", "POST", {
           ...dados,
           inicio: {
-            destino: r.onde,
-            pessoa: r.onde === "pessoa" ? { empresa, contrato } : null,
+            destino: recebedor?.destino ?? r.onde,
+            pessoa:
+              recebedor?.destino === "pessoa" ? { empresa: recebedor.empresa, contrato: recebedor.contrato } : null,
+            externo: recebedor?.destino === "externo" ? { id: recebedor.id } : null,
             local: r.onde === "local" ? r.local : null,
             data: hojeISO(),
           },
@@ -270,15 +269,13 @@ function FormEquipamento({
             className="self-start"
           />
           {r.onde === "pessoa" && (
-            <Combo
-              opcoes={opcoesPessoas}
+            <CampoRecebedor
+              pessoas={pessoas}
+              externos={externos}
               valor={r.pessoa}
               onMudar={(v) => mudar({ pessoa: v })}
-              placeholder={pessoas ? "Escolher no Diretório" : "Carregando o Diretório"}
-              busca
-              icone="usuario"
+              onCadastrado={onExternoCriado}
               rotuloAcessivel="Com quem está"
-              desabilitado={!pessoas}
             />
           )}
           {r.onde === "local" && (

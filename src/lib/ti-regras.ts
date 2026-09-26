@@ -12,7 +12,9 @@ import {
   type EquipamentoLista,
   type Especificacoes,
   type MotivoBaixa,
+  type DadosPessoaExterna,
   type PedidoMovimentacao,
+  type PessoaExterna,
   type PessoaTi,
   type Posse,
 } from "./ti-tipos";
@@ -107,9 +109,25 @@ export function lerDadosEquipamento(corpo: unknown): DadosEquipamento {
   };
 }
 
+// ── De fora do Diretório ─────────────────────────────────────────────────────
+
+/** O cadastro de alguém de fora do Diretório, conferido. Só o nome é obrigatório. */
+export function lerDadosExterno(corpo: unknown): DadosPessoaExterna {
+  const b = (corpo ?? {}) as Record<string, unknown>;
+  const nome = texto(b.nome, "Nome");
+  if (!nome) return recusar("Informe o nome");
+  return {
+    nome,
+    vinculo: texto(b.vinculo, "Empresa ou vínculo"),
+    documento: texto(b.documento, "Documento", 30),
+    contato: texto(b.contato, "Contato"),
+    observacao: texto(b.observacao, "Observação", OBS_MAX),
+  };
+}
+
 // ── Movimentação ─────────────────────────────────────────────────────────────
 
-const DESTINOS: Destino[] = ["pessoa", "local", "estoque", "manutencao", "baixa"];
+const DESTINOS: Destino[] = ["pessoa", "externo", "local", "estoque", "manutencao", "baixa"];
 
 export function lerPedido(corpo: unknown): PedidoMovimentacao {
   const b = (corpo ?? {}) as Record<string, unknown>;
@@ -124,6 +142,8 @@ export function lerPedido(corpo: unknown): PedidoMovimentacao {
     p && Number.isInteger(p.empresa) && Number.isInteger(p.contrato)
       ? { empresa: p.empresa as number, contrato: p.contrato as number }
       : null;
+  const x = b.externo as Record<string, unknown> | null | undefined;
+  const externo = x && Number.isInteger(x.id) && (x.id as number) > 0 ? { id: x.id as number } : null;
   const motivo = b.motivo == null ? null : (b.motivo as MotivoBaixa);
   if (motivo !== null && !MOTIVOS_BAIXA.some((m) => m.valor === motivo)) recusar("Motivo da baixa inválido");
 
@@ -131,6 +151,7 @@ export function lerPedido(corpo: unknown): PedidoMovimentacao {
     equipamentos: [...new Set(ids as number[])],
     destino: b.destino as Destino,
     pessoa,
+    externo,
     local: texto(b.local, b.destino === "manutencao" ? "Assistência" : "Local", 80),
     motivo,
     data: b.data as string,
@@ -141,19 +162,37 @@ export function lerPedido(corpo: unknown): PedidoMovimentacao {
 /** O destino inicial do cadastro: o mesmo pedido, sem equipamentos (ele ainda não existe). */
 export function lerInicio(corpo: unknown): Omit<PedidoMovimentacao, "equipamentos"> {
   const p = lerPedido({ ...((corpo ?? {}) as object), equipamentos: [1] });
-  return { destino: p.destino, pessoa: p.pessoa, local: p.local, motivo: p.motivo, data: p.data, observacao: p.observacao };
+  return {
+    destino: p.destino,
+    pessoa: p.pessoa,
+    externo: p.externo,
+    local: p.local,
+    motivo: p.motivo,
+    data: p.data,
+    observacao: p.observacao,
+  };
 }
 
 /**
  * Para onde o pedido leva, com o que cada destino exige. A pessoa vem do
- * Diretório de hoje: quem saiu da empresa não recebe equipamento.
+ * Diretório de hoje: quem saiu da empresa não recebe equipamento. Quem é de
+ * fora vem do cadastro da TI, e o cadastro encerrado também não recebe.
  */
-export function posseDoPedido(pedido: PedidoMovimentacao, pessoa: PessoaTi | null): Posse {
+export function posseDoPedido(
+  pedido: PedidoMovimentacao,
+  pessoa: PessoaTi | null,
+  externo: PessoaExterna | null = null
+): Posse {
   switch (pedido.destino) {
     case "pessoa":
       if (!pedido.pessoa) return recusar("Escolha quem recebe");
       if (!pessoa) return recusar("Essa pessoa não está no Diretório do RH. Quem saiu da empresa não recebe equipamento.");
       return { destino: "pessoa", empresa: pessoa.empresa, contrato: pessoa.contrato, nome: pessoa.nome, setor: pessoa.setor };
+    case "externo":
+      if (!pedido.externo) return recusar("Escolha quem recebe");
+      if (!externo) return recusar("Esse cadastro de fora do Diretório não existe mais. Recarregue a tela.");
+      if (!externo.ativo) return recusar(`${externo.nome} está com o cadastro encerrado e não recebe equipamento`);
+      return { destino: "externo", id: externo.id, nome: externo.nome, vinculo: externo.vinculo };
     case "local":
       if (!pedido.local) return recusar("Diga onde o equipamento fica");
       return { destino: "local", local: pedido.local };
