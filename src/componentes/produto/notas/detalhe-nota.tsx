@@ -7,18 +7,15 @@ import { Modal } from "@/componentes/primitivos/modal";
 import { Par } from "@/componentes/primitivos/painel";
 import { Selo } from "@/componentes/primitivos/selo";
 import { cn } from "@/lib/cn";
+import { copiarTexto } from "@/lib/copiar";
 import { brl, documento, num } from "@/lib/format";
 import type { NotaLista } from "@/lib/types";
 import { BlocoDetalhe, legendaNota, type ModuloNotas } from "./bloco-detalhe";
 import { ItensNota } from "./itens-nota";
 
 async function copiar(texto: string) {
-  try {
-    await navigator.clipboard.writeText(texto);
-    avisar.ok("Chave copiada");
-  } catch {
-    avisar.erro("Não deu para copiar", "Selecione a chave e copie com Ctrl+C.");
-  }
+  if (await copiarTexto(texto)) avisar.ok("Chave copiada");
+  else avisar.erro("Não deu para copiar", "Selecione a chave e copie com Ctrl+C.");
 }
 
 /**

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { avisar } from "@/componentes/primitivos/aviso";
 import { Botao, BotaoIcone, BotaoLink } from "@/componentes/primitivos/botao";
 import { Icone } from "@/componentes/primitivos/icone";
+import { copiarTexto } from "@/lib/copiar";
 
 type Copiado = "protocolo" | "senha" | "ambos" | null;
 
@@ -27,13 +28,10 @@ export function ReciboDenuncia({
   const [copiado, setCopiado] = useState<Copiado>(null);
 
   const copiar = async (qual: Exclude<Copiado, null>, texto: string) => {
-    try {
-      await navigator.clipboard.writeText(texto);
+    if (await copiarTexto(texto)) {
       setCopiado(qual);
       setTimeout(() => setCopiado((c) => (c === qual ? null : c)), 1600);
-    } catch {
-      avisar.erro("Não deu para copiar", "Selecione o texto e copie à mão.");
-    }
+    } else avisar.erro("Não deu para copiar", "Selecione o texto e copie à mão.");
   };
 
   return (

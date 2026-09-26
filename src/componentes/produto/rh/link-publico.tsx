@@ -5,6 +5,7 @@ import { BotaoIcone } from "@/componentes/primitivos/botao";
 import { Icone } from "@/componentes/primitivos/icone";
 import { avisar } from "@/componentes/primitivos/aviso";
 import { cn } from "@/lib/cn";
+import { copiarTexto } from "@/lib/copiar";
 
 const semAssinatura = () => () => {};
 
@@ -19,13 +20,10 @@ export function LinkPublico({ caminho, className }: { caminho: string; className
   const [copiado, setCopiado] = useState(false);
 
   const copiar = async () => {
-    try {
-      await navigator.clipboard.writeText(url);
+    if (await copiarTexto(url)) {
       setCopiado(true);
       setTimeout(() => setCopiado(false), 1600);
-    } catch {
-      avisar.erro("Não deu para copiar", "Selecione o endereço e copie com Ctrl+C.");
-    }
+    } else avisar.erro("Não deu para copiar", "Selecione o endereço e copie com Ctrl+C.");
   };
 
   return (
