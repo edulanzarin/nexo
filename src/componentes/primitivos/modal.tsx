@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
 import { BotaoIcone } from "./botao";
@@ -77,9 +77,15 @@ export function PainelModal({
 const FOCAVEIS =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
+const semAssinatura = () => () => {};
+
 /**
  * Modal: portal, véu, foco preso dentro, Esc e clique no véu fecham, e o foco
  * volta para quem abriu. A rolagem da página trava enquanto ele está aberto.
+ *
+ * Só abre depois da hidratação. O servidor não tem `document` e desenha nada;
+ * se o cliente desenhasse o portal já na hidratação (a ficha aberta direto
+ * pelo `?abrir=`), o React acusaria HTML diferente do servidor (#418).
  */
 export function Modal({
   aberto,
@@ -106,12 +112,14 @@ export function Modal({
   const idTitulo = useId();
   const caixa = useRef<HTMLDivElement>(null);
   const fecharRef = useRef(onFechar);
+  // Falso no servidor e durante a hidratação; verdadeiro logo depois.
+  const hidratado = useSyncExternalStore(semAssinatura, () => true, () => false);
   useEffect(() => {
     fecharRef.current = onFechar;
   });
 
   useEffect(() => {
-    if (!aberto) return;
+    if (!aberto || !hidratado) return;
     const anterior = document.activeElement as HTMLElement | null;
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -145,9 +153,9 @@ export function Modal({
       document.body.style.overflow = overflow;
       anterior?.focus?.();
     };
-  }, [aberto]);
+  }, [aberto, hidratado]);
 
-  if (!aberto || typeof document === "undefined") return null;
+  if (!aberto || !hidratado) return null;
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
       <div
