@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { avisar } from "@/componentes/primitivos/aviso";
 import { Botao } from "@/componentes/primitivos/botao";
 import { Esqueleto, PainelErro } from "@/componentes/primitivos/estados";
-import type { NomeIcone } from "@/componentes/primitivos/icone";
+import { Icone, type NomeIcone } from "@/componentes/primitivos/icone";
 import { Menu } from "@/componentes/primitivos/menu";
 import { Modal, PainelModal } from "@/componentes/primitivos/modal";
 import { Par } from "@/componentes/primitivos/painel";
@@ -12,6 +13,7 @@ import { Selo } from "@/componentes/primitivos/selo";
 import { mutar } from "@/hooks/mutar";
 import { useEquipamento } from "@/hooks/use-ti";
 import { brl, dataBR, hojeISO } from "@/lib/format";
+import { tipoAcesso } from "@/lib/ti-acessos-tipos";
 import {
   CAMPOS_SPEC,
   nomeEquipamento,
@@ -165,6 +167,26 @@ function CorpoFicha({
           {e.observacoes && (
             <Secao titulo="Observações">
               <p className="text-corpo whitespace-pre-line text-tinta-2">{e.observacoes}</p>
+            </Secao>
+          )}
+
+          {/* Só vem para quem tem o cofre: para o resto, o servidor manda null. */}
+          {e.acessos && e.acessos.length > 0 && (
+            <Secao titulo="Acessos">
+              <ul className="flex flex-col gap-1.5">
+                {e.acessos.map((a) => (
+                  <li key={a.id}>
+                    <Link
+                      href={`/ti/acessos?abrir=${a.id}`}
+                      className="inline-flex items-center gap-2 rounded-controle text-corpo text-tinta hover:text-acento"
+                    >
+                      <Icone nome={tipoAcesso(a.tipo).icone} tamanho={15} className="text-apagado" />
+                      {a.nome}
+                      <Icone nome="seta-direita" tamanho={14} className="text-apagado" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </Secao>
           )}
         </div>

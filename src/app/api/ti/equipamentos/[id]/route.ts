@@ -1,5 +1,7 @@
 import { apiRoute } from "@/lib/api-route";
 import { FilterError } from "@/lib/fiscal-filters";
+import { getSessaoOpcional, podeSecao } from "@/lib/sessao";
+import { acessosDoEquipamento } from "@/lib/ti-acessos";
 import { carregarEquipamento, conferido, excluirEquipamento, salvarEquipamento } from "@/lib/ti-equipamentos";
 import { lerDadosEquipamento } from "@/lib/ti-regras";
 
@@ -11,11 +13,19 @@ async function idDaRota(ctx: Ctx): Promise<number> {
   return id;
 }
 
-/** O equipamento aberto, com o histórico inteiro de quem ele passou. */
+/**
+ * O equipamento aberto, com o histórico inteiro de quem ele passou. Os acessos
+ * dele (o admin do roteador) vêm só para quem tem o cofre; para o resto, `null`.
+ */
 export const GET = apiRoute(async (_req, ctx) => {
-  const e = await carregarEquipamento(await idDaRota(ctx));
+  const id = await idDaRota(ctx);
+  const sessao = await getSessaoOpcional();
+  const [e, acessos] = await Promise.all([
+    carregarEquipamento(id),
+    sessao && podeSecao(sessao, "ti", "acessos") ? acessosDoEquipamento(id) : null,
+  ]);
   if (!e) throw new FilterError("O equipamento não existe mais. Alguém pode ter apagado.");
-  return e;
+  return { ...e, acessos };
 });
 
 /** Corrige o cadastro. Com quem ele está não muda aqui: isso é movimentação. */

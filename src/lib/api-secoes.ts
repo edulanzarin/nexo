@@ -212,13 +212,19 @@ const MAPA: Record<ModuloId, Record<string, string[]>> = {
     "post-mortem": [SECAO_PM, SECAO_PM_GESTAO],
   },
   ti: {
-    // Uma seção só, com três abas: o inventário, a movimentação e quem pode
-    // receber (o Diretório do RH reduzido ao que a TI precisa ler, e o
-    // cadastro da TI de quem é de fora dele).
+    // O Painel lê os dois lados, e cada lado só vem para quem tem a seção dele
+    // (o handler confere).
+    painel: ["painel"],
+    // Equipamentos: o inventário, a movimentação e quem pode receber (o
+    // Diretório do RH reduzido ao que a TI precisa ler, e o cadastro da TI de
+    // quem é de fora dele).
     equipamentos: ["equipamentos"],
     movimentacoes: ["equipamentos"],
     pessoas: ["equipamentos"],
     externos: ["equipamentos"],
+    // Acessos: o cofre, o revelar e o registro. Seção própria, e não aba dos
+    // Equipamentos: quem entrega notebook não precisa abrir a senha do banco.
+    acessos: ["acessos"],
   },
   config: {
     // O cadastro (lista, grupo aberto, criar, salvar, remover) e o universo

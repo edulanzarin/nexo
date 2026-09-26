@@ -10,6 +10,20 @@ import { EquipamentoEstatico } from "@/componentes/produto/ti/formulario-equipam
 import { MovimentarEstatico } from "@/componentes/produto/ti/movimentar";
 import { ChipsEquipamentos, PessoaTiEstatica } from "@/componentes/produto/ti/pessoa-equipamentos";
 import { CampoRecebedor, ExternoEstatico } from "@/componentes/produto/ti/recebedor";
+import { ListaUrgencias } from "@/componentes/produto/folha/pendencias-dp";
+import { CelulaAcesso, HistoricoAcesso, Segredo, TextoCopiavel } from "@/componentes/produto/ti/acesso";
+import { FichaAcessoCarregando, FichaAcessoEstatica } from "@/componentes/produto/ti/ficha-acesso";
+import { AcessoEstatico } from "@/componentes/produto/ti/formulario-acesso";
+import { AtividadeRecenteTi, InventarioPorTipo, itemPendenciaTi } from "@/componentes/produto/ti/painel-ti";
+import {
+  enderecoAcesso,
+  textoQrWifi,
+  usuarioAcesso,
+  type AcessoDetalhe,
+  type AcessoLista,
+  type EventoAcesso,
+} from "@/lib/ti-acessos-tipos";
+import type { AtividadeTi, PendenciaTi } from "@/lib/ti-painel-tipos";
 import type {
   EquipamentoDetalhe,
   EquipamentoLista,
@@ -113,6 +127,107 @@ const FICHA: EquipamentoDetalhe = {
 
 const NOTEBOOK_EQ = { ...EQUIPAMENTOS[0] };
 const MOVS_ANA: MovimentacaoLista[] = HISTORICO.map((m) => ({ ...m, equipamento: NOTEBOOK_EQ }));
+
+// ── Acessos (IPs e endereços de exemplo, nenhum é da Navecon) ─────────────────
+
+const acesso = (a: Partial<AcessoLista> & Pick<AcessoLista, "id" | "tipo" | "nome">): AcessoLista => ({
+  grupo: null,
+  campos: {},
+  segredos: {},
+  outraChave: [],
+  observacoes: null,
+  equipamento: null,
+  atualizadoEm: "2026-09-20T11:02:00",
+  ...a,
+});
+
+const ACESSOS: AcessoLista[] = [
+  acesso({
+    id: 7,
+    tipo: "wifi",
+    nome: "Wi-Fi dos Visitantes",
+    grupo: "Matriz",
+    campos: { ssid: "ESCRITORIO-VISITA", seguranca: "WPA2" },
+    segredos: { senha: "2026-08-12T09:30:00" },
+    observacoes: "Trocar a senha a cada trimestre.",
+    equipamento: { id: 60, tipo: "rede", nome: "Rede TP-Link Archer AX55", patrimonio: "NVC-060" },
+  }),
+  acesso({
+    id: 8,
+    tipo: "banco",
+    nome: "Banco do sistema interno",
+    grupo: "Servidor",
+    campos: { sgbd: "PostgreSQL", host: "192.168.0.10", porta: "5432", base: "sistema", usuario: "sistema" },
+    segredos: { senha: "2024-05-03T14:10:00" },
+  }),
+  acesso({
+    id: 9,
+    tipo: "remoto",
+    nome: "Servidor do escritório",
+    grupo: "Servidor",
+    campos: { ferramenta: "Área de Trabalho Remota (RDP)", host: "192.168.0.10", porta: "3389", dominio: "ESCRITORIO", usuario: "administrador" },
+    segredos: { senha: "2026-06-30T08:05:00" },
+  }),
+  acesso({
+    id: 10,
+    tipo: "site",
+    nome: "Portal da operadora de internet",
+    grupo: "Fornecedores",
+    campos: { url: "https://minhaconta.operadora.com.br", usuario: "financeiro@exemplo.com.br" },
+  }),
+  acesso({
+    id: 11,
+    tipo: "vpn",
+    nome: "VPN da filial",
+    grupo: "Filial",
+    campos: { protocolo: "WireGuard", host: "vpn.exemplo.com.br", porta: "51820", usuario: "filial" },
+    segredos: { senha: "2026-02-14T10:00:00", psk: "2025-11-02T10:00:00" },
+    outraChave: ["psk"],
+  }),
+];
+
+const EVENTOS: EventoAcesso[] = [
+  { id: 6, acao: "revelado", campos: ["senha"], usuario: "Diego Moretti", em: "2026-09-25T16:42:00" },
+  { id: 5, acao: "copiado", campos: ["senha"], usuario: "Marina Alves", em: "2026-09-19T09:03:00" },
+  { id: 4, acao: "segredo", campos: ["senha"], usuario: "Diego Moretti", em: "2026-08-12T09:30:00" },
+  { id: 3, acao: "editado", campos: ["seguranca", "equipamento"], usuario: "Diego Moretti", em: "2026-08-12T09:29:00" },
+  { id: 1, acao: "criado", campos: [], usuario: "Diego Moretti", em: "2026-02-03T15:20:00" },
+];
+
+const FICHA_WIFI: AcessoDetalhe = { ...ACESSOS[0], criadoEm: "2026-02-03T15:20:00", eventos: EVENTOS };
+const FICHA_BANCO: AcessoDetalhe = {
+  ...ACESSOS[1],
+  observacoes: "Só leitura para relatório: pedir o usuário de leitura ao suporte.",
+  criadoEm: "2024-05-03T14:10:00",
+  eventos: [
+    { id: 12, acao: "copiado", campos: ["senha"], usuario: "Diego Moretti", em: "2026-09-24T18:11:00" },
+    { id: 11, acao: "editado", campos: ["porta"], usuario: "Diego Moretti", em: "2025-03-10T08:40:00" },
+    { id: 10, acao: "criado", campos: [], usuario: "Diego Moretti", em: "2024-05-03T14:10:00" },
+  ],
+};
+
+const PENDENCIAS: PendenciaTi[] = [
+  { chave: "r", tipo: "recolher", alvo: { secao: "equipamentos", id: 9 }, titulo: "NVC-009 · Notebook Dell Vostro 3510", apoio: "Com BRUNO SCHULZ · saiu do Diretório", dias: 108 },
+  { chave: "l", tipo: "licenca", alvo: { secao: "acessos", id: 12 }, titulo: "Antivírus (50 estações)", apoio: "Vence em 10/10/2026", dias: 14 },
+  { chave: "m", tipo: "manutencao", alvo: { secao: "equipamentos", id: 18 }, titulo: "NVC-018 · Notebook Acer Aspire 5", apoio: "Em manutenção em Dell Suporte desde 18/08/2026", dias: 38 },
+  { chave: "s", tipo: "senha", alvo: { secao: "acessos", id: 8 }, titulo: "Banco do sistema interno", apoio: "Banco de dados · trocada em 03/05/2024", dias: 876 },
+  { chave: "g", tipo: "garantia", alvo: { secao: "equipamentos", id: 31 }, titulo: "NVC-031 · Monitor LG 24MK430H", apoio: "Garantia até 09/11/2026", dias: 44 },
+];
+
+const POR_TIPO = [
+  { tipo: "notebook", uso: 38, estoque: 4, manutencao: 1 },
+  { tipo: "monitor", uso: 41, estoque: 9, manutencao: 0 },
+  { tipo: "headset", uso: 30, estoque: 2, manutencao: 0 },
+  { tipo: "celular", uso: 6, estoque: 1, manutencao: 1 },
+  { tipo: "impressora", uso: 3, estoque: 0, manutencao: 0 },
+];
+
+const ATIVIDADE: AtividadeTi[] = [
+  { chave: "a1", origem: "acessos", alvoId: 7, icone: "ver", titulo: "Senha vista", alvo: "Wi-Fi dos Visitantes", por: "Diego Moretti", em: "2026-09-25T16:42:00" },
+  { chave: "a2", origem: "equipamentos", alvoId: 15, icone: "transferir", titulo: "Entregue a MARIANA COSTA", alvo: "NVC-015 · Notebook Lenovo ThinkPad E14", por: "Diego Moretti", em: "2026-09-25T10:14:00" },
+  { chave: "a3", origem: "acessos", alvoId: 9, icone: "chave", titulo: "Senha trocada", alvo: "Servidor do escritório", por: "Diego Moretti", em: "2026-09-24T17:55:00" },
+  { chave: "a4", origem: "equipamentos", alvoId: 18, icone: "transferir", titulo: "Foi para manutenção em Dell Suporte", alvo: "NVC-018 · Notebook Acer Aspire 5", por: "Marina Alves", em: "2026-09-23T09:20:00" },
+];
 
 export function BlocosTi() {
   const nada = () => {};
@@ -314,6 +429,148 @@ export function BlocosTi() {
           </Variante>
           <Variante nome="Encerrado: não recebe até reativar">
             <ExternoEstatico externo={EXTERNOS[2]} onFechar={nada} />
+          </Variante>
+        </div>
+      </Bloco>
+
+      <Bloco
+        titulo="Acesso na linha"
+        porque="O cofre se lê como a lista de equipamentos: o ícone do tipo antes do nome, o tipo e o grupo embaixo. Endereço e usuário não são segredo e se copiam com um clique, sem registro; a senha fica mascarada e só abre pelo servidor. A lista nunca carrega senha nenhuma, nem cifrada."
+      >
+        <Painel corpo="flex flex-col divide-y divide-linha p-0" className="max-w-4xl">
+          {ACESSOS.map((a) => (
+            <div key={a.id} className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,0.9fr)] items-center gap-3 px-4 py-1.5">
+              <CelulaAcesso a={a} />
+              <TextoCopiavel valor={enderecoAcesso(a)} rotulo="Endereço" />
+              <TextoCopiavel valor={usuarioAcesso(a)} rotulo="Usuário" />
+              <Segredo acessoId={a.id} campo="senha" guardado={!!a.segredos.senha} outraChave={a.outraChave.includes("senha")} />
+            </div>
+          ))}
+        </Painel>
+      </Bloco>
+
+      <Bloco
+        titulo="Segredo mascarado"
+        porque="Ver e copiar passam pelo servidor, que grava no registro quem abriu ANTES de devolver a senha: sem registro, sem senha. Aberta, ela volta à máscara sozinha em trinta segundos, para não ficar na tela de quem levantou. Guardada com outra chave do cofre, o selo diz o porquê em vez de um erro no clique."
+      >
+        <Painel corpo="grid gap-x-8 gap-y-3 sm:grid-cols-2" className="max-w-3xl">
+          <Variante nome="Guardada">
+            <Segredo acessoId={7} campo="senha" guardado />
+          </Variante>
+          <Variante nome="Aberta, voltando à máscara">
+            <Segredo acessoId={7} campo="senha" guardado revelado="Vis1t@-Trim3stre" />
+          </Variante>
+          <Variante nome="Não guardada">
+            <Segredo acessoId={10} campo="senha" guardado={false} />
+          </Variante>
+          <Variante nome="Guardada com outra chave">
+            <Segredo acessoId={11} campo="psk" guardado outraChave />
+          </Variante>
+          <Variante nome="Servidor sem a chave do cofre">
+            <Segredo acessoId={7} campo="senha" guardado semChave />
+          </Variante>
+        </Painel>
+      </Bloco>
+
+      <Bloco
+        titulo="Ficha do acesso"
+        porque="Como entrar em cima, cada campo com o seu copiar; o segredo mascarado; o registro inteiro ao lado. Abrir a ficha não abre senha. No Wi-Fi, o QR leva a senha dentro, então mostrá-lo passa pelo mesmo revelar e entra no registro; ele é preto no branco em qualquer tema, porque é o contraste que a câmera lê."
+      >
+        <div className="flex flex-col gap-6">
+          <Variante nome="Wi-Fi com o QR aberto">
+            <FichaAcessoEstatica acesso={FICHA_WIFI} qr={textoQrWifi("ESCRITORIO-VISITA", "WPA2", "Vis1t@-Trim3stre")} />
+          </Variante>
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <Variante nome="Banco de dados com senha antiga">
+              <FichaAcessoEstatica acesso={FICHA_BANCO} />
+            </Variante>
+            <Variante nome="Abrindo">
+              <FichaAcessoCarregando />
+            </Variante>
+          </div>
+        </div>
+      </Bloco>
+
+      <Bloco
+        titulo="Cadastro de acesso"
+        porque="O tipo escolhe os campos, a partir do catálogo em ti-acessos-tipos: servidor, porta e base para o banco de dados, rede e segurança para o Wi-Fi. A porta de costume aparece como sugestão e não é gravada. Na edição a senha guardada não volta para a tela: fica mascarada com Trocar e Remover, e redigitar a mesma não conta como troca. O campo é texto com máscara, e não de senha, para o navegador não preencher o login do sistema nem oferecer salvar o Wi-Fi."
+      >
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <Variante nome="Novo Wi-Fi">
+            <AcessoEstatico
+              grupos={["Matriz", "Servidor", "Fornecedores"]}
+              equipamentos={[{ id: 60, tipo: "rede", nome: "Rede TP-Link Archer AX55", patrimonio: "NVC-060" }]}
+              chave
+              inicial={{ nome: "Wi-Fi dos Visitantes", grupo: "Matriz", campos: { ssid: "ESCRITORIO-VISITA", seguranca: "WPA2" } }}
+              onFechar={nada}
+            />
+          </Variante>
+          <Variante nome="Editando um banco: a senha guardada fica mascarada">
+            <AcessoEstatico acesso={ACESSOS[1]} grupos={["Servidor"]} equipamentos={[]} chave onFechar={nada} />
+          </Variante>
+          <Variante nome="VPN trocando a chave compartilhada">
+            <AcessoEstatico
+              acesso={ACESSOS[4]}
+              grupos={["Filial"]}
+              equipamentos={[]}
+              chave
+              inicial={{ segredos: { psk: "" } }}
+              onFechar={nada}
+            />
+          </Variante>
+          <Variante nome="Servidor sem a chave do cofre">
+            <AcessoEstatico grupos={[]} equipamentos={[]} chave={false} inicial={{ tipo: "remoto", nome: "Servidor do escritório" }} onFechar={nada} />
+          </Variante>
+        </div>
+      </Bloco>
+
+      <Bloco
+        titulo="Registro do acesso"
+        porque="Só cresce, e apagar o acesso não apaga o que aconteceu com ele. Senha vista e copiada ficam no tom de atenção: é a linha que responde quem sabia a senha antes de o prestador sair."
+      >
+        <Painel className="max-w-md">
+          <HistoricoAcesso eventos={EVENTOS} tipo="wifi" />
+        </Painel>
+      </Bloco>
+
+      <Bloco
+        titulo="Pendências da TI"
+        porque="Inventário e cofre numa lista só, do que pesa mais para o que espera: equipamento com quem saiu, licença vencendo, manutenção parada, senha antiga, garantia. Garantia e licença falam em prazo; o resto fala em tempo parado, na escala que se lê (dias, meses, anos). Cada linha abre a ficha do item."
+      >
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <Variante nome="Com pendências">
+            <ListaUrgencias titulo="Pendências" itens={PENDENCIAS.map(itemPendenciaTi)} vazio="Nada pendente na TI" />
+          </Variante>
+          <Variante nome="Nada pendente">
+            <ListaUrgencias titulo="Pendências" itens={[]} vazio="Nada pendente na TI" />
+          </Variante>
+        </div>
+      </Bloco>
+
+      <Bloco
+        titulo="Inventário por tipo e atividade"
+        porque="A régua das barras é o maior tipo, então a barra também compara os tipos entre si: dá para ver que sobra monitor no estoque. A atividade junta movimentação e cofre, e senha aberta aparece no tom de atenção."
+      >
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <Variante nome="Inventário por tipo">
+            <Painel corpo="p-0" titulo="Inventário por Tipo">
+              <InventarioPorTipo porTipo={POR_TIPO} />
+            </Painel>
+          </Variante>
+          <Variante nome="Atividade recente">
+            <Painel corpo="p-0" titulo="Atividade Recente">
+              <AtividadeRecenteTi itens={ATIVIDADE} />
+            </Painel>
+          </Variante>
+          <Variante nome="Carregando">
+            <Painel corpo="p-0" titulo="Inventário por Tipo">
+              <InventarioPorTipo porTipo={undefined} carregando />
+            </Painel>
+          </Variante>
+          <Variante nome="Sem atividade">
+            <Painel corpo="p-0" titulo="Atividade Recente">
+              <AtividadeRecenteTi itens={[]} />
+            </Painel>
           </Variante>
         </div>
       </Bloco>

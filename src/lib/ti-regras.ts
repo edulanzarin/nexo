@@ -41,7 +41,7 @@ export function hojeEscritorio(agora = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(agora);
 }
 
-function dataValida(v: unknown): v is string {
+export function dataValida(v: unknown): v is string {
   if (typeof v !== "string" || !DATA.test(v)) return false;
   const [a, m, d] = v.split("-").map(Number);
   const dt = new Date(Date.UTC(a, m - 1, d));
@@ -49,7 +49,7 @@ function dataValida(v: unknown): v is string {
 }
 
 /** Texto opcional: aparado, espaço colapsado, vazio vira null. */
-function texto(v: unknown, rotulo: string, max = TEXTO_MAX): string | null {
+export function texto(v: unknown, rotulo: string, max = TEXTO_MAX): string | null {
   if (v == null) return null;
   if (typeof v !== "string") return recusar(`${rotulo} inválido`);
   const t = v.trim().replace(/\s+/g, " ");

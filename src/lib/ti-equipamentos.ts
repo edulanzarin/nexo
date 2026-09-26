@@ -262,7 +262,7 @@ export function conferido<T>(ler: () => T): T {
   }
 }
 
-async function comTransacao<T>(fn: (c: PoolClient) => Promise<T>): Promise<T> {
+export async function comTransacao<T>(fn: (c: PoolClient) => Promise<T>): Promise<T> {
   let client: PoolClient;
   try {
     client = await appPool.connect();

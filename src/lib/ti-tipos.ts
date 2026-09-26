@@ -140,6 +140,17 @@ export function lerChaveRecebedor(
   return null;
 }
 
+/**
+ * Está com quem precisa devolver: saiu do Diretório, ou é de fora e teve o
+ * cadastro encerrado. Sem o Diretório carregado (`ativos` null), ninguém do
+ * Diretório conta como fora, em vez de todo mundo.
+ */
+export function aRecolher(p: Posse, ativos: ReadonlySet<string> | null, encerrados: ReadonlySet<number>): boolean {
+  if (p.destino === "pessoa") return ativos != null && !ativos.has(chavePessoa(p.empresa, p.contrato));
+  if (p.destino === "externo") return encerrados.has(p.id);
+  return false;
+}
+
 export function mesmaPosse(a: Posse, b: Posse): boolean {
   if (a.destino !== b.destino) return false;
   if (a.destino === "pessoa" && b.destino === "pessoa") return a.empresa === b.empresa && a.contrato === b.contrato;
@@ -218,6 +229,8 @@ export interface EquipamentoDetalhe extends EquipamentoLista {
   historico: Movimentacao[];
   criadoEm: string;
   atualizadoEm: string;
+  /** Os acessos do cofre ligados a ele (o admin do roteador). `null` para quem não tem o cofre. */
+  acessos?: { id: number; nome: string; tipo: string }[] | null;
 }
 
 /** Quem pode receber equipamento: gente do Diretório do RH, só o que a TI precisa ler. */

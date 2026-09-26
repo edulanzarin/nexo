@@ -2,8 +2,9 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useRef, useState } from "react";
+import { useAbrirDaUrl } from "@/hooks/use-abrir-da-url";
 import { CHAVES_TI, useAtivosTi, useEquipamentos, useExternosTi, usePessoasTi, useRecarregarTi } from "@/hooks/use-ti";
-import { chavePessoa, type EquipamentoLista, type Posse } from "@/lib/ti-tipos";
+import { aRecolher, type EquipamentoLista, type Posse } from "@/lib/ti-tipos";
 import { ModalFichaEquipamento } from "./ficha-equipamento";
 import { ModalEquipamento } from "./formulario-equipamento";
 import { ModalMovimentar, type InicialMovimentar } from "./movimentar";
@@ -21,7 +22,9 @@ export function useJanelasTi() {
   const ativos = useAtivosTi();
   const recarregar = useRecarregarTi();
   const qc = useQueryClient();
-  const [ficha, setFicha] = useState<number | null>(null);
+  // O Painel e a ficha de um acesso abrem o equipamento direto (?abrir=).
+  const daUrl = useAbrirDaUrl();
+  const [ficha, setFicha] = useState<number | null>(daUrl);
   const [form, setForm] = useState<{ alvo: EquipamentoLista | null; voltar?: number } | null>(null);
   const [mov, setMov] = useState<(InicialMovimentar & { voltar?: number }) | null>(null);
   // O cadastro novo abre a ficha dele ao fechar a janela.
@@ -32,16 +35,8 @@ export function useJanelasTi() {
     [externos.data]
   );
 
-  /**
-   * Está com quem precisa devolver: saiu do Diretório, ou é de fora e teve o
-   * cadastro encerrado. Sem o Diretório carregado, ninguém do Diretório está.
-   */
-  const fora = useCallback(
-    (p: Posse) =>
-      (p.destino === "pessoa" && ativos != null && !ativos.has(chavePessoa(p.empresa, p.contrato))) ||
-      (p.destino === "externo" && encerrados.has(p.id)),
-    [ativos, encerrados]
-  );
+  /** Está com quem precisa devolver; a regra é a mesma do Painel (`aRecolher`). */
+  const fora = useCallback((p: Posse) => aRecolher(p, ativos, encerrados), [ativos, encerrados]);
 
   const recarregarExternos = useCallback(
     () => qc.invalidateQueries({ queryKey: [CHAVES_TI.externos] }),
